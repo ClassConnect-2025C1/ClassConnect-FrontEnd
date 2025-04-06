@@ -7,12 +7,17 @@ const LoginScreen = () => {
 
  // It's necessary to use text for the texts message (don't exist only the word withou <Text>)
  // the view is similar to div in react, all the elements are inside the view
+
+ // button
+ // its the native button its not possible to change the style, but you can change the color
+ // it's addaptative to mobile or web
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Iniciar Sesión</Text>
       <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" />
       <TextInput placeholder="Contraseña" style={styles.input} secureTextEntry />
-      <Button title="Entrar" onPress={() => {}} />
+
+      <Button title="Entrar" onPress={() =>  alert('simple alert')} />
 
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.link}>¿No tenés cuenta? Registrate</Text>
