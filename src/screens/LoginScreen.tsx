@@ -34,7 +34,7 @@ const LoginScreen = () => {
         const data = await response.json();
         console.log('Login successful:', data);
 
-        navigation.navigate('CoursesScreen');
+        navigation.navigate('Courses');
       } else {
         const errorData = await response.json();
         console.error('Login failed:', errorData);
