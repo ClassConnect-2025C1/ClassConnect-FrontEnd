@@ -42,7 +42,7 @@ const RegisterScreen = () => {
         console.error('Registration failed:', data);
       }
     } catch (error) {
-        console.log('BODY:', await response.json());
+      console.log('BODY:', await response.json());
       console.error('Error during registration: de json is ', error);
     }
   };
@@ -98,7 +98,6 @@ const RegisterScreen = () => {
               style={styles.registerButton}
               onPress={async () => {
                 await handleRegister();
-
               }}
             >
               <Text style={styles.registerButtonText}>Sign up</Text>

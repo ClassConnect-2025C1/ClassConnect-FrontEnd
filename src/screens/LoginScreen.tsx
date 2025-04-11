@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,46 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
+
 const LoginScreen = () => {
   const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch('http://192.168.0.14:8000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Login successful:', data);
+
+        navigation.navigate('CoursesScreen');
+      } else {
+        const errorData = await response.json();
+        console.error('Login failed:', errorData);
+        alert('Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      alert('An error occurred. Please try again later.');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -28,12 +63,16 @@ const LoginScreen = () => {
         <TextInput
           placeholder="Email"
           style={styles.input}
-          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
         />
+
         <TextInput
-          placeholder="Contraseña"
+          placeholder="password"
           style={styles.input}
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
 
         <TouchableOpacity
@@ -52,10 +91,6 @@ const LoginScreen = () => {
               style={styles.socialIcon}
             />
           </TouchableOpacity>
-          {/* Podés agregar más como este: */}
-          {/* <TouchableOpacity>
-              <Image source={require('../../assets/images/facebook.png')} style={styles.socialIcon} />
-            </TouchableOpacity> */}
         </View>
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
