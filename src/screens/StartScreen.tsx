@@ -1,12 +1,19 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Pressable,TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  Pressable,
+  TouchableOpacity,
+} from 'react-native';
 import { useFonts } from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
 
 const StartScreen = () => {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
   const [fontsLoaded] = useFonts({
-    'outfit': require('../../assets/fonts/Outfit-Bold.ttf'),
+    outfit: require('../../assets/fonts/Outfit-Bold.ttf'),
     'outfit-medium': require('../../assets/fonts/Outfit-Medium.ttf'),
     'outfit-regular': require('../../assets/fonts/Outfit-Regular.ttf'),
   });
@@ -32,12 +39,12 @@ const StartScreen = () => {
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text style={styles.primaryButtonText}>Get Started</Text>
           </TouchableOpacity>
-         </Pressable>
+        </Pressable>
 
         <Pressable style={styles.secondaryButton}>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.secondaryButtonText}>Log In</Text>
-            </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.secondaryButtonText}>Log In</Text>
+          </TouchableOpacity>
         </Pressable>
       </View>
     </View>
@@ -110,5 +117,3 @@ const styles = StyleSheet.create({
 });
 
 export default StartScreen;
-
-

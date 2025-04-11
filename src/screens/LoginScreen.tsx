@@ -1,24 +1,86 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch('http://192.168.0.14:8000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Login successful:', data);
+
+        navigation.navigate('Courses');
+      } else {
+        const errorData = await response.json();
+        console.error('Login failed:', errorData);
+        alert('Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      alert('An error occurred. Please try again later.');
+    }
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.topHalf}>
-        <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
+
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={styles.logo}
+        />
       </View>
 
       <View style={styles.formContainer}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Log in to your account</Text>
 
-        <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" />
-        <TextInput placeholder="Contraseña" style={styles.input} secureTextEntry />
+        <TextInput
+          placeholder="Email"
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+        />
 
-        <TouchableOpacity style={styles.loginButton} onPress={() => alert('simple alert')}>
+        <TextInput
+          placeholder="password"
+          style={styles.input}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={async () => {
+            await handleLogin();
+          }}
+        >
           <Text style={styles.loginButtonText}>Log in</Text>
         </TouchableOpacity>
 
@@ -26,12 +88,11 @@ const LoginScreen = () => {
 
         <View style={styles.socialContainer}>
           <TouchableOpacity>
-            <Image source={require('../../assets/images/googlelog.png')} style={styles.socialIcon} />
+            <Image
+              source={require('../../assets/images/googlelog.png')}
+              style={styles.socialIcon}
+            />
           </TouchableOpacity>
-          {/* Podés agregar más como este: */}
-          {/* <TouchableOpacity>
-              <Image source={require('../../assets/images/facebook.png')} style={styles.socialIcon} />
-            </TouchableOpacity> */}
         </View>
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
@@ -129,4 +190,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,46 @@ import { useNavigation } from '@react-navigation/native';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleRegister = async () => {
+    try {
+      const response = await fetch('http://192.168.0.14:8000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: firstName,
+          last_name: lastName,
+          email,
+          password,
+        }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('Registration successful:', data);
+        navigation.navigate('Login');
+      } else {
+        console.error('Registration failed:', data);
+      }
+    } catch (error) {
+      console.log('BODY:', await response.json());
+      console.error('Error during registration: de json is ', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.topHalf}>
-        <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={styles.logo}
+        />
       </View>
 
       <KeyboardAvoidingView
@@ -30,12 +65,41 @@ const RegisterScreen = () => {
             <Text style={styles.title}>Create an Account</Text>
             <Text style={styles.subtitle}>Let’s get you started</Text>
 
-            <TextInput placeholder="First name" style={styles.input} />
-            <TextInput placeholder="Last name" style={styles.input} />
-            <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" />
-            <TextInput placeholder="Create your password" style={styles.input} secureTextEntry />
+            <TextInput
+              placeholder="First name"
+              style={styles.input}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
 
-            <TouchableOpacity style={styles.registerButton} onPress={() => alert('Registered!')}>
+            <TextInput
+              placeholder="Last name"
+              style={styles.input}
+              value={lastName}
+              onChangeText={setLastName}
+            />
+
+            <TextInput
+              placeholder="Create your password"
+              style={styles.input}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+
+            <TextInput
+              placeholder="Email"
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+            />
+
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={async () => {
+                await handleRegister();
+              }}
+            >
               <Text style={styles.registerButtonText}>Sign up</Text>
             </TouchableOpacity>
 
@@ -53,7 +117,8 @@ const RegisterScreen = () => {
 
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <Text style={styles.bottomLink}>
-                Do you have an account? <Text style={styles.signIn}>Sign in</Text>
+                Do you have an account?{' '}
+                <Text style={styles.signIn}>Sign in</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -173,9 +238,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontWeight: '500',
   },
-
 });
 
 export default RegisterScreen;
-
-
