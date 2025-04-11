@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
@@ -50,6 +49,7 @@ const LoginScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topHalf}>
+
         <Image
           source={require('../../assets/images/logo.png')}
           style={styles.logo}
@@ -77,7 +77,9 @@ const LoginScreen = () => {
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => alert('simple alert')}
+          onPress={async () => {
+            await handleLogin();
+          }}
         >
           <Text style={styles.loginButtonText}>Log in</Text>
         </TouchableOpacity>

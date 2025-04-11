@@ -15,9 +15,8 @@ const CoursesScreen = () => {
       <View style={styles.formContainer}>
         <Text style={styles.title}>Courses</Text>
         <Text style={styles.subtitle}>Select a course to view details</Text>
-
-        {/* Add your course selection logic here */}
       </View>
     </View>
   );
 };
+export default CoursesScreen;
