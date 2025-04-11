@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
@@ -8,17 +15,31 @@ const LoginScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topHalf}>
-        <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={styles.logo}
+        />
       </View>
 
       <View style={styles.formContainer}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Log in to your account</Text>
 
-        <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" />
-        <TextInput placeholder="Contraseña" style={styles.input} secureTextEntry />
+        <TextInput
+          placeholder="Email"
+          style={styles.input}
+          keyboardType="email-address"
+        />
+        <TextInput
+          placeholder="Contraseña"
+          style={styles.input}
+          secureTextEntry
+        />
 
-        <TouchableOpacity style={styles.loginButton} onPress={() => alert('simple alert')}>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => alert('simple alert')}
+        >
           <Text style={styles.loginButtonText}>Log in</Text>
         </TouchableOpacity>
 
@@ -26,7 +47,10 @@ const LoginScreen = () => {
 
         <View style={styles.socialContainer}>
           <TouchableOpacity>
-            <Image source={require('../../assets/images/googlelog.png')} style={styles.socialIcon} />
+            <Image
+              source={require('../../assets/images/googlelog.png')}
+              style={styles.socialIcon}
+            />
           </TouchableOpacity>
           {/* Podés agregar más como este: */}
           {/* <TouchableOpacity>
@@ -129,4 +153,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-
