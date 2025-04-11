@@ -27,7 +27,7 @@ const RegisterScreen = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          first_name: firstName,
+          name: firstName,
           last_name: lastName,
           email,
           password,
@@ -37,11 +37,13 @@ const RegisterScreen = () => {
 
       if (response.ok) {
         console.log('Registration successful:', data);
+        navigation.navigate('Login');
       } else {
         console.error('Registration failed:', data);
       }
     } catch (error) {
-      console.error('Error during registration:', error);
+        console.log('BODY:', await response.json());
+      console.error('Error during registration: de json is ', error);
     }
   };
 
@@ -96,7 +98,7 @@ const RegisterScreen = () => {
               style={styles.registerButton}
               onPress={async () => {
                 await handleRegister();
-                alert('Enviado!');
+
               }}
             >
               <Text style={styles.registerButtonText}>Sign up</Text>
