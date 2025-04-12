@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { jwtDecode } from 'jwt-decode';
+import { Alert } from 'react-native';
+import RegisterErrors from '../Errors/RegisterErrors';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -21,7 +23,47 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [location, setLocation] = useState(null);
 
+  const [errors, setErrors] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+  });
+
   const handleRegister = async () => {
+
+   const newErrors = {};
+
+    // si el nombre tiene menos de 3 letras tiro error
+    if (firstName.length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
+
+    // si el apellido tiene menos de 3 letras tiro eero
+    if (lastName.length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+    // si el mail no formato email tiero error
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    // si la contraseña no tiene al menos 4 caracteres tiero error
+    if (password.length < 4) {
+      newErrors.password = 'Password must be at least 4 characters';
+    }
+
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        console.log('Please fill in all fields');
+        return;
+      }
+
+
+      setErrors({});
+
     try {
       const response = await fetch('http://192.168.0.14:8000/auth/register', {
         method: 'POST',
@@ -46,7 +88,10 @@ const RegisterScreen = () => {
         console.log('Registration successful:', data);
         navigation.navigate('Location', { userId });
       } else {
-        console.error('Registration failed:', data);
+        Alert.alert(
+          'Registration failed',
+          data.detail || 'Something went wrong, please try again.'
+        );
       }
     } catch (error) {
       console.error('Error during registration: de json is ', error);
@@ -75,30 +120,63 @@ const RegisterScreen = () => {
               placeholder="First name"
               style={styles.input}
               value={firstName}
-              onChangeText={setFirstName}
+              onChangeText={(text) => {
+                setFirstName(text);
+                if (text.trim() === '') {
+                  setErrors((prev) => ({ ...prev, firstName: 'First name must be at least 2 characters' }));
+                } else {
+                  setErrors((prev) => ({ ...prev, firstName: '' }));
+                }
+              }}
             />
+            {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
 
             <TextInput
               placeholder="Last name"
               style={styles.input}
               value={lastName}
-              onChangeText={setLastName}
+              onChangeText={(text) => {
+                setLastName(text);
+                if (text.trim() === '') {
+                  setErrors((prev) => ({ ...prev, lastName: 'Last name must be at least 2 characters' }));
+                } else {
+                  setErrors((prev) => ({ ...prev, lastName: '' }));
+                }
+              }}
             />
+            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
 
             <TextInput
               placeholder="Create your password"
               style={styles.input}
               secureTextEntry
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (text.trim() === '') {
+                  setErrors((prev) => ({ ...prev, password: 'Password must be at least 4 characters' }));
+                } else {
+                  setErrors((prev) => ({ ...prev, password: '' }));
+                }
+              }}
             />
+            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
             <TextInput
               placeholder="Email"
               style={styles.input}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (text.trim() === '') {
+                  setErrors((prev) => ({ ...prev, email: 'Email is invalid' }));
+                } else {
+                  setErrors((prev) => ({ ...prev, email: '' }));
+                }
+              }}
             />
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+
 
             <TouchableOpacity
               style={styles.registerButton}
@@ -244,6 +322,12 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontWeight: '500',
   },
+
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginBottom: 10,
+    },
 });
 
 export default RegisterScreen;
