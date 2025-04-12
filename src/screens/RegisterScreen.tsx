@@ -34,11 +34,25 @@ const RegisterScreen = () => {
 
    const newErrors = {};
 
+    // si el nombre tiene menos de 3 letras tiro error
+    if (firstName.length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
 
-    if (!firstName) newErrors.firstName = 'First name is required';
-    if (!lastName) newErrors.lastName = 'Last name is required';
-    if (!email) newErrors.email = 'Email is required';
-    if (!password) newErrors.password = 'Password is required';
+    // si el apellido tiene menos de 3 letras tiro eero
+    if (lastName.length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+    // si el mail no formato email tiero error
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    // si la contraseña no tiene al menos 4 caracteres tiero error
+    if (password.length < 4) {
+      newErrors.password = 'Password must be at least 4 characters';
+    }
 
 
       if (Object.keys(newErrors).length > 0) {
@@ -74,7 +88,10 @@ const RegisterScreen = () => {
         console.log('Registration successful:', data);
         navigation.navigate('Location', { userId });
       } else {
-        console.error('Registration failed:', data);
+        Alert.alert(
+          'Registration failed',
+          data.detail || 'Something went wrong, please try again.'
+        );
       }
     } catch (error) {
       console.error('Error during registration: de json is ', error);
@@ -106,7 +123,7 @@ const RegisterScreen = () => {
               onChangeText={(text) => {
                 setFirstName(text);
                 if (text.trim() === '') {
-                  setErrors((prev) => ({ ...prev, firstName: 'First name is required' }));
+                  setErrors((prev) => ({ ...prev, firstName: 'First name must be at least 2 characters' }));
                 } else {
                   setErrors((prev) => ({ ...prev, firstName: '' }));
                 }
@@ -121,7 +138,7 @@ const RegisterScreen = () => {
               onChangeText={(text) => {
                 setLastName(text);
                 if (text.trim() === '') {
-                  setErrors((prev) => ({ ...prev, lastName: 'Last name is required' }));
+                  setErrors((prev) => ({ ...prev, lastName: 'Last name must be at least 2 characters' }));
                 } else {
                   setErrors((prev) => ({ ...prev, lastName: '' }));
                 }
@@ -137,7 +154,7 @@ const RegisterScreen = () => {
               onChangeText={(text) => {
                 setPassword(text);
                 if (text.trim() === '') {
-                  setErrors((prev) => ({ ...prev, password: 'Password is required' }));
+                  setErrors((prev) => ({ ...prev, password: 'Password must be at least 4 characters' }));
                 } else {
                   setErrors((prev) => ({ ...prev, password: '' }));
                 }
@@ -152,7 +169,7 @@ const RegisterScreen = () => {
               onChangeText={(text) => {
                 setEmail(text);
                 if (text.trim() === '') {
-                  setErrors((prev) => ({ ...prev, email: 'Email is required' }));
+                  setErrors((prev) => ({ ...prev, email: 'Email is invalid' }));
                 } else {
                   setErrors((prev) => ({ ...prev, email: '' }));
                 }
