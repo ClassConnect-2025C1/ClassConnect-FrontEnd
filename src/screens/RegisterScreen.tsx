@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { jwtDecode } from 'jwt-decode';
+import { Alert } from 'react-native';
+import RegisterErrors from '../Errors/RegisterErrors';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -21,7 +23,33 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [location, setLocation] = useState(null);
 
+  const [errors, setErrors] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+  });
+
   const handleRegister = async () => {
+
+   const newErrors = {};
+
+
+    if (!firstName) newErrors.firstName = 'First name is required';
+    if (!lastName) newErrors.lastName = 'Last name is required';
+    if (!email) newErrors.email = 'Email is required';
+    if (!password) newErrors.password = 'Password is required';
+
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        console.log('Please fill in all fields');
+        return;
+      }
+
+
+      setErrors({});
+
     try {
       const response = await fetch('http://192.168.0.14:8000/auth/register', {
         method: 'POST',
@@ -75,30 +103,63 @@ const RegisterScreen = () => {
               placeholder="First name"
               style={styles.input}
               value={firstName}
-              onChangeText={setFirstName}
+              onChangeText={(text) => {
+                setFirstName(text);
+                if (text.trim() === '') {
+                  setErrors((prev) => ({ ...prev, firstName: 'First name is required' }));
+                } else {
+                  setErrors((prev) => ({ ...prev, firstName: '' }));
+                }
+              }}
             />
+            {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
 
             <TextInput
               placeholder="Last name"
               style={styles.input}
               value={lastName}
-              onChangeText={setLastName}
+              onChangeText={(text) => {
+                setLastName(text);
+                if (text.trim() === '') {
+                  setErrors((prev) => ({ ...prev, lastName: 'Last name is required' }));
+                } else {
+                  setErrors((prev) => ({ ...prev, lastName: '' }));
+                }
+              }}
             />
+            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
 
             <TextInput
               placeholder="Create your password"
               style={styles.input}
               secureTextEntry
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (text.trim() === '') {
+                  setErrors((prev) => ({ ...prev, password: 'Password is required' }));
+                } else {
+                  setErrors((prev) => ({ ...prev, password: '' }));
+                }
+              }}
             />
+            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
             <TextInput
               placeholder="Email"
               style={styles.input}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (text.trim() === '') {
+                  setErrors((prev) => ({ ...prev, email: 'Email is required' }));
+                } else {
+                  setErrors((prev) => ({ ...prev, email: '' }));
+                }
+              }}
             />
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+
 
             <TouchableOpacity
               style={styles.registerButton}
@@ -244,6 +305,12 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontWeight: '500',
   },
+
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginBottom: 10,
+    },
 });
 
 export default RegisterScreen;
