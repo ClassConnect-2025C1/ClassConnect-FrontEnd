@@ -43,20 +43,21 @@ const LocationScreen = () => {
       currentLocation.coords.longitude,
     );
   };
-  const updateUserLocation = async (country) => {
-    try {
-      const response = await axios.put(
-        `http://localhost:8000/users/profile/${userId}/location`,
-        { location_data: country },
-      );
-      if (response.status === 200) {
-        console.log('Ubicación actualizada con éxito');
-        navigation.navigate('Profile');
-      }
-    } catch (error) {
-      console.error('Error al actualizar la ubicación:', error);
+const updateUserLocation = async (country) => {
+  try {
+    const response = await axios.put(
+      `http://192.168.0.14:8001/users/profile/${userId}/location`,
+      { location: country },
+    );
+    if (response.status === 200) {
+      console.log('Ubicación actualizada con éxito');
+
     }
-  };
+  } catch (error) {
+    console.error('Error al actualizar la ubicación:', error.response ? error.response.data : error);
+  }
+};
+
 
   return (
     <View style={styles.container}>
