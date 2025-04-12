@@ -31,8 +31,7 @@ const RegisterScreen = () => {
   });
 
   const handleRegister = async () => {
-
-   const newErrors = {};
+    const newErrors = {};
 
     // si el nombre tiene menos de 3 letras tiro error
     if (firstName.length < 2) {
@@ -54,15 +53,13 @@ const RegisterScreen = () => {
       newErrors.password = 'Password must be at least 4 characters';
     }
 
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      console.log('Please fill in all fields');
+      return;
+    }
 
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        console.log('Please fill in all fields');
-        return;
-      }
-
-
-      setErrors({});
+    setErrors({});
 
     try {
       const response = await fetch('http://192.168.0.14:8000/auth/register', {
@@ -90,7 +87,7 @@ const RegisterScreen = () => {
       } else {
         Alert.alert(
           'Registration failed',
-          data.detail || 'Something went wrong, please try again.'
+          data.detail || 'Something went wrong, please try again.',
         );
       }
     } catch (error) {
@@ -123,13 +120,18 @@ const RegisterScreen = () => {
               onChangeText={(text) => {
                 setFirstName(text);
                 if (text.trim() === '') {
-                  setErrors((prev) => ({ ...prev, firstName: 'First name must be at least 2 characters' }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    firstName: 'First name must be at least 2 characters',
+                  }));
                 } else {
                   setErrors((prev) => ({ ...prev, firstName: '' }));
                 }
               }}
             />
-            {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+            {errors.firstName && (
+              <Text style={styles.errorText}>{errors.firstName}</Text>
+            )}
 
             <TextInput
               placeholder="Last name"
@@ -138,13 +140,18 @@ const RegisterScreen = () => {
               onChangeText={(text) => {
                 setLastName(text);
                 if (text.trim() === '') {
-                  setErrors((prev) => ({ ...prev, lastName: 'Last name must be at least 2 characters' }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    lastName: 'Last name must be at least 2 characters',
+                  }));
                 } else {
                   setErrors((prev) => ({ ...prev, lastName: '' }));
                 }
               }}
             />
-            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+            {errors.lastName && (
+              <Text style={styles.errorText}>{errors.lastName}</Text>
+            )}
 
             <TextInput
               placeholder="Create your password"
@@ -154,13 +161,18 @@ const RegisterScreen = () => {
               onChangeText={(text) => {
                 setPassword(text);
                 if (text.trim() === '') {
-                  setErrors((prev) => ({ ...prev, password: 'Password must be at least 4 characters' }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    password: 'Password must be at least 4 characters',
+                  }));
                 } else {
                   setErrors((prev) => ({ ...prev, password: '' }));
                 }
               }}
             />
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            {errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
 
             <TextInput
               placeholder="Email"
@@ -175,8 +187,9 @@ const RegisterScreen = () => {
                 }
               }}
             />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
 
             <TouchableOpacity
               style={styles.registerButton}
@@ -323,11 +336,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-    errorText: {
-        color: 'red',
-        fontSize: 12,
-        marginBottom: 10,
-    },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 10,
+  },
 });
 
 export default RegisterScreen;
