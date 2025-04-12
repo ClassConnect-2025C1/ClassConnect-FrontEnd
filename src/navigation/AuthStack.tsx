@@ -6,6 +6,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import StartScreen from '../screens/StartScreen';
 import CoursesScreen from '../screens/CoursesScreen';
+import LocationScreen from '../screens/LocationScreen';
 const Stack = createNativeStackNavigator();
 
 const AuthStack = () => (
@@ -18,6 +19,7 @@ const AuthStack = () => (
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="Register" component={RegisterScreen} />
     <Stack.Screen name="Courses" component={CoursesScreen} />
+    <Stack.Screen name="Location" component={LocationScreen} />
   </Stack.Navigator>
 );
 

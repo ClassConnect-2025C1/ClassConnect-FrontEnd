@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { jwtDecode } from 'jwt-decode';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -18,6 +19,7 @@ const RegisterScreen = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [location, setLocation] = useState(null);
 
   const handleRegister = async () => {
     try {
@@ -36,13 +38,17 @@ const RegisterScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
+        const token = data.access_token;
+
+        const decoded = jwtDecode(token);
+        const userId = decoded.sub;
+
         console.log('Registration successful:', data);
-        navigation.navigate('Login');
+        navigation.navigate('Location', { userId });
       } else {
         console.error('Registration failed:', data);
       }
     } catch (error) {
-      console.log('BODY:', await response.json());
       console.error('Error during registration: de json is ', error);
     }
   };
