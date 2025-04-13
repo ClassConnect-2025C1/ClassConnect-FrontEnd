@@ -13,7 +13,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { showLoginErrorToast } from '../components/LoginErrors';
 
-
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
@@ -36,7 +35,7 @@ const LoginScreen = () => {
         const data = await response.json();
         console.log('Login successful:', data);
 
-        navigation.navigate('Courses');
+        navigation.navigate('TeacherCourses');
       } else {
         const errorData = await response.json();
         console.error('Login failed:', errorData);
