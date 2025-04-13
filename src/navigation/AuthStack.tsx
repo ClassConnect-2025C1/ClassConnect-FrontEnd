@@ -5,8 +5,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import StartScreen from '../screens/StartScreen';
-import CoursesScreen from '../screens/CoursesScreen';
+import StudentCoursesScreen from '../screens/student/StudentCoursesScreen';
 import LocationScreen from '../screens/LocationScreen';
+import StudentAvailableCoursesScrenn from '../screens/student/StudentAvailableCoursesScrenn';
+import TeacherCoursesScreen from '../screens/teacher/TeacherCoursesScreen';
+import TeacherCreateNewCourse from '../screens/teacher/TeacherCreateNewCourse';
+import ProfileScreen from '../screens/ProfileScreen';
 const Stack = createNativeStackNavigator();
 
 const AuthStack = () => (
@@ -18,8 +22,17 @@ const AuthStack = () => (
     />
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="Register" component={RegisterScreen} />
-    <Stack.Screen name="Courses" component={CoursesScreen} />
+    <Stack.Screen name="StudentCourses" component={ StudentCoursesScreen} />
+    <Stack.Screen name="TeacherCourses" component={TeacherCoursesScreen} />
     <Stack.Screen name="Location" component={LocationScreen} />
+    <Stack.Screen
+      name="AvailableCourses"
+      component={StudentAvailableCoursesScrenn }
+     />
+     <Stack.Screen name ="Profile" component={ProfileScreen} />
+    <Stack.Screen name="CreateNewCourse" component={TeacherCreateNewCourse} />
+
+
   </Stack.Navigator>
 );
 
