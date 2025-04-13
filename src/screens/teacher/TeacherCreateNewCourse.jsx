@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
 
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
@@ -14,14 +19,12 @@ const TeacherCreateNewCourseScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Create New Course</Text>
 
-
       <Text style={styles.label}>Course Name</Text>
       <TextInput
         style={styles.input}
         value={courseName}
         onChangeText={setCourseName}
       />
-
 
       <Text style={styles.label}>Description</Text>
       <TextInput
@@ -31,14 +34,12 @@ const TeacherCreateNewCourseScreen = () => {
         multiline
       />
 
-
       <Text style={styles.label}>Eligibility Criteria</Text>
       <TextInput
         style={styles.input}
         value={eligibilityCriteria}
         onChangeText={setEligibilityCriteria}
       />
-
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.createButton}>
@@ -52,7 +53,6 @@ const TeacherCreateNewCourseScreen = () => {
           <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
       </View>
-
     </View>
   );
 };
@@ -92,14 +92,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   createButton: {
-    backgroundColor: '#a0a0a0',  // Gris más oscuro
+    backgroundColor: '#a0a0a0', // Gris más oscuro
     padding: 14,
     borderRadius: 10,
     flex: 0.48,
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#d0d0d0',  // Gris más claro
+    backgroundColor: '#d0d0d0', // Gris más claro
     padding: 14,
     borderRadius: 10,
     flex: 0.48,

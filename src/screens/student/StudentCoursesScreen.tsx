@@ -20,28 +20,28 @@ const CoursesScreen = () => {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
         <Image
           source={require('../../../assets/images/logo.png')}
           style={styles.icon}
         />
         <Text style={styles.headerTitle}>ClassConnect</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-        <Image
-          source={require('../../../assets/images/profile/profile-icon.jpg')}
-          style={styles.icon}
-        />
+        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+          <Image
+            source={require('../../../assets/images/profile/profile-icon.jpg')}
+            style={styles.icon}
+          />
         </TouchableOpacity>
       </View>
-
 
       <ScrollView contentContainerStyle={styles.courseList}>
         {courses.map((course) => (
           <TouchableOpacity
             key={course.id}
             style={[styles.courseCard, { backgroundColor: course.color }]}
-            onPress={() => console.log(`Pressed ${course.name}`)}
+            onPress={() =>
+              navigation.navigate('TeacherCourseDetail', { course })
+            }
           >
             <Text style={styles.courseText}>{course.name}</Text>
           </TouchableOpacity>
@@ -59,11 +59,20 @@ const CoursesScreen = () => {
         }}
         onPress={() => navigation.navigate('AvailableCourses')}
       >
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>Available courses</Text>
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>
+          Available courses
+        </Text>
       </TouchableOpacity>
 
-
-      <View style={{ height: 1, backgroundColor: '#ccc', opacity: 0.5, marginHorizontal: 20, marginBottom: 5 }} />
+      <View
+        style={{
+          height: 1,
+          backgroundColor: '#ccc',
+          opacity: 0.5,
+          marginHorizontal: 20,
+          marginBottom: 5,
+        }}
+      />
 
       <View
         style={[

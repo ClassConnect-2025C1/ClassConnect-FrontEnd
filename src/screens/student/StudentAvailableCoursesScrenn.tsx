@@ -1,7 +1,12 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
 
 const availableCourses = [
   { id: 1, name: 'Biology' },
@@ -11,13 +16,11 @@ const availableCourses = [
 ];
 
 const AvailableCoursesScreen = () => {
-      const navigation = useNavigation();
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Available Courses</Text>
       <ScrollView contentContainerStyle={styles.courseList}>
-
-
         {availableCourses.map((course) => (
           <TouchableOpacity key={course.id} style={styles.courseCard}>
             <Text style={styles.courseText}>{course.name}</Text>
@@ -31,7 +34,6 @@ const AvailableCoursesScreen = () => {
       >
         <Text style={styles.doneButtonText}>Done</Text>
       </TouchableOpacity>
-
     </View>
   );
 };
