@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
@@ -13,21 +13,59 @@ const LocationScreen = () => {
   const { userId } = route.params;
   const [address, setAddress] = useState(null);
 
+
+    const [permissionRequested, setPermissionRequested] = useState(false);
+    const [permissionGranted, setPermissionGranted] = useState(null);
+
+
+    const handleAccept = async () => {
+      setPermissionRequested(true);
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        setPermissionGranted(true);
+        getLocation();
+      } else {
+        setPermissionGranted(false);
+        alert('Permiso de ubicación no otorgado');
+      }
+    };
+
+
+    const handleCancel = () => {
+      navigation.navigate('Login');
+    };
+
+
   useEffect(() => {
-    getLocation();
   }, []);
 
   const getAddress = async (latitude, longitude) => {
     try {
       const response = await axios.get(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+        `https://nominatim.openstreetmap.org/reverse`,
+        {
+          params: {
+            lat: latitude,
+            lon: longitude,
+            format: 'json',
+          },
+          headers: {
+            'User-Agent': 'ClassConnectApp/1.0 (francisco@example.com)',
+          },
+        }
       );
-      const country = response.data.address?.country;
-      setCountry(country || 'Desconocido');
-      setAddress(country || 'Desconocido');
-      updateUserLocation(country || 'Desconocido');
+
+      const addressData = response.data.address;
+      const country = addressData?.country;
+      const state = addressData?.state;
+
+      const fullAddress = `${country || 'Unknown'}, ${state || 'Unknown'}`;
+      setCountry(country || 'Unknown');
+      setAddress(fullAddress);
+      updateUserLocation(fullAddress);
     } catch (error) {
-      console.error('Error al obtener la dirección:', error);
+      console.error('Error getting address:', error);
+      alert('Could not fetch location. Please try again later.');
     }
   };
 
@@ -60,21 +98,41 @@ const LocationScreen = () => {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Get location</Text>
-      {address ? (
-        <Text style={styles.address}>Country: {address}</Text>
-      ) : (
-        <Text style={styles.loading}>Get location...</Text>
-      )}
-      <Button
-        title="Continuar"
-        onPress={() => navigation.navigate('Login')}
-        color="#4CAF50"
-      />
-    </View>
-  );
+
+return (
+  <View style={styles.container}>
+    {!permissionRequested && (
+      <>
+        <Text style={styles.title}>Do you allow access to your location?</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
+            <Text style={styles.buttonText}>Accept</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    )}
+
+    {permissionRequested && permissionGranted && (
+      <>
+        <Text style={styles.loading}>Getting location...</Text>
+        {address && (
+          <>
+            <Text style={styles.address}>Location: {address}</Text>
+            <Button
+              title="Continue"
+              onPress={() => navigation.navigate('Login')}
+              color="#4CAF50"
+            />
+          </>
+        )}
+      </>
+    )}
+  </View>
+);
+
 };
 
 const styles = StyleSheet.create({
@@ -101,6 +159,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#888',
     marginBottom: 20,
+  },
+
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+    gap: 20,
+  },
+  acceptButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f44336',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 

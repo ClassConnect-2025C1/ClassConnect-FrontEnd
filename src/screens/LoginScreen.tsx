@@ -33,9 +33,14 @@ const LoginScreen = () => {
 
       if (response.ok) {
         const data = await response.json();
+        const userRole = data.user?.role;
         console.log('Login successful:', data);
 
-        navigation.navigate('TeacherCourses');
+        if (userRole === 'teacher') {
+          navigation.navigate('TeacherCourses');
+        } else {
+          navigation.navigate('StudentCourses');
+        }
       } else {
         const errorData = await response.json();
         console.error('Login failed:', errorData);

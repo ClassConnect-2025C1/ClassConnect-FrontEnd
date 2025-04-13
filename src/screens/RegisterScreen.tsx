@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { jwtDecode } from 'jwt-decode';
 import { Alert } from 'react-native';
 import RegisterErrors from '../Errors/RegisterErrors';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -22,6 +23,7 @@ const RegisterScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [location, setLocation] = useState(null);
+  const [selectedRole, setSelectedRole] = useState('');
 
   const [errors, setErrors] = useState({
     firstName: '',
@@ -53,6 +55,11 @@ const RegisterScreen = () => {
       newErrors.password = 'Password must be at least 4 characters';
     }
 
+    if (!selectedRole) {
+      Alert.alert('Please select a role (Student or Teacher)');
+      return;
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       console.log('Please fill in all fields');
@@ -72,6 +79,7 @@ const RegisterScreen = () => {
           last_name: lastName,
           email,
           password,
+          role: selectedRole,
         }),
       });
       const data = await response.json();
@@ -190,6 +198,37 @@ const RegisterScreen = () => {
             {errors.email && (
               <Text style={styles.errorText}>{errors.email}</Text>
             )}
+
+        <View style={styles.roleContainer}>
+          <Text style={styles.roleLabel}>Select your role:</Text>
+
+          <View style={styles.roleOptionsRow}>
+            <TouchableOpacity
+              style={styles.roleOption}
+              onPress={() => setSelectedRole('student')}
+            >
+              <View style={styles.checkbox}>
+                {selectedRole === 'student' && (
+                  <Icon name="check" size={20} color="#4CAF50" />
+                )}
+              </View>
+              <Text style={styles.roleText}>Student</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.roleOption}
+              onPress={() => setSelectedRole('teacher')}
+            >
+              <View style={styles.checkbox}>
+                {selectedRole === 'teacher' && (
+                  <Icon name="check" size={20} color="#4CAF50" />
+                )}
+              </View>
+              <Text style={styles.roleText}>Teacher</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
 
             <TouchableOpacity
               style={styles.registerButton}
@@ -340,6 +379,40 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginBottom: 10,
+  },
+
+  roleOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+
+  roleText: {
+    fontSize: 16,
+    color: '#333',
+  },
+
+  roleOptionsRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 10,
+  },
+
+  roleOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
   },
 });
 

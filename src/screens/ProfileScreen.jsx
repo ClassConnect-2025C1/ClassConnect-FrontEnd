@@ -9,29 +9,31 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-
 const ProfileScreen = () => {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
 
   const [firstName, setFirstName] = useState('Claude');
   const [lastName, setLastName] = useState('Redrum');
   const [email, setEmail] = useState('claudekoo@example.com');
-  const [bio, setBio] = useState('IT Engineering student at Michigan University.');
+  const [bio, setBio] = useState(
+    'IT Engineering student at Michigan University.',
+  );
 
   return (
-
     <View style={styles.container}>
-
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Text style={styles.backButtonText}>Back</Text>
-          </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.backButtonText}>Back</Text>
+      </TouchableOpacity>
 
       <Text style={styles.title}>My Profile</Text>
 
       <View style={styles.imageContainer}>
         <View style={styles.placeholderImage} />
 
-     {/* In the future this text is necesary to search and change de picture */}
+        {/* In the future this text is necesary to search and change de picture */}
         <Text style={styles.changeText}>Change profile picture</Text>
       </View>
 
@@ -64,8 +66,11 @@ const ProfileScreen = () => {
         onChangeText={setBio}
         multiline
       />
-         {/* For the momment this buttom only go back */}
-      <TouchableOpacity style={styles.saveButton} onPress={() => navigation.goBack()}>
+      {/* For the momment this buttom only go back */}
+      <TouchableOpacity
+        style={styles.saveButton}
+        onPress={() => navigation.goBack()}
+      >
         <Text style={styles.saveButtonText}>Save Changes</Text>
       </TouchableOpacity>
     </View>
@@ -128,16 +133,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-    backButtonText: {
-      color: 'white',
-      fontSize: 15,
-    },
-    backButton: {
-      position: 'absolute',
-      top: 43,
-      left: 16,
-      backgroundColor: '#d0d0d0',
-      padding: 5,
-      borderRadius: 10,
-    },
+  backButtonText: {
+    color: 'white',
+    fontSize: 15,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 43,
+    left: 16,
+    backgroundColor: '#d0d0d0',
+    padding: 5,
+    borderRadius: 10,
+  },
 });
