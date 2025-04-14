@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../utils/axiosInstance';
-import { useNavigation } from '@react-navigation/native';  // Usamos useNavigation aquí
+import { useNavigation } from '@react-navigation/native'; // Usamos useNavigation aquí
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false); // Estado de redirección
-  const navigation = useNavigation();  // Usamos navigation aquí dentro del contexto
+  const navigation = useNavigation(); // Usamos navigation aquí dentro del contexto
 
   const checkToken = async () => {
     const token = await AsyncStorage.getItem('token');
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      await api.get('/auth/protected');  // Si no expira el token, estamos bien
+      await api.get('/auth/protected'); // Si no expira el token, estamos bien
       setIsAuthenticated(true);
     } catch (e) {
       setIsAuthenticated(false);
@@ -48,14 +48,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkToken();
 
     const interval = setInterval(() => {
-      checkToken();  // Chequear el token cada cierto tiempo
-    }, 11000);  // Puedes ajustar este intervalo si es necesario
+      checkToken(); // Chequear el token cada cierto tiempo
+    }, 11000); // Puedes ajustar este intervalo si es necesario
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, loading, shouldRedirectToLogin, setShouldRedirectToLogin }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        loading,
+        shouldRedirectToLogin,
+        setShouldRedirectToLogin,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
