@@ -11,8 +11,10 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { showLoginErrorToast } from '../components/LoginErrors';
+import { showLoginErrorToast } from '../Errors/LoginErrors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {jwtDecode} from 'jwt-decode';
+
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -32,19 +34,43 @@ const LoginScreen = () => {
         }),
       });
 
-       const data = await response.json();
+      const data = await response.json();
 
       if (response.ok) {
+        await AsyncStorage.setItem('token', data.access_token);
 
-         await AsyncStorage.setItem('token', data.access_token);
+        const decodedToken: any = jwtDecode(data.access_token);
+        const user_id = decodedToken.sub;
 
-        const userRole = data.user?.role;
-        console.log('Login successful:', data);
+        try {
 
-        if (userRole === 'teacher') {
-          navigation.navigate('TeacherCourses');
-        } else {
-          navigation.navigate('StudentCourses');
+          const profileResponse = await fetch(
+            `http://192.168.0.14:8001/users/profile/${user_id}`,
+            {
+              method: 'GET',
+              headers: {
+
+              },
+            },
+          );
+
+          if (!profileResponse.ok) {
+            showLoginErrorToast();
+            return;
+          }
+
+          const userProfile = await profileResponse.json();
+          const userRole = userProfile.role;
+          console.log('User profile:', userProfile);
+
+          if (userRole === 'teacher') {
+            navigation.navigate('TeacherCourses');
+          } else {
+            navigation.navigate('StudentCourses');
+          }
+        } catch (profileError) {
+          console.error('Error fetching profile:', profileError);
+          alert('An error occurred while fetching user profile.');
         }
       } else {
         const errorData = await response.json();
@@ -56,7 +82,6 @@ const LoginScreen = () => {
       alert('An error occurred. Please try again later.');
     }
   };
-
   return (
     <View style={styles.container}>
       <View style={styles.topHalf}>

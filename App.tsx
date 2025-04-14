@@ -10,7 +10,7 @@ const AppContent = () => {
 
   useEffect(() => {
     if (shouldRedirectToLogin) {
-     navigation.navigate('Login');
+      navigation.navigate('Login');
     }
   }, [shouldRedirectToLogin, navigation]);
 

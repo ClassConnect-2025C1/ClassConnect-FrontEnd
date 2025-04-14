@@ -13,31 +13,26 @@ const LocationScreen = () => {
   const { userId } = route.params;
   const [address, setAddress] = useState(null);
 
+  const [permissionRequested, setPermissionRequested] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(null);
 
-    const [permissionRequested, setPermissionRequested] = useState(false);
-    const [permissionGranted, setPermissionGranted] = useState(null);
+  const handleAccept = async () => {
+    setPermissionRequested(true);
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status === 'granted') {
+      setPermissionGranted(true);
+      getLocation();
+    } else {
+      setPermissionGranted(false);
+      alert('Permiso de ubicación no otorgado');
+    }
+  };
 
+  const handleCancel = () => {
+    navigation.navigate('Login');
+  };
 
-    const handleAccept = async () => {
-      setPermissionRequested(true);
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        setPermissionGranted(true);
-        getLocation();
-      } else {
-        setPermissionGranted(false);
-        alert('Permiso de ubicación no otorgado');
-      }
-    };
-
-
-    const handleCancel = () => {
-      navigation.navigate('Login');
-    };
-
-
-  useEffect(() => {
-  }, []);
+  useEffect(() => {}, []);
 
   const getAddress = async (latitude, longitude) => {
     try {
@@ -52,7 +47,7 @@ const LocationScreen = () => {
           headers: {
             'User-Agent': 'ClassConnectApp/1.0 (francisco@example.com)',
           },
-        }
+        },
       );
 
       const addressData = response.data.address;
@@ -98,41 +93,47 @@ const LocationScreen = () => {
     }
   };
 
+  return (
+    <View style={styles.container}>
+      {!permissionRequested && (
+        <>
+          <Text style={styles.title}>
+            Do you allow access to your location?
+          </Text>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.acceptButton}
+              onPress={handleAccept}
+            >
+              <Text style={styles.buttonText}>Accept</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
 
-return (
-  <View style={styles.container}>
-    {!permissionRequested && (
-      <>
-        <Text style={styles.title}>Do you allow access to your location?</Text>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
-            <Text style={styles.buttonText}>Accept</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </>
-    )}
-
-    {permissionRequested && permissionGranted && (
-      <>
-        <Text style={styles.loading}>Getting location...</Text>
-        {address && (
-          <>
-            <Text style={styles.address}>Location: {address}</Text>
-            <Button
-              title="Continue"
-              onPress={() => navigation.navigate('Login')}
-              color="#4CAF50"
-            />
-          </>
-        )}
-      </>
-    )}
-  </View>
-);
-
+      {permissionRequested && permissionGranted && (
+        <>
+          <Text style={styles.loading}>Getting location...</Text>
+          {address && (
+            <>
+              <Text style={styles.address}>Location: {address}</Text>
+              <Button
+                title="Continue"
+                onPress={() => navigation.navigate('Login')}
+                color="#4CAF50"
+              />
+            </>
+          )}
+        </>
+      )}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({

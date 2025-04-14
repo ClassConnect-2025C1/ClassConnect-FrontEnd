@@ -199,36 +199,35 @@ const RegisterScreen = () => {
               <Text style={styles.errorText}>{errors.email}</Text>
             )}
 
-        <View style={styles.roleContainer}>
-          <Text style={styles.roleLabel}>Select your role:</Text>
+            <View style={styles.roleContainer}>
+              <Text style={styles.roleLabel}>Select your role:</Text>
 
-          <View style={styles.roleOptionsRow}>
-            <TouchableOpacity
-              style={styles.roleOption}
-              onPress={() => setSelectedRole('student')}
-            >
-              <View style={styles.checkbox}>
-                {selectedRole === 'student' && (
-                  <Icon name="check" size={20} color="#4CAF50" />
-                )}
+              <View style={styles.roleOptionsRow}>
+                <TouchableOpacity
+                  style={styles.roleOption}
+                  onPress={() => setSelectedRole('student')}
+                >
+                  <View style={styles.checkbox}>
+                    {selectedRole === 'student' && (
+                      <Icon name="check" size={20} color="#4CAF50" />
+                    )}
+                  </View>
+                  <Text style={styles.roleText}>Student</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.roleOption}
+                  onPress={() => setSelectedRole('teacher')}
+                >
+                  <View style={styles.checkbox}>
+                    {selectedRole === 'teacher' && (
+                      <Icon name="check" size={20} color="#4CAF50" />
+                    )}
+                  </View>
+                  <Text style={styles.roleText}>Teacher</Text>
+                </TouchableOpacity>
               </View>
-              <Text style={styles.roleText}>Student</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.roleOption}
-              onPress={() => setSelectedRole('teacher')}
-            >
-              <View style={styles.checkbox}>
-                {selectedRole === 'teacher' && (
-                  <Icon name="check" size={20} color="#4CAF50" />
-                )}
-              </View>
-              <Text style={styles.roleText}>Teacher</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
+            </View>
 
             <TouchableOpacity
               style={styles.registerButton}
