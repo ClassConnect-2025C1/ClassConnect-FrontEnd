@@ -1,5 +1,3 @@
-// Define navigation with screens
-// This not stay in normal react xd
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';

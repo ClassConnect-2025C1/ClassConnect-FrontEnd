@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { showLoginErrorToast } from '../components/LoginErrors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -31,8 +32,12 @@ const LoginScreen = () => {
         }),
       });
 
+       const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
+
+         await AsyncStorage.setItem('token', data.access_token);
+
         const userRole = data.user?.role;
         console.log('Login successful:', data);
 
