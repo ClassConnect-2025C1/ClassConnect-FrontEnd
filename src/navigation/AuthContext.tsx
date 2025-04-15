@@ -1,27 +1,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../utils/axiosInstance';
-import { useNavigation } from '@react-navigation/native'; // Usamos useNavigation aquí
+import { useNavigation } from '@react-navigation/native';
 
 type AuthContextType = {
   isAuthenticated: boolean;
   loading: boolean;
-  shouldRedirectToLogin: boolean; // Agregamos este estado
-  setShouldRedirectToLogin: React.Dispatch<React.SetStateAction<boolean>>; // Función para actualizar el estado
+  shouldRedirectToLogin: boolean;
+  setShouldRedirectToLogin: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   loading: true,
-  shouldRedirectToLogin: false, // Inicializamos el estado
+  shouldRedirectToLogin: false,
   setShouldRedirectToLogin: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false); // Estado de redirección
-  const navigation = useNavigation(); // Usamos navigation aquí dentro del contexto
+  const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false);
+  const navigation = useNavigation();
 
   const checkToken = async () => {
     const token = await AsyncStorage.getItem('token');
@@ -33,23 +33,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      await api.get('/auth/protected'); // Si no expira el token, estamos bien
+      // Realizamos una llamada a una ruta protegida para verificar la validez del token
+      await api.get('/auth/protected');
       setIsAuthenticated(true);
     } catch (e) {
       setIsAuthenticated(false);
       await AsyncStorage.removeItem('token');
-      setShouldRedirectToLogin(true); // Marcamos que necesitamos redirigir
+      setShouldRedirectToLogin(true); // Establecemos la necesidad de redirigir al login
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Al montar el componente, chequeamos si el token es válido
     checkToken();
 
+    // Usamos un intervalo para revisar cada 10 segundos si el token sigue siendo válido
     const interval = setInterval(() => {
-      checkToken(); // Chequear el token cada cierto tiempo
-    }, 11000); // Puedes ajustar este intervalo si es necesario
+      checkToken();
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
@@ -69,3 +72,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
