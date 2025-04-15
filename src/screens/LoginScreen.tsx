@@ -14,9 +14,12 @@ import { useNavigation } from '@react-navigation/native';
 import { showLoginErrorToast } from '../Errors/LoginErrors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {jwtDecode} from 'jwt-decode';
-
-
+import GoogleLogin from '../components/GoogleAuth';
+    import * as AuthSession from 'expo-auth-session';
 const LoginScreen = () => {
+
+
+  console.log("Mi ury essss:",AuthSession.makeRedirectUri({ useProxy: true }));
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -121,15 +124,10 @@ const LoginScreen = () => {
 
         <Text style={styles.orText}>Or log in with</Text>
 
-        <View style={styles.socialContainer}>
-          <TouchableOpacity>
-            <Image
-              source={require('../../assets/images/googlelog.png')}
-              style={styles.socialIcon}
-            />
-          </TouchableOpacity>
-        </View>
-
+             <View style={styles.socialContainer}>
+                  {/* Aquí se ejecuta GoogleLogin cuando el usuario presiona la imagen de Google */}
+                  <GoogleLogin />
+                </View>
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={styles.bottomLink}>
             Don’t have an account? <Text style={styles.signUp}>Sign up</Text>
@@ -151,6 +149,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+    socialContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginBottom: 20,
+    },
+
   logo: {
     width: 160,
     height: 160,
