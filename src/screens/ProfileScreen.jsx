@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -19,14 +20,31 @@ const ProfileScreen = () => {
     'IT Engineering student at Michigan University.',
   );
 
+
+      const handleLogout = async () => {
+        try {
+          await AsyncStorage.removeItem('token');
+          navigation.navigate('Login');
+        } catch (error) {
+          console.error('Error al cerrar sesión:', error);
+        }
+      };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
+
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
+
+       <View style={styles.headerContainer}>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
 
       <Text style={styles.title}>My Profile</Text>
 
@@ -85,6 +103,16 @@ const styles = StyleSheet.create({
     padding: 40,
     backgroundColor: '#fff',
   },
+
+    logoutButton: {
+      padding: 10,
+         alignItems: 'center',
+    },
+    logoutButtonText: {
+      fontSize: 16,
+      color: 'red',
+    },
+
   title: {
     alignSelf: 'center',
     fontSize: 20,
