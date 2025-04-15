@@ -14,7 +14,8 @@ const GoogleLogin = () => {
   const navigation = useNavigation();
   const [request, response, promptAsync] = Google.useAuthRequest({
    webClientId: '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com',
-    expoClientId: 'localhost:8081',
+    expoClientId: '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com',
+    androidClientId: '1050877364267-q1t9iqmr18b39ggofpl4dmv3s72k20b4.apps.googleusercontent.com',
    redirectUri: AuthSession.makeRedirectUri({
      useProxy: true,
    }),
