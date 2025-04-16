@@ -13,20 +13,17 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { showLoginErrorToast } from '../Errors/LoginErrors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import GoogleLogin from '../components/GoogleAuth';
-    import * as AuthSession from 'expo-auth-session';
+import * as AuthSession from 'expo-auth-session';
 const LoginScreen = () => {
-
-
-  console.log("Mi ury essss:",AuthSession.makeRedirectUri({ useProxy: true }));
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://192.168.0.14:8000/auth/login', {
+      const response = await fetch('http://0.0.0.0:7999/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,14 +43,11 @@ const LoginScreen = () => {
         const user_id = decodedToken.sub;
 
         try {
-
           const profileResponse = await fetch(
-            `http://192.168.0.14:8001/users/profile/${user_id}`,
+            `http://0.0.0.0:7999/api/users/profile/${user_id}`,
             {
               method: 'GET',
-              headers: {
-
-              },
+              headers: {},
             },
           );
 
@@ -124,10 +118,10 @@ const LoginScreen = () => {
 
         <Text style={styles.orText}>Or log in with</Text>
 
-             <View style={styles.socialContainer}>
-                  {/* Aquí se ejecuta GoogleLogin cuando el usuario presiona la imagen de Google */}
-                  <GoogleLogin />
-                </View>
+        <View style={styles.socialContainer}>
+          {/* Aquí se ejecuta GoogleLogin cuando el usuario presiona la imagen de Google */}
+          <GoogleLogin />
+        </View>
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={styles.bottomLink}>
             Don’t have an account? <Text style={styles.signUp}>Sign up</Text>
@@ -149,11 +143,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-    socialContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      marginBottom: 20,
-    },
+  socialContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
 
   logo: {
     width: 160,

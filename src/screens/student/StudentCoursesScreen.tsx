@@ -1,4 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
+import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   Text,
@@ -10,13 +12,44 @@ import {
 
 const CoursesScreen = () => {
   const navigation = useNavigation();
+  const darkColors = ['#1e1e1e', '#2c2c2c', '#3a3a3a', '#121212', '#242424'];
 
-  const courses = [
-    { id: 1, name: 'Math', color: '#2E86DE' },
-    { id: 2, name: 'Science', color: '#45A29E' },
-    { id: 3, name: 'History', color: '#F39C12' },
-    { id: 4, name: 'Art', color: '#E74C3C' },
-  ];
+  const [courses, setCourses] = useState<Course[]>([]);
+
+  useEffect(() => {
+    const fetchUserCourses = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const response = await fetch(`http://0.0.0.0:7999/api/courses/`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const text = await response.text();
+
+          try {
+            const json = JSON.parse(text);
+            if (Array.isArray(json.data)) {
+              setCourses(json.data);
+            } else {
+              console.error('La respuesta no es un array:', json);
+              setCourses([]);
+            }
+          } catch (e) {
+            console.error('Respuesta no es JSON válido:', text);
+            setCourses([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error al obtener los cursos del usuario:', error);
+      }
+    };
+
+    fetchUserCourses();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -35,15 +68,18 @@ const CoursesScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.courseList}>
-        {courses.map((course) => (
+        {courses.map((course, index) => (
           <TouchableOpacity
             key={course.id}
-            style={[styles.courseCard, { backgroundColor: course.color }]}
+            style={[
+              styles.courseCard,
+              { backgroundColor: darkColors[index % darkColors.length] },
+            ]}
             onPress={() =>
               navigation.navigate('TeacherCourseDetail', { course })
             }
           >
-            <Text style={styles.courseText}>{course.name}</Text>
+            <Text style={styles.courseText}>{course.title}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 
 const api = axios.create({
-  baseURL: 'http://192.168.0.14:8000',
+  baseURL: 'http://0.0.0.0:7999/api',
 });
 
 api.interceptors.request.use(
@@ -27,7 +27,6 @@ api.interceptors.response.use(
     ) {
       await AsyncStorage.removeItem('token');
       Alert.alert('Sesión expirada', 'Inicia sesión nuevamente');
-
     }
     return Promise.reject(error);
   },

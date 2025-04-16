@@ -2,6 +2,7 @@
   "expo": {
     "name": "ClassConnect-App",
     "slug": "ClassConnect-App",
+    "scheme": "classconnect",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

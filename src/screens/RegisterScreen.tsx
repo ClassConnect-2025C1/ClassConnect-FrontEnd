@@ -69,7 +69,7 @@ const RegisterScreen = () => {
     setErrors({});
 
     try {
-      const response = await fetch('http://192.168.0.14:8000/auth/register', {
+      const response = await fetch('http://0.0.0.0:7999/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

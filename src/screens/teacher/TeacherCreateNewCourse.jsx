@@ -6,25 +6,57 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
 
-  const [courseName, setCourseName] = useState('');
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eligibilityCriteria, setEligibilityCriteria] = useState('');
+  const [capacity, setCapacity] = useState('');
+
+  const handleCreateCourse = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+
+      const response = await fetch('http://0.0.0.0:7999/api/courses/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          eligibility_criteria: eligibilityCriteria,
+          capacity: parseInt(capacity),
+          created_by: 'teacher', // Assuming 'teacher' is the role
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Error creating course:', errorData);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Curso creado exitosamente:', data);
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error al crear el curso:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create New Course</Text>
 
       <Text style={styles.label}>Course Name</Text>
-      <TextInput
-        style={styles.input}
-        value={courseName}
-        onChangeText={setCourseName}
-      />
+      <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
       <Text style={styles.label}>Description</Text>
       <TextInput
@@ -41,8 +73,19 @@ const TeacherCreateNewCourseScreen = () => {
         onChangeText={setEligibilityCriteria}
       />
 
+      <Text style={styles.label}>Capacity</Text>
+      <TextInput
+        style={styles.input}
+        value={capacity}
+        onChangeText={setCapacity}
+        keyboardType="numeric"
+      />
+
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.createButton}>
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={handleCreateCourse}
+        >
           <Text style={styles.buttonText}>Create</Text>
         </TouchableOpacity>
 
@@ -92,14 +135,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   createButton: {
-    backgroundColor: '#a0a0a0', // Gris más oscuro
+    backgroundColor: '#333',
     padding: 14,
     borderRadius: 10,
     flex: 0.48,
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#d0d0d0', // Gris más claro
+    backgroundColor: '#555',
     padding: 14,
     borderRadius: 10,
     flex: 0.48,
