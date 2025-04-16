@@ -89,13 +89,6 @@ export default function CourseDetail({ route }) {
       {selectedOption === 'resources' && (
         <Text style={{ textAlign: 'center' }}>Resource list goes here</Text>
       )}
-
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.createButtonText}>Back</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }

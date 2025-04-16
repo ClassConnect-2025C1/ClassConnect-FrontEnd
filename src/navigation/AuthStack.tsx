@@ -13,6 +13,7 @@ import StudentCourseDetail from '../screens/student/StudentCourseDetail';
 import TeacherCoursesScreen from '../screens/teacher/TeacherCoursesScreen';
 import TeacherCreateNewCourse from '../screens/teacher/TeacherCreateNewCourse';
 import TeacherCoursesDetail from '../screens/teacher/TeacherCoursesDetail';
+import TeacherEditCourseDetail from '../screens/teacher/TeacherEditCourseDetail';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,6 +39,10 @@ const AuthStack = () => (
     <Stack.Screen name="TeacherCourses" component={TeacherCoursesScreen} />
     <Stack.Screen name="CreateNewCourse" component={TeacherCreateNewCourse} />
     <Stack.Screen name="TeacherCourseDetail" component={TeacherCoursesDetail} />
+    <Stack.Screen
+      name="TeacherEditCourseDetail"
+      component={TeacherEditCourseDetail}
+    />
   </Stack.Navigator>
 );
 

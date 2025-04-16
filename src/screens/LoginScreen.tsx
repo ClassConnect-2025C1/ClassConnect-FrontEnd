@@ -16,29 +16,41 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import GoogleLogin from '../components/GoogleAuth';
 import * as AuthSession from 'expo-auth-session';
+
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
   const handleLogin = async () => {
+    setEmailError('');
+    setPasswordError('');
+    let valid = true;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Email is invalid');
+      valid = false;
+    }
+
+    if (!valid) return;
+
     try {
       const response = await fetch('http://0.0.0.0:7999/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         await AsyncStorage.setItem('token', data.access_token);
-
         const decodedToken: any = jwtDecode(data.access_token);
         const user_id = decodedToken.sub;
 
@@ -58,7 +70,6 @@ const LoginScreen = () => {
 
           const userProfile = await profileResponse.json();
           const userRole = userProfile.role;
-          console.log('User profile:', userProfile);
 
           if (userRole === 'teacher') {
             navigation.navigate('TeacherCourses');
@@ -70,9 +81,14 @@ const LoginScreen = () => {
           alert('An error occurred while fetching user profile.');
         }
       } else {
-        const errorData = await response.json();
-        console.error('Login failed:', errorData);
-        alert('Login failed. Please check your credentials.');
+        console.log('la data detail', data.detail);
+        if (data.detail === 'Invalid Email') {
+          setEmailError('Invalid email');
+        } else if (data.detail === 'Invalid password') {
+          setPasswordError('Invalid password');
+        } else {
+          alert('Login failed. Please check your credentials.');
+        }
       }
     } catch (error) {
       console.error('Error during login:', error);
@@ -96,16 +112,26 @@ const LoginScreen = () => {
           placeholder="Email"
           style={styles.input}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            setEmailError('');
+          }}
         />
+        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
         <TextInput
-          placeholder="password"
+          placeholder="Password"
           style={styles.input}
           secureTextEntry
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(text) => {
+            setPassword(text);
+            setPasswordError('');
+          }}
         />
+        {passwordError ? (
+          <Text style={styles.errorText}>{passwordError}</Text>
+        ) : null}
 
         <TouchableOpacity
           style={styles.loginButton}
@@ -215,6 +241,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 15,
   },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+
   signUp: {
     fontWeight: 'bold',
     color: '#4CAF50',

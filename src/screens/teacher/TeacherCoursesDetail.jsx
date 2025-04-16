@@ -104,6 +104,15 @@ export default function TeacherCourseDetail({ route }) {
 
       <TouchableOpacity
         style={styles.createButton}
+        onPress={() =>
+          navigation.navigate('TeacherEditCourseDetail', { course })
+        }
+      >
+        <Text style={styles.createButtonText}>Edit Course</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.createButton}
         onPress={() => console.log('Create assignment pressed')}
       >
         <Text style={styles.createButtonText}>Create Assignment</Text>

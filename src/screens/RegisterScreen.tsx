@@ -33,36 +33,33 @@ const RegisterScreen = () => {
   });
 
   const handleRegister = async () => {
-    const newErrors = {};
+    const newErrors: any = {};
 
-    // si el nombre tiene menos de 3 letras tiro error
+    // Validaciones
     if (firstName.length < 2) {
       newErrors.firstName = 'First name must be at least 2 characters';
     }
 
-    // si el apellido tiene menos de 3 letras tiro eero
     if (lastName.length < 2) {
       newErrors.lastName = 'Last name must be at least 2 characters';
     }
-    // si el mail no formato email tiero error
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       newErrors.email = 'Email is invalid';
     }
 
-    // si la contraseña no tiene al menos 4 caracteres tiero error
     if (password.length < 4) {
       newErrors.password = 'Password must be at least 4 characters';
     }
 
     if (!selectedRole) {
-      Alert.alert('Please select a role (Student or Teacher)');
-      return;
+      newErrors.role = 'Please select a role (Student or Teacher)';
     }
 
+    // Si hay errores, mostrar los mensajes
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      console.log('Please fill in all fields');
       return;
     }
 
@@ -86,10 +83,8 @@ const RegisterScreen = () => {
 
       if (response.ok) {
         const token = data.access_token;
-
         const decoded = jwtDecode(token);
         const userId = decoded.sub;
-
         console.log('Registration successful:', data);
         navigation.navigate('Location', { userId });
       } else {
@@ -99,10 +94,11 @@ const RegisterScreen = () => {
         );
       }
     } catch (error) {
-      console.error('Error during registration: de json is ', error);
+      console.error('Error during registration:', error);
     }
   };
 
+  // En el JSX, asegúrate de que los errores se muestren si existen
   return (
     <View style={styles.container}>
       <View style={styles.topHalf}>
@@ -228,6 +224,7 @@ const RegisterScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
+            {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
 
             <TouchableOpacity
               style={styles.registerButton}
