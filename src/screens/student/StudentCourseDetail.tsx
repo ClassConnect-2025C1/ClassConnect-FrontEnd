@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 export default function CourseDetail({ route }) {
@@ -76,7 +82,6 @@ export default function CourseDetail({ route }) {
           </Text>
         </TouchableOpacity>
       </View>
-
 
       {selectedOption === 'assignments' && (
         <Text style={{ textAlign: 'center' }}>Assignment list goes here</Text>
@@ -168,4 +173,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

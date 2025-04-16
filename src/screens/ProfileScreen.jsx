@@ -10,6 +10,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigation } from '@react-navigation/native';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -47,7 +48,7 @@ const ProfileScreen = () => {
             setLastName(userProfile.last_name || 'No Last Name');
             setEmail(userProfile.email || 'No Email');
             setBio(userProfile.bio || '');
-            setUserImage(userProfile.image || null);
+            setUserImage(userProfile.photo || null);
           } else {
             setFirstName('No Name');
             setLastName('No Last Name');
@@ -73,11 +74,27 @@ const ProfileScreen = () => {
     }
   };
 
+  const handleSelectImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 0.5,
+    });
+
+    if (!result.didCancel && result.assets) {
+      setUserImage(result.assets[0].uri);
+    }
+  };
+
   const handleSaveChanges = async () => {
     if (isLoading) return;
 
-    // Validar que los campos no estén vacíos y tengan al menos 2 caracteres
-    if (!firstName || !lastName || firstName.length < 2 || lastName.length < 2) {
+
+    if (
+      !firstName ||
+      !lastName ||
+      firstName.length < 2 ||
+      lastName.length < 2
+    ) {
       alert('Please fill in all fields with at least 2 characters');
       return;
     }
@@ -101,8 +118,9 @@ const ProfileScreen = () => {
             body: JSON.stringify({
               name: firstName,
               last_name: lastName,
-              email: email, // No se puede cambiar el email
+              email: email, 
               bio: bio,
+              photo: userImage,
             }),
           },
         );
@@ -140,19 +158,23 @@ const ProfileScreen = () => {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-
       <Text style={styles.title}>My Profile</Text>
 
-      <View style={styles.imageContainer}>
-        {userImage ? (
-          <Image source={{ uri: userImage }} style={styles.profileImage} />
-        ) : (
-          <View style={styles.placeholderImage}>
-            <Text>No Image</Text>
-          </View>
-        )}
-        <Text style={styles.changeText}>Change profile picture</Text>
-      </View>
+      <TouchableOpacity onPress={handleSelectImage}>
+        <View style={styles.imageContainer}>
+          {userImage ? (
+            <Image
+              source={{ uri: userImage }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <View style={styles.placeholderImage}>
+              <Text>No Image</Text>
+            </View>
+          )}
+          <Text style={styles.changeText}>Change profile picture</Text>
+        </View>
+      </TouchableOpacity>
 
       <Text style={styles.label}>First Name</Text>
       <TextInput
@@ -172,7 +194,7 @@ const ProfileScreen = () => {
       <TextInput
         style={[styles.input, styles.readOnlyInput]}
         value={email}
-        editable={false} // Deshabilita la edición del campo de email
+        editable={false}
       />
 
       <Text style={styles.label}>Bio</Text>
@@ -283,6 +305,22 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 10,
   },
+
+  imageButton: {
+    marginTop: 10,
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+
   readOnlyInput: {
     backgroundColor: '#f0f0f0',
   },
