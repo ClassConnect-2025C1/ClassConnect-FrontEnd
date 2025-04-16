@@ -17,39 +17,42 @@ const TeacherCreateNewCourseScreen = () => {
   const [eligibilityCriteria, setEligibilityCriteria] = useState('');
   const [capacity, setCapacity] = useState('');
 
-  const handleCreateCourse = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) throw new Error('No token found');
+ const handleCreateCourse = async () => {
+   try {
+     const token = await AsyncStorage.getItem('token');
+     if (!token) throw new Error('No token found');
 
-      const response = await fetch('http://0.0.0.0:7999/api/courses/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title,
-          description,
-          eligibility_criteria: eligibilityCriteria,
-          capacity: parseInt(capacity),
-          created_by: 'teacher',
-        }),
-      });
+     const response = await fetch('http://0.0.0.0:7999/api/courses/', {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/json',
+         Authorization: `Bearer ${token}`,
+       },
+       body: JSON.stringify({
+         title,
+         description,
+         eligibility_criteria: eligibilityCriteria,
+         capacity: parseInt(capacity),
+         created_by: 'teacher',
+       }),
+     });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Error creating course:', errorData);
-        return;
-      }
+     if (!response.ok) {
+       const errorData = await response.text();
+       console.error('Error creating course:', errorData);
+       return;
+     }
 
-      const data = await response.json();
-      console.log('Curso creado exitosamente:', data);
-      navigation.goBack();
-    } catch (error) {
-      console.error('Error al crear el curso:', error);
-    }
-  };
+     const data = await response.json();
+     console.log('Curso creado exitosamente:', data);
+
+
+     navigation.navigate('TeacherCourses', { newCourse: data });
+   } catch (error) {
+     console.error('Error al crear el curso:', error);
+   }
+ };
+
 
   return (
     <View style={styles.container}>

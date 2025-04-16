@@ -1,4 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
+import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   Text,
@@ -8,15 +10,65 @@ import {
   Image,
 } from 'react-native';
 
-const CoursesScreen = () => {
+const CoursesScreen = ({ route }) => {
   const navigation = useNavigation();
 
-  const courses = [
-    { id: 1, name: 'Math', color: '#2E86DE' },
-    { id: 2, name: 'Science', color: '#45A29E' },
-    { id: 3, name: 'History', color: '#F39C12' },
-    { id: 4, name: 'Art', color: '#E74C3C' },
+  const cardColors = [
+    '#6C5CE7',
+    '#00B894',
+    '#0984E3',
+    '#E17055',
+    '#FD79A8',
+    '#FDCB6E',
+    '#74B9FF',
+    '#55EFC4',
+    '#FAB1A0',
   ];
+
+  const [courses, setCourses] = useState<Course[]>([]);
+
+  // Use effect para cargar los cursos al inicio
+  useEffect(() => {
+    const fetchUserCourses = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const response = await fetch(`http://0.0.0.0:7999/api/courses/`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const text = await response.text();
+
+          try {
+            const json = JSON.parse(text);
+            if (Array.isArray(json.data)) {
+              setCourses(json.data);
+            } else {
+              console.error('La respuesta no es un array:', json);
+              setCourses([]);
+            }
+          } catch (e) {
+            console.error('Respuesta no es JSON válido:', text);
+            setCourses([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error al obtener los cursos del usuario:', error);
+      }
+    };
+
+    fetchUserCourses();
+  }, []);
+
+  // Agregar el nuevo curso si llega desde la pantalla de creación
+  useEffect(() => {
+    if (route.params?.newCourse) {
+      setCourses((prevCourses) => [...prevCourses, route.params.newCourse]);
+    }
+  }, [route.params?.newCourse]);
 
   return (
     <View style={styles.container}>
@@ -34,17 +86,19 @@ const CoursesScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Courses */}
       <ScrollView contentContainerStyle={styles.courseList}>
-        {courses.map((course) => (
+        {courses.map((course, index) => (
           <TouchableOpacity
             key={course.id}
-            style={[styles.courseCard, { backgroundColor: course.color }]}
+            style={[
+              styles.courseCard,
+              { backgroundColor: cardColors[index % cardColors.length] },
+            ]}
             onPress={() =>
               navigation.navigate('TeacherCourseDetail', { course })
             }
           >
-            <Text style={styles.courseText}>{course.name}</Text>
+            <Text style={styles.courseText}>{course.title}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -74,47 +128,6 @@ const CoursesScreen = () => {
           marginBottom: 5,
         }}
       />
-
-      <View
-        style={[
-          styles.bottomBar,
-          {
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.iconContainer}
-          onPress={() => console.log('Icon 1')}
-        >
-          <Image
-            source={require('../../../assets/images/courses/layers.png')}
-            style={styles.icon}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.iconContainer}
-          onPress={() => console.log('Icon 2')}
-        >
-          <Image
-            source={require('../../../assets/images/courses/imbox.png')}
-            style={styles.icon}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.iconContainer}
-          onPress={() => console.log('Icon 3')}
-        >
-          <Image
-            source={require('../../../assets/images/courses/settings.png')}
-            style={styles.icon}
-          />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
