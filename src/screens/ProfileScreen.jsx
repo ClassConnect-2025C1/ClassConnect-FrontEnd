@@ -76,8 +76,9 @@ const ProfileScreen = () => {
   const handleSaveChanges = async () => {
     if (isLoading) return;
 
-    if (!firstName || !lastName || !email) {
-      alert('Please fill in all fields');
+    // Validar que los campos no estén vacíos y tengan al menos 2 caracteres
+    if (!firstName || !lastName || firstName.length < 2 || lastName.length < 2) {
+      alert('Please fill in all fields with at least 2 characters');
       return;
     }
 
@@ -93,11 +94,15 @@ const ProfileScreen = () => {
           `http://0.0.0.0:7999/api/users/profile/${userId}`,
           {
             method: 'PATCH',
-            headers: {},
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({
               name: firstName,
               last_name: lastName,
-              email: email,
+              email: email, // No se puede cambiar el email
+              bio: bio,
             }),
           },
         );
@@ -106,16 +111,16 @@ const ProfileScreen = () => {
 
         if (response.ok) {
           console.log('Perfil actualizado con éxito');
-          alert('Success', 'Profile updated successfully!');
+          alert('Profile updated successfully!');
           navigation.goBack();
         } else {
           console.error('Error al actualizar el perfil:', result);
-          alert('Hubo un error al actualizar el perfil');
+          alert('There was an error updating the profile');
         }
       }
     } catch (error) {
       console.error('Error al guardar los cambios:', error);
-      alert('Hubo un error al guardar los cambios');
+      alert('There was an error saving the changes');
     } finally {
       setIsLoading(false);
     }
@@ -165,10 +170,9 @@ const ProfileScreen = () => {
 
       <Text style={styles.label}>Email</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, styles.readOnlyInput]}
         value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
+        editable={false} // Deshabilita la edición del campo de email
       />
 
       <Text style={styles.label}>Bio</Text>
@@ -278,6 +282,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#d0d0d0',
     padding: 5,
     borderRadius: 10,
+  },
+  readOnlyInput: {
+    backgroundColor: '#f0f0f0',
   },
 });
 

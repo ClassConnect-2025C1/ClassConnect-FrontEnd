@@ -12,7 +12,18 @@ import {
 
 const CoursesScreen = () => {
   const navigation = useNavigation();
-  const darkColors = ['#1e1e1e', '#2c2c2c', '#3a3a3a', '#121212', '#242424'];
+
+  const cardColors = [
+    '#6C5CE7',
+    '#00B894',
+    '#0984E3',
+    '#E17055',
+    '#FD79A8',
+    '#FDCB6E',
+    '#74B9FF',
+    '#55EFC4',
+    '#FAB1A0',
+  ];
 
   const [courses, setCourses] = useState<Course[]>([]);
 
@@ -73,10 +84,10 @@ const CoursesScreen = () => {
             key={course.id}
             style={[
               styles.courseCard,
-              { backgroundColor: darkColors[index % darkColors.length] },
+              { backgroundColor: cardColors[index % cardColors.length] },
             ]}
             onPress={() =>
-              navigation.navigate('TeacherCourseDetail', { course })
+              navigation.navigate('StudentCourseDetail', { course })
             }
           >
             <Text style={styles.courseText}>{course.title}</Text>

@@ -33,7 +33,7 @@ const TeacherCreateNewCourseScreen = () => {
           description,
           eligibility_criteria: eligibilityCriteria,
           capacity: parseInt(capacity),
-          created_by: 'teacher', // Assuming 'teacher' is the role
+          created_by: 'teacher',
         }),
       });
 
