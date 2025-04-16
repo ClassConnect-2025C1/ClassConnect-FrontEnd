@@ -88,7 +88,6 @@ const ProfileScreen = () => {
   const handleSaveChanges = async () => {
     if (isLoading) return;
 
-
     if (
       !firstName ||
       !lastName ||
@@ -118,7 +117,7 @@ const ProfileScreen = () => {
             body: JSON.stringify({
               name: firstName,
               last_name: lastName,
-              email: email, 
+              email: email,
               bio: bio,
               photo: userImage,
             }),
@@ -163,10 +162,7 @@ const ProfileScreen = () => {
       <TouchableOpacity onPress={handleSelectImage}>
         <View style={styles.imageContainer}>
           {userImage ? (
-            <Image
-              source={{ uri: userImage }}
-              style={styles.profileImage}
-            />
+            <Image source={{ uri: userImage }} style={styles.profileImage} />
           ) : (
             <View style={styles.placeholderImage}>
               <Text>No Image</Text>
