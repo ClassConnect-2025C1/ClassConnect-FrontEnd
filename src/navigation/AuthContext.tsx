@@ -1,31 +1,32 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../utils/axiosInstance';
+import api, { setOnTokenExpired } from '../utils/axiosInstance';
 import { useNavigation } from '@react-navigation/native';
+import { Alert } from 'react-native';
 
 type AuthContextType = {
   isAuthenticated: boolean;
   loading: boolean;
-  shouldRedirectToLogin: boolean;
   setShouldRedirectToLogin: React.Dispatch<React.SetStateAction<boolean>>;
+  setTokenExpired: (expired: boolean) => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   loading: true,
-  shouldRedirectToLogin: false,
   setShouldRedirectToLogin: () => {},
+  setTokenExpired: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false);
+  const [tokenExpired, setTokenExpired] = useState(false);
   const navigation = useNavigation();
 
   const checkToken = async () => {
     const token = await AsyncStorage.getItem('token');
-
     if (!token) {
       setIsAuthenticated(false);
       setLoading(false);
@@ -33,28 +34,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      // Realizamos una llamada a una ruta protegida para verificar la validez del token
       await api.get('/auth/protected');
       setIsAuthenticated(true);
     } catch (e) {
       setIsAuthenticated(false);
       await AsyncStorage.removeItem('token');
-      setShouldRedirectToLogin(true); // Establecemos la necesidad de redirigir al login
+      setShouldRedirectToLogin(true);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Al montar el componente, chequeamos si el token es válido
     checkToken();
+  }, []);
 
-    // Usamos un intervalo para revisar cada 10 segundos si el token sigue siendo válido
-    const interval = setInterval(() => {
-      checkToken();
-    }, 10000);
+  useEffect(() => {
+    if (shouldRedirectToLogin || tokenExpired) {
+      Alert.alert('Sesión expirada', 'Inicia sesión nuevamente');
+      navigation.navigate('Login');
+      setTokenExpired(false);
+    }
+  }, [shouldRedirectToLogin, tokenExpired, navigation]);
 
-    return () => clearInterval(interval);
+  useEffect(() => {
+    // Conectamos axios con el AuthContext
+    setOnTokenExpired(() => () => setTokenExpired(true));
   }, []);
 
   return (
@@ -62,8 +67,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         isAuthenticated,
         loading,
-        shouldRedirectToLogin,
         setShouldRedirectToLogin,
+        setTokenExpired,
       }}
     >
       {children}

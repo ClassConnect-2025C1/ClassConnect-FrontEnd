@@ -1,10 +1,15 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
 
 const api = axios.create({
   baseURL: 'http://0.0.0.0:7999/api',
 });
+
+let onTokenExpired: (() => void) | null = null;
+
+export const setOnTokenExpired = (callback: () => void) => {
+  onTokenExpired = callback;
+};
 
 api.interceptors.request.use(
   async (config) => {
@@ -26,10 +31,11 @@ api.interceptors.response.use(
       error.response.data?.detail?.includes('expirado')
     ) {
       await AsyncStorage.removeItem('token');
-      Alert.alert('Sesión expirada', 'Inicia sesión nuevamente');
+      if (onTokenExpired) onTokenExpired();
     }
     return Promise.reject(error);
   },
 );
 
 export default api;
+

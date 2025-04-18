@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
-
+import { AcceptRejectModal } from '../../components/Modals';
 import {
   Modal,
   Button,
@@ -182,41 +182,19 @@ const CoursesScreen = ({ route }) => {
         }}
       />
 
-      {/* Modal for confirmation */}
-      <Modal
-        transparent
-        animationType="fade"
+      <AcceptRejectModal
         visible={showDeleteModal}
-        onRequestClose={() => setShowDeleteModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalText}>
-              Are you sure you want to delete this course?
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                onPress={() => setShowDeleteModal(false)}
-                style={styles.cancelButton}
-              >
-                <Text>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  if (courseToDelete) {
-                    handleDeleteCourse(courseToDelete);
-                  }
-                  setShowDeleteModal(false);
-                  setCourseToDelete(null);
-                }}
-                style={styles.deleteButtonModal}
-              >
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        message="Are you sure you want to delete this course?"
+        onAccept={() => {
+          if (courseToDelete) {
+            handleDeleteCourse(courseToDelete);
+          }
+          setShowDeleteModal(false);
+          setCourseToDelete(null);
+        }}
+        onReject={() => setShowDeleteModal(false)}
+        onClose={() => setShowDeleteModal(false)}
+      />
     </View>
   );
 };

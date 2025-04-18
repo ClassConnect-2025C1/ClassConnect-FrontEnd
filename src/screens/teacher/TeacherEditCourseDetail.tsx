@@ -15,7 +15,9 @@ export default function EditCourseScreen({ route }) {
 
   const [title, setTitle] = useState(course.title);
   const [description, setDescription] = useState(course.description);
-  const [eligibilityCriteria, setEligibilityCriteria] = useState(course.eligibilityCriteria || '');
+  const [eligibilityCriteria, setEligibilityCriteria] = useState(
+    course.eligibilityCriteria || '',
+  );
   const [startDate, setStartDate] = useState(course.startDate);
   const [endDate, setEndDate] = useState(course.endDate);
 
@@ -49,7 +51,8 @@ export default function EditCourseScreen({ route }) {
     }
 
     if (eligibilityCriteria.length < 3) {
-      newErrors.eligibilityCriteria = 'Eligibility criteria must be at least 3 characters';
+      newErrors.eligibilityCriteria =
+        'Eligibility criteria must be at least 3 characters';
     }
 
     if (!isValidDate(startDate)) {
@@ -91,7 +94,7 @@ export default function EditCourseScreen({ route }) {
             start_date: formattedStartDate,
             end_date: formattedEndDate,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -109,7 +112,10 @@ export default function EditCourseScreen({ route }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={styles.backButton}
+      >
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
 
@@ -127,7 +133,9 @@ export default function EditCourseScreen({ route }) {
         value={description}
         onChangeText={setDescription}
       />
-      {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+      {errors.description && (
+        <Text style={styles.errorText}>{errors.description}</Text>
+      )}
 
       <TextInput
         style={styles.input}
@@ -145,7 +153,9 @@ export default function EditCourseScreen({ route }) {
         value={startDate}
         onChangeText={setStartDate}
       />
-      {errors.startDate && <Text style={styles.errorText}>{errors.startDate}</Text>}
+      {errors.startDate && (
+        <Text style={styles.errorText}>{errors.startDate}</Text>
+      )}
 
       <TextInput
         style={styles.input}
@@ -178,17 +188,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   backButton: {
-    backgroundColor: '#D3D3D3', // Light grey background
+    backgroundColor: '#D3D3D3',
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 15,
     marginBottom: 20,
     alignItems: 'center',
-    marginLeft: 20, // Add margin to the left
-    marginTop: 20,  // Add margin to the top
+    marginLeft: 20,
+    marginTop: 20,
   },
   backButtonText: {
-    color: '#fff', // White text
+    color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -211,7 +221,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-
-
-

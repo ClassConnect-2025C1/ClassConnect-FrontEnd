@@ -16,11 +16,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import GoogleLogin from '../components/GoogleAuth';
 import * as AuthSession from 'expo-auth-session';
+import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -33,6 +35,11 @@ const LoginScreen = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailError('Email is invalid');
+      valid = false;
+    }
+
+    if (password < 4) {
+      setPasswordError('password is not correct');
       valid = false;
     }
 
@@ -77,8 +84,7 @@ const LoginScreen = () => {
             navigation.navigate('StudentCourses');
           }
         } catch (profileError) {
-          console.error('Error fetching profile:', profileError);
-          alert('An error occurred while fetching user profile.');
+          accept;
         }
       } else {
         console.log('la data detail', data.detail);
@@ -87,7 +93,7 @@ const LoginScreen = () => {
         } else if (data.detail === 'Invalid password') {
           setPasswordError('Invalid password');
         } else {
-          alert('Login failed. Please check your credentials.');
+          setShowModal(true);
         }
       }
     } catch (error) {
@@ -97,6 +103,12 @@ const LoginScreen = () => {
   };
   return (
     <View style={styles.container}>
+      <AcceptOnlyModal
+        visible={showModal}
+        message="Invalid credentials. Please try again."
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
       <View style={styles.topHalf}>
         <Image
           source={require('../../assets/images/logo.png')}
