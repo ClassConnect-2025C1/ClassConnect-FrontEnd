@@ -22,7 +22,12 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
   const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+  const [generalError, setGeneralError] = useState('');
+  const [showGeneralErrorModal, setShowGeneralErrorModal] = useState(false);
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -88,27 +93,43 @@ const LoginScreen = () => {
         }
       } else {
         console.log('la data detail', data.detail);
-        if (data.detail === 'Invalid Email') {
-          setEmailError('Invalid email');
-        } else if (data.detail === 'Invalid password') {
+
+        const detailMsg = data.detail?.detail || data.detail;
+        if (
+          typeof detailMsg === 'string' &&
+          detailMsg.toLowerCase().includes('invalid email')
+        ) {
+          setEmailError('Email is not registered');
+        } else if (detailMsg === 'Invalid password') {
           setPasswordError('Invalid password');
         } else {
+          console.log('la data detail', detailMsg);
+          setModalMessage(detailMsg);
           setShowModal(true);
         }
       }
     } catch (error) {
       console.error('Error during login:', error);
-      alert('An error occurred. Please try again later.');
+      setGeneralError('An error occurred. Please try again later.');
+      setShowGeneralErrorModal(true);
     }
   };
   return (
     <View style={styles.container}>
       <AcceptOnlyModal
         visible={showModal}
-        message="Invalid credentials. Please try again."
+        message={modalMessage}
         onAccept={() => setShowModal(false)}
         onClose={() => setShowModal(false)}
       />
+
+      <AcceptOnlyModal
+        visible={showGeneralErrorModal}
+        message={generalError}
+        onAccept={() => setShowGeneralErrorModal(false)}
+        onClose={() => setShowGeneralErrorModal(false)}
+      />
+
       <View style={styles.topHalf}>
         <Image
           source={require('../../assets/images/logo.png')}
@@ -157,7 +178,6 @@ const LoginScreen = () => {
         <Text style={styles.orText}>Or log in with</Text>
 
         <View style={styles.socialContainer}>
-          {/* Aquí se ejecuta GoogleLogin cuando el usuario presiona la imagen de Google */}
           <GoogleLogin />
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>

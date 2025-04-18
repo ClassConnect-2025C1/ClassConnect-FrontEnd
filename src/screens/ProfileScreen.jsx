@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
-
+import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 const ProfileScreen = () => {
   const navigation = useNavigation();
 
@@ -19,8 +19,13 @@ const ProfileScreen = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [location, setLocation] = useState(null);
+  const [role, setRole] = useState(null);
   const [bio, setBio] = useState('');
   const [userImage, setUserImage] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -49,12 +54,16 @@ const ProfileScreen = () => {
             setEmail(userProfile.email || 'No Email');
             setBio(userProfile.bio || '');
             setUserImage(userProfile.photo || null);
+            setLocation(userProfile.location || null);
+            setRole(userProfile.role || null);
           } else {
             setFirstName('No Name');
             setLastName('No Last Name');
             setEmail('No Email');
             setBio('');
             setUserImage(null);
+            setLocation('');
+            setRole(null);
           }
         }
       } catch (error) {
@@ -94,7 +103,10 @@ const ProfileScreen = () => {
       firstName.length < 2 ||
       lastName.length < 2
     ) {
-      alert('Please fill in all fields with at least 2 characters');
+      setModalMessage(
+        'The only field that can be empty is the bio.  please fill in the rest with at least 2 letters.',
+      );
+      setShowModal(true);
       return;
     }
 
@@ -128,16 +140,18 @@ const ProfileScreen = () => {
 
         if (response.ok) {
           console.log('Perfil actualizado con éxito');
-          alert('Profile updated successfully!');
-          navigation.goBack();
+          setModalMessage('Profile updated successfully');
+          setShowModal(true);
         } else {
           console.error('Error al actualizar el perfil:', result);
-          alert('There was an error updating the profile');
+          setModalMessage('Error updating profile');
+          setShowModal(true);
         }
       }
     } catch (error) {
       console.error('Error al guardar los cambios:', error);
-      alert('There was an error saving the changes');
+      setModalMessage('Error saving changes');
+      setShowModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -145,6 +159,13 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
+      <AcceptOnlyModal
+        visible={showModal}
+        message={modalMessage}
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
+
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
@@ -158,16 +179,15 @@ const ProfileScreen = () => {
         </TouchableOpacity>
       </View>
       <Text style={styles.title}>My Profile</Text>
-
       <TouchableOpacity onPress={handleSelectImage}>
         <View style={styles.imageContainer}>
-          {userImage ? (
-            <Image source={{ uri: userImage }} style={styles.profileImage} />
-          ) : (
-            <View style={styles.placeholderImage}>
-              <Text>No Image</Text>
-            </View>
-          )}
+          <Image
+            source={{
+              uri:
+                userImage || 'https://www.w3schools.com/howto/img_avatar.png',
+            }}
+            style={styles.profileImage}
+          />
           <Text style={styles.changeText}>Change profile picture</Text>
         </View>
       </TouchableOpacity>
@@ -190,6 +210,19 @@ const ProfileScreen = () => {
       <TextInput
         style={[styles.input, styles.readOnlyInput]}
         value={email}
+        editable={false}
+      />
+      <Text style={styles.label}>Location</Text>
+      <TextInput
+        style={[styles.input, styles.readOnlyInput]}
+        value={location}
+        editable={false}
+      />
+
+      <Text style={styles.label}>Role</Text>
+      <TextInput
+        style={[styles.input, styles.readOnlyInput]}
+        value={role}
         editable={false}
       />
 
