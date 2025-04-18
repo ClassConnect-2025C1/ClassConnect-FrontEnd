@@ -23,6 +23,7 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -88,11 +89,18 @@ const LoginScreen = () => {
         }
       } else {
         console.log('la data detail', data.detail);
-        if (data.detail === 'Invalid Email') {
-          setEmailError('Invalid email');
-        } else if (data.detail === 'Invalid password') {
+
+        const detailMsg = data.detail?.detail || data.detail; // soporte para ambas formas
+        if (
+          typeof detailMsg === 'string' &&
+          detailMsg.toLowerCase().includes('invalid email')
+        ) {
+          setEmailError('Email is not registered');
+        } else if (detailMsg === 'Invalid password') {
           setPasswordError('Invalid password');
         } else {
+          console.log('la data detail', detailMsg);
+          setModalMessage(detailMsg);
           setShowModal(true);
         }
       }
@@ -105,7 +113,7 @@ const LoginScreen = () => {
     <View style={styles.container}>
       <AcceptOnlyModal
         visible={showModal}
-        message="Invalid credentials. Please try again."
+        message={modalMessage}
         onAccept={() => setShowModal(false)}
         onClose={() => setShowModal(false)}
       />
