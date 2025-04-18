@@ -1,32 +1,32 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api, { setOnTokenExpired } from '../utils/axiosInstance';
+import api from '../utils/axiosInstance';
 import { useNavigation } from '@react-navigation/native';
-import { Alert } from 'react-native';
-
+import { AcceptOnlyModal } from '../components/Modals';
 type AuthContextType = {
   isAuthenticated: boolean;
   loading: boolean;
+  shouldRedirectToLogin: boolean;
   setShouldRedirectToLogin: React.Dispatch<React.SetStateAction<boolean>>;
-  setTokenExpired: (expired: boolean) => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   loading: true,
+  shouldRedirectToLogin: false,
   setShouldRedirectToLogin: () => {},
-  setTokenExpired: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false);
-  const [tokenExpired, setTokenExpired] = useState(false);
   const navigation = useNavigation();
+  const [showModal, setShowModal] = useState(false);
 
   const checkToken = async () => {
     const token = await AsyncStorage.getItem('token');
+
     if (!token) {
       setIsAuthenticated(false);
       setLoading(false);
@@ -47,33 +47,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     checkToken();
+
+    const interval = setInterval(() => {
+      checkToken();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    if (shouldRedirectToLogin || tokenExpired) {
-      Alert.alert('Sesión expirada', 'Inicia sesión nuevamente');
+    if (shouldRedirectToLogin) {
+      setShowModal(true);
       navigation.navigate('Login');
-      setTokenExpired(false);
     }
-  }, [shouldRedirectToLogin, tokenExpired, navigation]);
-
-  useEffect(() => {
-    // Conectamos axios con el AuthContext
-    setOnTokenExpired(() => () => setTokenExpired(true));
-  }, []);
+  }, [shouldRedirectToLogin, navigation]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        loading,
-        setShouldRedirectToLogin,
-        setTokenExpired,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <>
+      <AuthContext.Provider
+        value={{
+          isAuthenticated,
+          loading,
+          shouldRedirectToLogin,
+          setShouldRedirectToLogin,
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+
+      <AcceptOnlyModal
+        visible={showModal}
+        message="
+Your session has expired, please log in again."
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
+    </>
   );
 };
-
 export const useAuth = () => useContext(AuthContext);
