@@ -22,6 +22,7 @@ const RegisterScreen = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [location, setLocation] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
@@ -34,6 +35,7 @@ const RegisterScreen = () => {
     lastName: '',
     email: '',
     password: '',
+    phone: '',
   });
 
   const handleRegister = async () => {
@@ -80,6 +82,7 @@ const RegisterScreen = () => {
           email,
           password,
           role: selectedRole,
+          phone: phone,
         }),
       });
       const data = await response.json();
@@ -185,6 +188,35 @@ const RegisterScreen = () => {
             {errors.password && (
               <Text style={styles.errorText}>{errors.password}</Text>
             )}
+
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 10,
+              }}
+            >
+              <Text style={{ fontSize: 16, marginRight: 5 }}>+54</Text>
+              <TextInput
+                placeholder="Phone number"
+                style={[styles.input, { flex: 1 }]}
+                keyboardType="numeric"
+                value={phone.replace('+54', '')}
+                onChangeText={(text) => {
+                  const fullNumber = '+54' + text;
+                  setPhone(fullNumber);
+
+                  if (text.trim() === '' || fullNumber.length < 12) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      phone: 'Phone number is invalid',
+                    }));
+                  } else {
+                    setErrors((prev) => ({ ...prev, phone: '' }));
+                  }
+                }}
+              />
+            </View>
 
             <TextInput
               placeholder="Email"

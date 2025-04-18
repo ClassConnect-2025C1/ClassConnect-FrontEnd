@@ -22,6 +22,8 @@ const ProfileScreen = () => {
   const [location, setLocation] = useState(null);
   const [role, setRole] = useState(null);
   const [bio, setBio] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
   const [userImage, setUserImage] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
@@ -56,6 +58,7 @@ const ProfileScreen = () => {
             setUserImage(userProfile.photo || null);
             setLocation(userProfile.location || null);
             setRole(userProfile.role || null);
+            setPhoneNumber(userProfile.phone_number || '');
           } else {
             setFirstName('No Name');
             setLastName('No Last Name');
@@ -101,10 +104,12 @@ const ProfileScreen = () => {
       !firstName ||
       !lastName ||
       firstName.length < 2 ||
-      lastName.length < 2
+      lastName.length < 2 ||
+      !phone_number.startsWith('+54') ||
+      phone_number.length < 12
     ) {
       setModalMessage(
-        'The only field that can be empty is the bio.  please fill in the rest with at least 2 letters.',
+        'The only field that can be empty is the bio.  please fill all fields.',
       );
       setShowModal(true);
       return;

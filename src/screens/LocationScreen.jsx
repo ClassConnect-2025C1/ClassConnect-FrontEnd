@@ -10,7 +10,7 @@ const LocationScreen = () => {
   const [location] = useState(null);
   const navigation = useNavigation();
   const route = useRoute();
-  const { userId } = route.params;
+  const { userId, phoneNumber } = route.params;
   const [address, setAddress] = useState(null);
 
   const [permissionRequested, setPermissionRequested] = useState(false);
@@ -58,6 +58,7 @@ const LocationScreen = () => {
       setCountry(country || 'Unknown');
       setAddress(fullAddress);
       updateUserLocation(fullAddress);
+      navigation.navigate('PinScreen', { userId, phoneNumber });
     } catch (error) {
       console.error('Error getting address:', error);
       alert('Could not fetch location. Please try again later.');
@@ -125,7 +126,7 @@ const LocationScreen = () => {
               <Text style={styles.address}>Location: {address}</Text>
               <Button
                 title="Continue"
-                onPress={() => navigation.navigate('Login')}
+                onPress={() => navigation.navigate('PinScreen')}
                 color="#4CAF50"
               />
             </>
