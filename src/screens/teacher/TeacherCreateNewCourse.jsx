@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { AcceptOnlyModal } from '../../components/Modals';
 
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
@@ -17,7 +18,22 @@ const TeacherCreateNewCourseScreen = () => {
   const [eligibilityCriteria, setEligibilityCriteria] = useState('');
   const [capacity, setCapacity] = useState('');
 
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
   const handleCreateCourse = async () => {
+    if (!title || !description || !eligibilityCriteria || !capacity) {
+      setModalMessage('All fields must be filled.');
+      setShowModal(true);
+      return;
+    }
+    const capacityNumber = parseInt(capacity, 10);
+    if (isNaN(capacityNumber) || capacityNumber <= 0) {
+      setModalMessage('Capacity must be a valid number greater than zero.');
+      setShowModal(true);
+      return;
+    }
+
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
@@ -40,6 +56,8 @@ const TeacherCreateNewCourseScreen = () => {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
+        setModalMessage('Failed to create course. Please try again.');
+        setShowModal(true);
         return;
       }
 
@@ -48,7 +66,8 @@ const TeacherCreateNewCourseScreen = () => {
 
       navigation.navigate('TeacherCourses', { newCourse: data });
     } catch (error) {
-      console.error('Error al crear el curso:', error);
+      setModalMessage('An unexpected error occurred.');
+      setShowModal(true);
     }
   };
 
@@ -65,6 +84,11 @@ const TeacherCreateNewCourseScreen = () => {
         value={description}
         onChangeText={setDescription}
         multiline
+      />
+      <AcceptOnlyModal
+        visible={showModal}
+        message={modalMessage}
+        onAccept={() => setShowModal(false)}
       />
 
       <Text style={styles.label}>Eligibility Criteria</Text>
