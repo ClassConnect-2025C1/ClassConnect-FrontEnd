@@ -22,8 +22,12 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
+  const [generalError, setGeneralError] = useState('');
+  const [showGeneralErrorModal, setShowGeneralErrorModal] = useState(false);
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -90,7 +94,7 @@ const LoginScreen = () => {
       } else {
         console.log('la data detail', data.detail);
 
-        const detailMsg = data.detail?.detail || data.detail; // soporte para ambas formas
+        const detailMsg = data.detail?.detail || data.detail;
         if (
           typeof detailMsg === 'string' &&
           detailMsg.toLowerCase().includes('invalid email')
@@ -106,7 +110,8 @@ const LoginScreen = () => {
       }
     } catch (error) {
       console.error('Error during login:', error);
-      alert('An error occurred. Please try again later.');
+      setGeneralError('An error occurred. Please try again later.');
+      setShowGeneralErrorModal(true);
     }
   };
   return (
@@ -117,6 +122,14 @@ const LoginScreen = () => {
         onAccept={() => setShowModal(false)}
         onClose={() => setShowModal(false)}
       />
+
+      <AcceptOnlyModal
+        visible={showGeneralErrorModal}
+        message={generalError}
+        onAccept={() => setShowGeneralErrorModal(false)}
+        onClose={() => setShowGeneralErrorModal(false)}
+      />
+
       <View style={styles.topHalf}>
         <Image
           source={require('../../assets/images/logo.png')}
@@ -165,7 +178,6 @@ const LoginScreen = () => {
         <Text style={styles.orText}>Or log in with</Text>
 
         <View style={styles.socialContainer}>
-          {/* Aquí se ejecuta GoogleLogin cuando el usuario presiona la imagen de Google */}
           <GoogleLogin />
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>

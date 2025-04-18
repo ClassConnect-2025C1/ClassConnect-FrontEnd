@@ -79,7 +79,7 @@ const LocationScreen = () => {
   const updateUserLocation = async (country) => {
     try {
       const response = await axios.put(
-        `http://192.168.0.14:8001/users/profile/${userId}/location`,
+        `http://0.0.0.0:7999/api/users/profile/${userId}/location`,
         { location: country },
       );
       if (response.status === 200) {

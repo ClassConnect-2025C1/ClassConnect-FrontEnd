@@ -15,6 +15,7 @@ import { jwtDecode } from 'jwt-decode';
 import { Alert } from 'react-native';
 import RegisterErrors from '../Errors/RegisterErrors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -24,6 +25,9 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [location, setLocation] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const [errors, setErrors] = useState({
     firstName: '',
@@ -57,7 +61,6 @@ const RegisterScreen = () => {
       newErrors.role = 'Please select a role (Student or Teacher)';
     }
 
-    // Si hay errores, mostrar los mensajes
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -80,7 +83,7 @@ const RegisterScreen = () => {
         }),
       });
       const data = await response.json();
-
+      const detailMsg = data.detail?.detail || data.detail;
       if (response.ok) {
         const token = data.access_token;
         const decoded = jwtDecode(token);
@@ -88,17 +91,15 @@ const RegisterScreen = () => {
         console.log('Registration successful:', data);
         navigation.navigate('Location', { userId });
       } else {
-        Alert.alert(
-          'Registration failed',
-          data.detail || 'Something went wrong, please try again.',
-        );
+        setModalMessage(detailMsg);
+        setShowModal(true);
       }
     } catch (error) {
-      console.error('Error during registration:', error);
+      setModalMessage(error);
+      setShowModal(true);
     }
   };
 
-  // En el JSX, asegúrate de que los errores se muestren si existen
   return (
     <View style={styles.container}>
       <View style={styles.topHalf}>
@@ -107,6 +108,13 @@ const RegisterScreen = () => {
           style={styles.logo}
         />
       </View>
+
+      <AcceptOnlyModal
+        visible={showModal}
+        message={modalMessage}
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
