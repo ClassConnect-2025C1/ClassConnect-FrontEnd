@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { validateFields } from '../../Errors/ValidationsEditCourse'; // Importa la función de validación
 
 export default function EditCourseScreen({ route }) {
   const { course } = route.params;
@@ -31,46 +32,18 @@ export default function EditCourseScreen({ route }) {
 
   const navigation = useNavigation();
 
-  // Validate date format YYYY-MM-DD
-  const isValidDate = (dateString) => {
-    const regex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateString.match(regex)) return false;
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 10) === dateString;
-  };
-
-  const validateFields = () => {
-    const newErrors = {};
-
-    if (title.length < 3) {
-      newErrors.title = 'Title must be at least 3 characters';
-    }
-
-    if (description.length < 3) {
-      newErrors.description = 'Description must be at least 3 characters';
-    }
-
-    if (eligibilityCriteria.length < 3) {
-      newErrors.eligibilityCriteria =
-        'Eligibility criteria must be at least 3 characters';
-    }
-
-    if (!isValidDate(startDate)) {
-      newErrors.startDate = 'Start date must be valid (YYYY-MM-DD)';
-    }
-
-    if (!isValidDate(endDate)) {
-      newErrors.endDate = 'End date must be valid (YYYY-MM-DD)';
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSaveChanges = async () => {
-    if (!validateFields()) {
-      return; // Do not continue if there are errors
+    const newErrors = validateFields(
+      title,
+      description,
+      eligibilityCriteria,
+      startDate,
+      endDate,
+    ); // Llamada a la función de validación
+    setErrors(newErrors); // Actualiza los errores
+
+    if (Object.keys(newErrors).length > 0) {
+      return; // Si hay errores, no continuar
     }
 
     try {
@@ -175,49 +148,53 @@ export default function EditCourseScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: '#FFFFFF', // Fondo blanco
     flexGrow: 1,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#CCCCCC',
     borderRadius: 12,
     padding: 12,
     marginBottom: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#F9F9F9',
     fontSize: 16,
   },
   backButton: {
-    backgroundColor: '#D3D3D3',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    backgroundColor: '#E0E0E0', // Gris claro
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     marginBottom: 20,
     alignItems: 'center',
-    marginLeft: 20,
-    marginTop: 20,
+    alignSelf: 'flex-start',
   },
   backButtonText: {
-    color: '#fff',
+    color: '#333333',
     fontSize: 14,
     fontWeight: 'bold',
   },
   errorText: {
-    color: 'red',
+    color: '#D32F2F',
     fontSize: 12,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#707070',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 20,
+    backgroundColor: '#4CAF50', // Verde llamativo
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 25,
+    marginTop: 30,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

@@ -134,14 +134,20 @@ export default function TeacherCourseDetail({ route }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: '#FFFFFF', // Fondo blanco
   },
   backButton: {
     marginBottom: 20,
+    backgroundColor: '#E0E0E0', // Gris claro
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
   backButtonText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#333333',
+    fontWeight: 'bold',
   },
   courseCard: {
     borderRadius: 12,
@@ -193,7 +199,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   selectedOptionButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4CAF50', // Verde
   },
   optionText: {
     fontSize: 16,
@@ -240,7 +246,7 @@ const styles = StyleSheet.create({
   },
   createButton: {
     marginTop: 10,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4CAF50', // Verde
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',

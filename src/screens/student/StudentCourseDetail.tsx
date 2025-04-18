@@ -96,19 +96,31 @@ export default function CourseDetail({ route }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: '#FFFFFF',
   },
   backButton: {
     marginBottom: 20,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
   backButtonText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#333333',
+    fontWeight: 'bold',
   },
   courseCard: {
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
+    backgroundColor: '#4CAF50',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
   courseTitle: {
     fontSize: 24,
@@ -118,7 +130,7 @@ const styles = StyleSheet.create({
   },
   courseDescription: {
     fontSize: 16,
-    color: '#ccc',
+    color: '#fff',
     marginBottom: 20,
   },
   infoRow: {
@@ -129,10 +141,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginRight: 8,
+    flex: 1,
   },
   value: {
     color: '#fff',
     flexShrink: 1,
+    flex: 2,
   },
   optionsContainer: {
     flexDirection: 'row',
@@ -140,25 +154,27 @@ const styles = StyleSheet.create({
     marginVertical: 30,
   },
   optionButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 30,
     backgroundColor: '#e0e0e0',
   },
   optionText: {
     fontSize: 16,
     color: '#333',
+    textAlign: 'center',
   },
   selected: {
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#4CAF50',
   },
   createButton: {
     marginTop: 10,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4CAF50', // Verde
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
+    marginVertical: 20,
   },
   createButtonText: {
     color: '#fff',
