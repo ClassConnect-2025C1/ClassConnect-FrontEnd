@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (shouldRedirectToLogin) {
       setShowModal(true);
       navigation.navigate('Login');
+      setShouldRedirectToLogin(false);
     }
   }, [shouldRedirectToLogin, navigation]);
 
