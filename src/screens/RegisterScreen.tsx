@@ -92,7 +92,7 @@ const RegisterScreen = () => {
         const decoded = jwtDecode(token);
         const userId = decoded.sub;
         console.log('Registration successful:', data);
-        navigation.navigate('Location', { userId });
+        navigation.navigate('Location', { userId, phone });
       } else {
         setModalMessage(detailMsg);
         setShowModal(true);

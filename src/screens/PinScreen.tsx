@@ -15,7 +15,7 @@ const PinScreen = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const route = useRoute();
-  const { userId } = route.params;
+  const { userId, phone } = route.params;
 
   const verifyPin = async () => {
     try {
@@ -47,6 +47,7 @@ const PinScreen = () => {
         `http://localhost:7999/api/auth/resend-pin`,
         {
           userId,
+          phone,
         },
       );
 
