@@ -55,10 +55,10 @@ const ProfileScreen = () => {
             setLastName(userProfile.last_name || 'No Last Name');
             setEmail(userProfile.email || 'No Email');
             setBio(userProfile.bio || '');
-            setUserImage(userProfile.photo || null);
+            setUserImage(userProfile.photo || userProfile.photo_url || null);
             setLocation(userProfile.location || null);
             setRole(userProfile.role || null);
-            setPhoneNumber(userProfile.phone_number || '');
+            setPhoneNumber(userProfile.phone || '');
           } else {
             setFirstName('No Name');
             setLastName('No Last Name');
@@ -104,13 +104,16 @@ const ProfileScreen = () => {
       !firstName ||
       !lastName ||
       firstName.length < 2 ||
-      lastName.length < 2 ||
-      !phone_number.startsWith('+54') ||
-      phone_number.length < 12
+      lastName.length < 2
     ) {
       setModalMessage(
         'The only field that can be empty is the bio.  please fill all fields.',
       );
+      setShowModal(true);
+      return;
+    }
+    if (!phoneNumber.startsWith('+54')) {
+      setModalMessage('The number can be start with +54');
       setShowModal(true);
       return;
     }
@@ -137,6 +140,7 @@ const ProfileScreen = () => {
               email: email,
               bio: bio,
               photo: userImage,
+              phone: phoneNumber,
             }),
           },
         );
@@ -237,6 +241,12 @@ const ProfileScreen = () => {
         value={bio}
         onChangeText={setBio}
         multiline
+      />
+      <Text style={styles.label}>Phone number</Text>
+      <TextInput
+        style={styles.input}
+        value={phoneNumber}
+        onChangeText={setPhoneNumber}
       />
 
       <TouchableOpacity
