@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { showLoginErrorToast } from '../Errors/LoginErrors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
-import GoogleLogin from '../components/GoogleAuth';
+import { loginWithGoogle } from '../components/GoogleAuth';
 import * as AuthSession from 'expo-auth-session';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 import { API_URL } from '@env';
@@ -181,8 +181,18 @@ const LoginScreen = () => {
         <Text style={styles.orText}>Or log in with</Text>
 
         <View style={styles.socialContainer}>
-          <GoogleLogin />
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={() => loginWithGoogle(navigation)}
+          >
+            <Image
+              source={require('../../assets/images/googlelog.png')}
+              style={styles.socialIcon}
+            />
+            <Text style={styles.googleText}>Login with Google</Text>
+          </TouchableOpacity>
         </View>
+
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={styles.bottomLink}>
             Don’t have an account? <Text style={styles.signUp}>Sign up</Text>
@@ -281,6 +291,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginBottom: 8,
+  },
+
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+
+  googleText: {
+    fontSize: 16,
+    color: '#000',
+    marginLeft: 10,
+    fontWeight: '500',
   },
 
   signUp: {
