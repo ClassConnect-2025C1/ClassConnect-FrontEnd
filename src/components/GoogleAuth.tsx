@@ -3,7 +3,7 @@ import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../configs/FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
-
+import { API_URL } from '@env';
 export const loginWithGoogle = async (navigation: any) => {
   const provider = new GoogleAuthProvider();
 
@@ -12,7 +12,7 @@ export const loginWithGoogle = async (navigation: any) => {
     const user = result.user;
     const idToken = await user.getIdToken();
 
-    const response = await fetch('http://0.0.0.0:7999/api/auth/google', {
+    const response = await fetch(`${API_URL}/api/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ google_token: idToken }),
@@ -32,7 +32,7 @@ export const loginWithGoogle = async (navigation: any) => {
     const userId = decoded.sub;
 
     const profileResponse = await fetch(
-      `http://0.0.0.0:7999/api/users/profile/${userId}`,
+      `${API_URL}/api/users/profile/${userId}`,
       {
         method: 'GET',
         headers: {},
