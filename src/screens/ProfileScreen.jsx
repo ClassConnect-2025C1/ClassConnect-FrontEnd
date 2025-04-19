@@ -38,7 +38,7 @@ const ProfileScreen = () => {
           const userId = decoded.user_id || decoded.sub;
 
           const response = await fetch(
-            `http://0.0.0.0:7999/api/users/profile/${userId}`,
+            `http://localhost:7999/api/users/profile/${userId}`,
             {
               method: 'GET',
               headers: {
@@ -124,7 +124,7 @@ const ProfileScreen = () => {
         const userId = decoded.user_id || decoded.sub;
 
         const response = await fetch(
-          `http://0.0.0.0:7999/api/users/profile/${userId}`,
+          `http://localhost:7999/api/users/profile/${userId}`,
           {
             method: 'PATCH',
             headers: {

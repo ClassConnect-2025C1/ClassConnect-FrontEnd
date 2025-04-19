@@ -37,7 +37,7 @@ const CoursesScreen = ({ route }) => {
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) {
-          const response = await fetch(`http://0.0.0.0:7999/api/courses/`, {
+          const response = await fetch(`http://localhost:7999/api/courses/`, {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -76,7 +76,7 @@ const CoursesScreen = ({ route }) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await fetch(
-        `http://0.0.0.0:7999/api/courses/${courseId}`,
+        `http://localhost:7999/api/courses/${courseId}`,
         {
           method: 'DELETE',
           headers: {

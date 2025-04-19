@@ -38,7 +38,7 @@ const TeacherCreateNewCourseScreen = () => {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      const response = await fetch('http://0.0.0.0:7999/api/courses/', {
+      const response = await fetch('http://localhost:7999/api/courses/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

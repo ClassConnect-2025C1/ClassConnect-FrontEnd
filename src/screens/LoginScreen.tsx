@@ -51,7 +51,7 @@ const LoginScreen = () => {
     if (!valid) return;
 
     try {
-      const response = await fetch('http://0.0.0.0:7999/api/auth/login', {
+      const response = await fetch('http://localhost:7999/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ const LoginScreen = () => {
 
         try {
           const profileResponse = await fetch(
-            `http://0.0.0.0:7999/api/users/profile/${user_id}`,
+            `http://localhost:7999/api/users/profile/${user_id}`,
             {
               method: 'GET',
               headers: {},
@@ -89,7 +89,9 @@ const LoginScreen = () => {
             navigation.navigate('StudentCourses');
           }
         } catch (profileError) {
-          accept;
+          console.error('Error fetching user profile:', profileError);
+          setGeneralError('An error occurred. Please try again later.');
+          setShowGeneralErrorModal(true);
         }
       } else {
         console.log('la data detail', data.detail);

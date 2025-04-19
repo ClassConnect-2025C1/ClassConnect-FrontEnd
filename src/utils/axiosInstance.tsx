@@ -4,7 +4,7 @@ import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const api = axios.create({
-  baseURL: 'http://0.0.0.0:7999/api',
+  baseURL: 'http://localhost:7999/api',
 });
 
 api.interceptors.request.use(

@@ -80,7 +80,7 @@ const LocationScreen = () => {
   const updateUserLocation = async (country) => {
     try {
       const response = await axios.put(
-        `http://0.0.0.0:7999/api/users/profile/${userId}/location`,
+        `http://localhost:7999/api/users/profile/${userId}/location`,
         { location: country },
       );
       if (response.status === 200) {
@@ -126,7 +126,7 @@ const LocationScreen = () => {
               <Text style={styles.address}>Location: {address}</Text>
               <Button
                 title="Continue"
-                onPress={() => navigation.navigate('PinScreen')}
+                onPress={() => navigation.navigate('PinScreen', { userId })}
                 color="#4CAF50"
               />
             </>

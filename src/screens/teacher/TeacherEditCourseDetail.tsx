@@ -53,7 +53,7 @@ export default function EditCourseScreen({ route }) {
       const formattedEndDate = `${endDate}T00:00:00Z`;
 
       const response = await fetch(
-        `http://0.0.0.0:7999/api/courses/${course.id}`,
+        `http://localhost:7999/api/courses/${course.id}`,
         {
           method: 'PATCH',
           headers: {
