@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
-
+import { API_URL } from '@env';
 const PinScreen = () => {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ const PinScreen = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `http://localhost:7999/api/auth/verify-pin`,
+        `${API_URL}/api/auth/verify-pin`,
         {
           userId,
           pin,
@@ -44,7 +44,7 @@ const PinScreen = () => {
   const resendPin = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:7999/api/auth/resend-pin`,
+        `${API_URL}/api/auth/resend-pin`,
         {
           userId,
           phone,

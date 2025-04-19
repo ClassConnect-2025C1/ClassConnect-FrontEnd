@@ -2,9 +2,9 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
+import { API_URL } from '@env';
 const api = axios.create({
-  baseURL: 'http://localhost:7999/api',
+  baseURL: `${API_URL}/api`,
 });
 
 api.interceptors.request.use(

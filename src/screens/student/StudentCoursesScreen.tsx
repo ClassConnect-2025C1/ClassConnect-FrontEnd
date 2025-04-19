@@ -9,7 +9,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-
+import { API_URL } from '@env';
 const CoursesScreen = () => {
   const navigation = useNavigation();
 
@@ -32,7 +32,7 @@ const CoursesScreen = () => {
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) {
-          const response = await fetch(`http://localhost:7999/api/courses/`, {
+          const response = await fetch(`${API_URL}/api/courses/`, {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${token}`,

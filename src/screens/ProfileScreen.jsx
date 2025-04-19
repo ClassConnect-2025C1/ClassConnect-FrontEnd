@@ -12,6 +12,7 @@ import { jwtDecode } from 'jwt-decode';
 import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
+import { API_URL } from '@env';
 const ProfileScreen = () => {
   const navigation = useNavigation();
 
@@ -38,7 +39,7 @@ const ProfileScreen = () => {
           const userId = decoded.user_id || decoded.sub;
 
           const response = await fetch(
-            `http://localhost:7999/api/users/profile/${userId}`,
+            `${API_URL}/api/users/profile/${userId}`,
             {
               method: 'GET',
               headers: {
@@ -124,7 +125,7 @@ const ProfileScreen = () => {
         const userId = decoded.user_id || decoded.sub;
 
         const response = await fetch(
-          `http://localhost:7999/api/users/profile/${userId}`,
+          `${API_URL}/api/users/profile/${userId}`,
           {
             method: 'PATCH',
             headers: {

@@ -17,6 +17,7 @@ import { jwtDecode } from 'jwt-decode';
 import GoogleLogin from '../components/GoogleAuth';
 import * as AuthSession from 'expo-auth-session';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
+import { API_URL } from '@env';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -51,7 +52,7 @@ const LoginScreen = () => {
     if (!valid) return;
 
     try {
-      const response = await fetch('http://localhost:7999/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +69,7 @@ const LoginScreen = () => {
 
         try {
           const profileResponse = await fetch(
-            `http://localhost:7999/api/users/profile/${user_id}`,
+            `${API_URL}/api/users/profile/${user_id}`,
             {
               method: 'GET',
               headers: {},

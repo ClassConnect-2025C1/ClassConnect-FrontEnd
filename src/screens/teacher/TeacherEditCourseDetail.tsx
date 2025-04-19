@@ -10,7 +10,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { validateFields } from '../../Errors/ValidationsEditCourse'; // Importa la función de validación
-
+import { API_URL } from '@env';
 export default function EditCourseScreen({ route }) {
   const { course } = route.params;
 
@@ -53,7 +53,7 @@ export default function EditCourseScreen({ route }) {
       const formattedEndDate = `${endDate}T00:00:00Z`;
 
       const response = await fetch(
-        `http://localhost:7999/api/courses/${course.id}`,
+        `${API_URL}/api/courses/${course.id}`,
         {
           method: 'PATCH',
           headers: {

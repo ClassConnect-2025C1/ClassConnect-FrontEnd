@@ -9,7 +9,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { AcceptOnlyModal } from '../../components/Modals';
-
+import { API_URL } from '@env';
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
 
@@ -38,7 +38,7 @@ const TeacherCreateNewCourseScreen = () => {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      const response = await fetch('http://localhost:7999/api/courses/', {
+      const response = await fetch(`${API_URL}/api/courses/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

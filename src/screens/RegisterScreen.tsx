@@ -16,6 +16,7 @@ import { Alert } from 'react-native';
 import RegisterErrors from '../Errors/RegisterErrors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
+import { API_URL } from '@env';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -71,7 +72,7 @@ const RegisterScreen = () => {
     setErrors({});
 
     try {
-      const response = await fetch('http://localhost:7999/api/auth/register', {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
