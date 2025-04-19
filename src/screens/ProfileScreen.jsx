@@ -58,7 +58,7 @@ const ProfileScreen = () => {
             setUserImage(userProfile.photo || userProfile.photo_url || null);
             setLocation(userProfile.location || null);
             setRole(userProfile.role || null);
-            setPhoneNumber(userProfile.phone || '');
+            setPhoneNumber(userProfile.phone || '+543329602476');
           } else {
             setFirstName('No Name');
             setLastName('No Last Name');
@@ -104,7 +104,8 @@ const ProfileScreen = () => {
       !firstName ||
       !lastName ||
       firstName.length < 2 ||
-      lastName.length < 2
+      lastName.length < 2 ||
+      !phoneNumber
     ) {
       setModalMessage(
         'The only field that can be empty is the bio.  please fill all fields.',
