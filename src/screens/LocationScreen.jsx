@@ -4,10 +4,7 @@ import * as Location from 'expo-location';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
-
-import Constants from 'expo-constants';
-
-const apiUrl = Constants.expoConfig.extra.apiUrl;
+import { API_URL } from '@env';
 
 const LocationScreen = () => {
   const [country, setCountry] = useState(null);
@@ -84,7 +81,7 @@ const LocationScreen = () => {
   const updateUserLocation = async (country) => {
     try {
       const response = await axios.put(
-        `${apiUrl}/api/users/profile/${userId}/location`,
+        `${API_URL}/api/users/profile/${userId}/location`,
         { location: country },
       );
       if (response.status === 200) {
