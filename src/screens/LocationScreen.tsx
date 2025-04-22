@@ -127,7 +127,9 @@ const LocationScreen = () => {
               <Text style={styles.address}>Location: {address}</Text>
               <Button
                 title="Continue"
-                onPress={() => navigation.navigate('PinScreen', { userId, phone })}
+                onPress={() =>
+                  navigation.navigate('PinScreen', { userId, phone })
+                }
                 color="#4CAF50"
               />
             </>

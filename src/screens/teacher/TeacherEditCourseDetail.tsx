@@ -52,23 +52,20 @@ export default function EditCourseScreen({ route }) {
       const formattedStartDate = `${startDate}T00:00:00Z`;
       const formattedEndDate = `${endDate}T00:00:00Z`;
 
-      const response = await fetch(
-        `${API_URL}/api/courses/${course.id}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title,
-            description,
-            eligibility_criteria: eligibilityCriteria,
-            start_date: formattedStartDate,
-            end_date: formattedEndDate,
-          }),
+      const response = await fetch(`${API_URL}/api/courses/${course.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify({
+          title,
+          description,
+          eligibility_criteria: eligibilityCriteria,
+          start_date: formattedStartDate,
+          end_date: formattedEndDate,
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.text();

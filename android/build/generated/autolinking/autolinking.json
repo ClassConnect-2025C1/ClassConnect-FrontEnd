@@ -22,7 +22,7 @@
   },
   "project": {
     "android": {
-      "packageName": "com.classconnectapp",
+      "packageName": "com.helloworld",
       "sourceDir": "/Users/brent/code/expo/templates/expo-template-bare-minimum/android"
     }
   }

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
@@ -13,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 import { API_URL } from '@env';
+
 const ProfileScreen = () => {
   const navigation = useNavigation();
 
@@ -24,9 +26,7 @@ const ProfileScreen = () => {
   const [role, setRole] = useState(null);
   const [bio, setBio] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-
   const [userImage, setUserImage] = useState(null);
-
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
@@ -51,7 +51,6 @@ const ProfileScreen = () => {
           const userProfile = await response.json();
 
           if (userProfile) {
-            console.log('json', userProfile.name);
             setFirstName(userProfile.name || 'No Name');
             setLastName(userProfile.last_name || 'No Last Name');
             setEmail(userProfile.email || 'No Email');
@@ -109,43 +108,40 @@ const ProfileScreen = () => {
       !phoneNumber
     ) {
       setModalMessage(
-        'The only field that can be empty is the bio.  please fill all fields.',
+        'The only field that can be empty is the bio. Please fill all fields.',
       );
       setShowModal(true);
       return;
     }
+
     if (!phoneNumber.startsWith('+54')) {
-      setModalMessage('The number can be start with +54');
+      setModalMessage('The number must start with +54');
       setShowModal(true);
       return;
     }
 
     try {
       setIsLoading(true);
-
       const token = await AsyncStorage.getItem('token');
       if (token) {
         const decoded = jwtDecode(token);
         const userId = decoded.user_id || decoded.sub;
 
-        const response = await fetch(
-          `${API_URL}/api/users/profile/${userId}`,
-          {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              name: firstName,
-              last_name: lastName,
-              email: email,
-              bio: bio,
-              photo: userImage,
-              phone: phoneNumber,
-            }),
+        const response = await fetch(`${API_URL}/api/users/profile/${userId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
-        );
+          body: JSON.stringify({
+            name: firstName,
+            last_name: lastName,
+            email: email,
+            bio: bio,
+            photo: userImage,
+            phone: phoneNumber,
+          }),
+        });
 
         const result = await response.json();
 
@@ -189,74 +185,77 @@ const ProfileScreen = () => {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.title}>My Profile</Text>
-      <TouchableOpacity onPress={handleSelectImage}>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{
-              uri:
-                userImage || 'https://www.w3schools.com/howto/img_avatar.png',
-            }}
-            style={styles.profileImage}
-          />
-          <Text style={styles.changeText}>Change profile picture</Text>
-        </View>
-      </TouchableOpacity>
 
-      <Text style={styles.label}>First Name</Text>
-      <TextInput
-        style={styles.input}
-        value={firstName}
-        onChangeText={setFirstName}
-      />
+      <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
+        <Text style={styles.title}>My Profile</Text>
 
-      <Text style={styles.label}>Last Name</Text>
-      <TextInput
-        style={styles.input}
-        value={lastName}
-        onChangeText={setLastName}
-      />
+        <TouchableOpacity onPress={handleSelectImage}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{
+                uri:
+                  userImage || 'https://www.w3schools.com/howto/img_avatar.png',
+              }}
+              style={styles.profileImage}
+            />
+            <Text style={styles.changeText}>Change profile picture</Text>
+          </View>
+        </TouchableOpacity>
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={[styles.input, styles.readOnlyInput]}
-        value={email}
-        editable={false}
-      />
-      <Text style={styles.label}>Location</Text>
-      <TextInput
-        style={[styles.input, styles.readOnlyInput]}
-        value={location}
-        editable={false}
-      />
+        <Text style={styles.label}>First Name</Text>
+        <TextInput
+          style={styles.input}
+          value={firstName}
+          onChangeText={setFirstName}
+        />
 
-      <Text style={styles.label}>Role</Text>
-      <TextInput
-        style={[styles.input, styles.readOnlyInput]}
-        value={role}
-        editable={false}
-      />
+        <Text style={styles.label}>Last Name</Text>
+        <TextInput
+          style={styles.input}
+          value={lastName}
+          onChangeText={setLastName}
+        />
 
-      <Text style={styles.label}>Bio</Text>
-      <TextInput
-        style={[styles.input, styles.bio]}
-        value={bio}
-        onChangeText={setBio}
-        multiline
-      />
-      <Text style={styles.label}>Phone number</Text>
-      <TextInput
-        style={styles.input}
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
-      />
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={[styles.input, styles.readOnlyInput]}
+          value={email}
+          editable={false}
+        />
 
-      <TouchableOpacity
-        style={styles.saveButton}
-        onPress={() => handleSaveChanges()}
-      >
-        <Text style={styles.saveButtonText}>Save Changes</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Location</Text>
+        <TextInput
+          style={[styles.input, styles.readOnlyInput]}
+          value={location}
+          editable={false}
+        />
+
+        <Text style={styles.label}>Role</Text>
+        <TextInput
+          style={[styles.input, styles.readOnlyInput]}
+          value={role}
+          editable={false}
+        />
+
+        <Text style={styles.label}>Bio</Text>
+        <TextInput
+          style={[styles.input, styles.bio]}
+          value={bio}
+          onChangeText={setBio}
+          multiline
+        />
+
+        <Text style={styles.label}>Phone number</Text>
+        <TextInput
+          style={styles.input}
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+        />
+
+        <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+          <Text style={styles.saveButtonText}>Save Changes</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
@@ -268,12 +267,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   logoutButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     backgroundColor: '#FF6B6B',
     borderRadius: 20,
     alignSelf: 'flex-end',
-    marginRight: 16,
+    marginRight: 20,
     marginTop: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -282,10 +281,11 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   logoutText: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'white',
     fontWeight: 'bold',
   },
+
   title: {
     alignSelf: 'center',
     fontSize: 20,

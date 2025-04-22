@@ -1,56 +1,58 @@
-// GoogleAuth.tsx
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '../configs/FirebaseConfig';
+import * as Google from 'expo-auth-session';
+import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
-import { API_URL } from '@env';
+
 export const loginWithGoogle = async (navigation: any) => {
-  const provider = new GoogleAuthProvider();
-
   try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    const idToken = await user.getIdToken();
-
-    const response = await fetch(`${API_URL}/api/auth/google`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ google_token: idToken }),
+    const { type, authentication } = await Google.useAuthRequest({
+      androidClientId:
+        '265750987543-ks66gl8in4vq899lgosftfsbtaki5i46.apps.googleusercontent.com',
     });
 
-    const data = await response.json();
+    if (type === 'success') {
+      const { id_token } = authentication;
 
-    if (!response.ok) {
-      console.log('❌ Error al loguear en backend:', data.detail);
-      return;
-    }
+      const response = await fetch(`${API_URL}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ google_token: id_token }),
+      });
 
-    const backendToken = data.access_token;
-    await AsyncStorage.setItem('token', backendToken);
+      const data = await response.json();
 
-    const decoded: any = jwtDecode(backendToken);
-    const userId = decoded.sub;
+      if (!response.ok) {
+        console.log('❌ Error al loguear en backend:', data.detail);
+        return;
+      }
 
-    const profileResponse = await fetch(
-      `${API_URL}/api/users/profile/${userId}`,
-      {
-        method: 'GET',
-        headers: {},
-      },
-    );
+      const backendToken = data.access_token;
+      await AsyncStorage.setItem('token', backendToken);
 
-    if (!profileResponse.ok) {
-      console.log('❌ Error al obtener el perfil');
-      return;
-    }
+      const decoded: any = jwtDecode(backendToken);
+      const userId = decoded.sub;
 
-    const userProfile = await profileResponse.json();
-    const userRole = userProfile.role;
+      const profileResponse = await fetch(
+        `${API_URL}/api/users/profile/${userId}`,
+        {
+          method: 'GET',
+          headers: {},
+        },
+      );
 
-    if (userRole === 'teacher') {
-      navigation.navigate('TeacherCourses');
-    } else {
-      navigation.navigate('StudentCourses');
+      if (!profileResponse.ok) {
+        console.log('❌ Error al obtener el perfil');
+        return;
+      }
+
+      const userProfile = await profileResponse.json();
+      const userRole = userProfile.role;
+
+      if (userRole === 'teacher') {
+        navigation.navigate('TeacherCourses');
+      } else {
+        navigation.navigate('StudentCourses');
+      }
     }
   } catch (error: any) {
     console.error('Error en login con Google:', error.message);

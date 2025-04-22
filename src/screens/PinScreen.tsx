@@ -20,13 +20,10 @@ const PinScreen = () => {
   const verifyPin = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        `${API_URL}/api/auth/verify-pin`,
-        {
-          userId,
-          pin,
-        },
-      );
+      const response = await axios.post(`${API_URL}/api/auth/verify-pin`, {
+        userId,
+        pin,
+      });
 
       if (response.status === 200) {
         navigation.navigate('Login');
@@ -43,13 +40,10 @@ const PinScreen = () => {
 
   const resendPin = async () => {
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/resend-pin`,
-        {
-          userId,
-          phone,
-        },
-      );
+      const response = await axios.post(`${API_URL}/api/auth/resend-pin`, {
+        userId,
+        phone,
+      });
 
       if (response.status === 200) {
         Alert.alert('PIN Sent', 'A new PIN has been sent to your number.');

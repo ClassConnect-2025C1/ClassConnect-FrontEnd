@@ -33,6 +33,18 @@ const LoginScreen = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId:
+      '265750987543-ks66gl8in4vq899lgosftfsbtaki5i46.apps.googleusercontent.com',
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.authentication!;
+      loginWithGoogle(id_token, navigation);
+    }
+  }, [response]);
+
   const handleLogin = async () => {
     setEmailError('');
     setPasswordError('');
@@ -180,16 +192,24 @@ const LoginScreen = () => {
 
         <Text style={styles.orText}>Or log in with</Text>
 
-        <View style={styles.socialContainer}>
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
           <TouchableOpacity
-            style={styles.googleButton}
-            onPress={() => loginWithGoogle(navigation)}
+            style={{
+              backgroundColor: '#fff',
+              padding: 12,
+              borderRadius: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+            onPress={() => promptAsync()}
           >
             <Image
               source={require('../../assets/images/googlelog.png')}
-              style={styles.socialIcon}
+              style={{ width: 20, height: 20, marginRight: 10 }}
             />
-            <Text style={styles.googleText}>Login with Google</Text>
+            <Text>Login with Google</Text>
           </TouchableOpacity>
         </View>
 
