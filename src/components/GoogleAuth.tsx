@@ -1,59 +1,47 @@
-import * as Google from 'expo-auth-session';
+// GoogleAuth.ts
 import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 
-export const loginWithGoogle = async (navigation: any) => {
+export const handleGoogleLoginCallback = async (
+  idToken: string,
+  navigation: any,
+) => {
   try {
-    const { type, authentication } = await Google.useAuthRequest({
-      androidClientId:
-        '265750987543-ks66gl8in4vq899lgosftfsbtaki5i46.apps.googleusercontent.com',
+    const response = await fetch(`${API_URL}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ google_token: idToken }),
     });
 
-    if (type === 'success') {
-      const { id_token } = authentication;
+    const data = await response.json();
 
-      const response = await fetch(`${API_URL}/api/auth/google`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ google_token: id_token }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.log('❌ Error al loguear en backend:', data.detail);
-        return;
-      }
-
-      const backendToken = data.access_token;
-      await AsyncStorage.setItem('token', backendToken);
-
-      const decoded: any = jwtDecode(backendToken);
-      const userId = decoded.sub;
-
-      const profileResponse = await fetch(
-        `${API_URL}/api/users/profile/${userId}`,
-        {
-          method: 'GET',
-          headers: {},
-        },
-      );
-
-      if (!profileResponse.ok) {
-        console.log('❌ Error al obtener el perfil');
-        return;
-      }
-
-      const userProfile = await profileResponse.json();
-      const userRole = userProfile.role;
-
-      if (userRole === 'teacher') {
-        navigation.navigate('TeacherCourses');
-      } else {
-        navigation.navigate('StudentCourses');
-      }
+    if (!response.ok) {
+      console.log('❌ Error al loguear en backend:', data.detail);
+      return;
     }
+
+    const backendToken = data.access_token;
+    await AsyncStorage.setItem('token', backendToken);
+
+    const decoded: any = jwtDecode(backendToken);
+    const userId = decoded.sub;
+
+    const profileResponse = await fetch(
+      `${API_URL}/api/users/profile/${userId}`,
+    );
+
+    if (!profileResponse.ok) {
+      console.log('❌ Error al obtener el perfil');
+      return;
+    }
+
+    const userProfile = await profileResponse.json();
+    const userRole = userProfile.role;
+
+    navigation.navigate(
+      userRole === 'teacher' ? 'TeacherCourses' : 'StudentCourses',
+    );
   } catch (error: any) {
     console.error('Error en login con Google:', error.message);
   }

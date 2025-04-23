@@ -15,10 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.classconnect.app"
+      "bundleIdentifier": "com.classconnect1.app"
     },
     "android": {
-      "package": "com.classconnect.app",
+      "package": "com.classconnect1.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -36,6 +36,7 @@
       "eas": {
         "projectId": "c01c75ab-7cf3-457c-9edc-98d09376e36e"
       }
-    }
+    },
+    "plugins": ["@react-native-google-signin/google-signin"]
   }
 }

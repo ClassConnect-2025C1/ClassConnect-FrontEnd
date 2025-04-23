@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,10 +14,12 @@ import { useNavigation } from '@react-navigation/native';
 import { showLoginErrorToast } from '../Errors/LoginErrors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
-import { loginWithGoogle } from '../components/GoogleAuth';
-import * as AuthSession from 'expo-auth-session';
+import { handleGoogleLoginCallback } from '../components/GoogleAuth';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 import { API_URL } from '@env';
+import { useAuthRequest } from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -33,17 +35,26 @@ const LoginScreen = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
+  const [googleLoginPressed, setGoogleLoginPressed] = useState(false);
+
+  const [request, response, promptAsync] = useAuthRequest({
     androidClientId:
-      '265750987543-ks66gl8in4vq899lgosftfsbtaki5i46.apps.googleusercontent.com',
+      '98403984467-b7t9npmhl4bc1aa6tnrsh8hg4esi4mem.apps.googleusercontent.com',
+    webClientId:
+      '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com',
+      redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
   });
 
   useEffect(() => {
-    if (response?.type === 'success') {
+    if (googleLoginPressed && response?.type === 'success') {
+      WebBrowser.maybeCompleteAuthSession();
       const { id_token } = response.authentication!;
-      loginWithGoogle(id_token, navigation);
+      console.log('Google ID Token:', id_token);
+      handleGoogleLoginCallback(id_token, navigation);
+
+      setGoogleLoginPressed(false);
     }
-  }, [response]);
+  }, [response, googleLoginPressed]);
 
   const handleLogin = async () => {
     setEmailError('');
@@ -203,7 +214,10 @@ const LoginScreen = () => {
               flexDirection: 'row',
               alignItems: 'center',
             }}
-            onPress={() => promptAsync()}
+            onPress={() => {
+              setGoogleLoginPressed(true);
+              promptAsync();
+            }}
           >
             <Image
               source={require('../../assets/images/googlelog.png')}
