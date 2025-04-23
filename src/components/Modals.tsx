@@ -28,10 +28,10 @@ export const AcceptRejectModal = ({
           <Text style={styles.message}>{message}</Text>
           <View style={styles.buttonRow}>
             <TouchableOpacity onPress={onReject} style={styles.cancel}>
-              <Text>Cancel</Text>
+              <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={onAccept} style={styles.confirm}>
-              <Text style={{ color: 'white' }}>Accept</Text>
+              <Text style={styles.buttonText}>Accept</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -63,12 +63,14 @@ export const AcceptOnlyModal = ({
       <View style={styles.overlay}>
         <View style={styles.modal}>
           <Text style={styles.message}>{message}</Text>
-          <TouchableOpacity
-            onPress={onAccept}
-            style={[styles.confirm, { marginTop: 10 }]}
-          >
-            <Text style={{ color: 'white' }}>Accept</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              onPress={onAccept}
+              style={styles.confirm}
+            >
+              <Text style={styles.buttonText}>Accept</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -90,26 +92,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   message: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
     marginBottom: 20,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
+    width: '100%',
   },
   cancel: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: '#999',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
     flex: 1,
     alignItems: 'center',
   },
   confirm: {
     backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
     flex: 1,
     alignItems: 'center',
   },
+  buttonText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: 'bold',
+  },
 });
+
