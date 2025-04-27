@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
+
 export default function TeacherCourseDetail({ route }) {
   const { course } = route.params;
   const navigation = useNavigation();
@@ -129,6 +130,7 @@ export default function TeacherCourseDetail({ route }) {
           styles.smallButton,
           { alignSelf: 'flex-end', marginBottom: 40 },
         ]}
+        onPress={() => navigation.navigate('TeacherCreateAssignments', { course })}
       >
         <Text style={styles.smallButtonText}>Create assignment</Text>
       </TouchableOpacity>
