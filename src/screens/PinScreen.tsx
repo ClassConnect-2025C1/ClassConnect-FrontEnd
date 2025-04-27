@@ -10,6 +10,8 @@ import {
 import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
+
+
 const PinScreen = () => {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,6 +30,7 @@ const PinScreen = () => {
       if (response.status === 200) {
         navigation.navigate('Login');
       } else {
+
         Alert.alert('Invalid PIN', 'Please try again.');
       }
     } catch (error) {

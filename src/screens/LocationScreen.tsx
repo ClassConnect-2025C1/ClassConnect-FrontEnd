@@ -25,7 +25,7 @@ const LocationScreen = () => {
       getLocation();
     } else {
       setPermissionGranted(false);
-      alert('Permiso de ubicación no otorgado');
+      getLocation();
     }
   };
 
