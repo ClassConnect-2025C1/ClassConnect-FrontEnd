@@ -42,7 +42,7 @@ const LoginScreen = () => {
       '98403984467-b7t9npmhl4bc1aa6tnrsh8hg4esi4mem.apps.googleusercontent.com',
     webClientId:
       '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com',
-      redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
+    redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
   });
 
   useEffect(() => {

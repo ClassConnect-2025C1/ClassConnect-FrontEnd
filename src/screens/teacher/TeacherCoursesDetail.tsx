@@ -12,10 +12,11 @@ export default function TeacherCourseDetail({ route }) {
   const { course } = route.params;
   const navigation = useNavigation();
 
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [activeTab, setActiveTab] = useState('Assignments');
+  const [activeSubTab, setActiveSubTab] = useState('Assignments');
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.mainContainer}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
@@ -23,238 +24,227 @@ export default function TeacherCourseDetail({ route }) {
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
 
-      <View style={[styles.courseCard, { backgroundColor: course.color }]}>
-        <Text style={styles.courseText}>{course.title}</Text>
-        <Text style={styles.courseDescription}>{course.description}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>Created by:</Text>
-        <Text style={styles.value}>{course.createdBy}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>Capacity:</Text>
-        <Text style={styles.value}>{course.capacity}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>Eligibility:</Text>
-        <Text style={styles.value}>
-          {course.eligibilityCriteria || 'Not specified'}
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>{course.title}</Text>
+        <Text style={styles.subtitle}>
+          {course.description || 'No description available'}
         </Text>
-      </View>
 
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>Start Date:</Text>
-        <Text style={styles.value}>{course.startDate}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>End Date:</Text>
-        <Text style={styles.value}>{course.endDate}</Text>
-      </View>
-
-      <View style={styles.optionsContainer}>
-        <TouchableOpacity
-          style={[
-            styles.optionButton,
-            selectedOption === 'assignments' && styles.selectedOptionButton,
-          ]}
-          onPress={() => setSelectedOption('assignments')}
-        >
-          <Text
-            style={[
-              styles.optionText,
-              selectedOption === 'assignments' && styles.selected,
-            ]}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tabButton, { backgroundColor: '#D3D3D3' }]}
+            onPress={() =>
+              navigation.navigate('TeacherEditCourseDetail', { course })
+            }
           >
-            Assignments
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.optionButton,
-            selectedOption === 'resources' && styles.selectedOptionButton,
-          ]}
-          onPress={() => setSelectedOption('resources')}
-        >
-          <Text
+            <Text style={styles.tabText}>Edit Course</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[
-              styles.optionText,
-              selectedOption === 'resources' && styles.selected,
+              styles.tabButton,
+              activeTab === 'Feedbacks' && styles.activeTab,
             ]}
+            onPress={() => setActiveTab('Feedbacks')}
           >
-            Resources
-          </Text>
-        </TouchableOpacity>
+            <Text style={styles.tabText}>Feedbacks</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'Members' && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab('Members')}
+          >
+            <Text style={styles.tabText}>Members</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {selectedOption === 'assignments' && (
-        <View style={styles.assignmentSection}>
-          <Text style={styles.assignmentText}>Assignment list goes here</Text>
+      {/* Sección de Assignments y Resources con una línea de separación */}
+      <View style={styles.sectionContainer}>
+        <View style={styles.subTabContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeSubTab === 'Assignments' && styles.activeTab,
+            ]}
+            onPress={() => setActiveSubTab('Assignments')}
+          >
+            <Text style={styles.tabText}>Assignments</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeSubTab === 'Resources' && styles.activeTab,
+            ]}
+            onPress={() => setActiveSubTab('Resources')}
+          >
+            <Text style={styles.tabText}>Resources</Text>
+          </TouchableOpacity>
         </View>
-      )}
+        <View style={styles.separator} />
+      </View>
 
-      {selectedOption === 'resources' && (
-        <View style={styles.resourceSection}>
-          <Text style={styles.resourceText}>Resource list goes here</Text>
-        </View>
-      )}
+      <ScrollView style={styles.contentContainer}>
+        {activeSubTab === 'Assignments' && (
+          <View style={styles.assignmentContainer}>
+            <View style={styles.assignmentHeader}>
+              <Text style={styles.assignmentTitle}>Dijkstra's Algorithm</Text>
+              <Text style={styles.assignmentDate}>18/02/2025</Text>
+            </View>
+            <Text style={styles.assignmentDescription}>
+              Implement Dijkstra's algorithm in python. The file to submit
+              should be a .py file with a main function that receives as
+              parameter a Graph instance, you can find the structure in
+              Resources section.
+            </Text>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.smallButton}>
+                <Text style={styles.smallButtonText}>Edit assignment</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.smallButton}>
+                <Text style={styles.smallButtonText}>See submissions</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={() =>
-          navigation.navigate('TeacherEditCourseDetail', { course })
-        }
-      >
-        <Text style={styles.createButtonText}>Edit Course</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={() => console.log('Create assignment pressed')}
-      >
-        <Text style={styles.createButtonText}>Create Assignment</Text>
-      </TouchableOpacity>
-
-      <View
-        style={{
-          height: 1,
-          backgroundColor: '#ccc',
-          opacity: 0.5,
-          marginHorizontal: 20,
-          marginBottom: 10,
-        }}
-      />
-    </ScrollView>
+        {activeSubTab === 'Resources' && (
+          <View style={styles.assignmentContainer}>
+            <Text style={styles.assignmentTitle}>Course Resources</Text>
+            <Text style={styles.assignmentDescription}>
+              Here you will find resources such as slides, books, and other
+              materials related to this course.
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: '#FFFFFF', // Fondo blanco
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: 40,
+    paddingHorizontal: 20,
   },
   backButton: {
-    marginBottom: 20,
-    backgroundColor: '#E0E0E0', // Gris claro
+    position: 'absolute',
+    top: 30,
+    left: 10,
+    backgroundColor: '#E0E0E0',
     borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    zIndex: 10,
   },
   backButtonText: {
     fontSize: 16,
-    color: '#333333',
     fontWeight: 'bold',
+    color: '#333',
   },
-  courseCard: {
-    borderRadius: 12,
-    padding: 20,
+  headerContainer: {
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: '#F8F8F8',
+    marginHorizontal: 15,
+    marginTop: 40,
     marginBottom: 20,
-    elevation: 3,
+    borderRadius: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  courseText: {
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#333',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#555',
     marginBottom: 10,
   },
-  courseDescription: {
-    fontSize: 16,
-    color: '#333',
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginBottom: 20,
   },
-  infoRow: {
+  tabButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    backgroundColor: '#D3D3D3',
+  },
+  activeTab: {
+    backgroundColor: '#4CAF50',
+  },
+  tabText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  sectionContainer: {
+    marginVertical: 20,
+  },
+  subTabContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#D3D3D3',
+    marginVertical: 10,
+  },
+  contentContainer: {
+    paddingBottom: 20,
+  },
+  assignmentContainer: {
+    backgroundColor: '#F0F0F0',
+    borderRadius: 10,
+    padding: 15,
     marginBottom: 15,
   },
-  label: {
-    fontWeight: 'bold',
-    color: '#000',
-    marginRight: 10,
-    flex: 1,
-  },
-  value: {
-    color: '#000',
-    flexShrink: 1,
-    flex: 2,
-  },
-  optionsContainer: {
+  assignmentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 20,
-    marginBottom: 30,
+    marginBottom: 10,
   },
-  optionButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 30,
-    backgroundColor: '#e0e0e0',
-    marginHorizontal: 10,
-  },
-  selectedOptionButton: {
-    backgroundColor: '#4CAF50', // Verde
-  },
-  optionText: {
+  assignmentTitle: {
     fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
-  },
-  selected: {
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#333',
   },
-  assignmentSection: {
-    marginTop: 20,
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+  assignmentDate: {
+    fontSize: 14,
+    color: '#888',
+  },
+  assignmentDescription: {
+    fontSize: 14,
+    color: '#555',
     marginBottom: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  resourceSection: {
-    marginTop: 20,
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  assignmentText: {
-    fontSize: 16,
-    color: '#000',
-    textAlign: 'center',
+  smallButton: {
+    backgroundColor: '#D3D3D3',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
   },
-  resourceText: {
-    fontSize: 16,
-    color: '#000',
-    textAlign: 'center',
-  },
-  createButton: {
-    marginTop: 10,
-    backgroundColor: '#4CAF50', // Verde
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  createButtonText: {
+  smallButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
 });

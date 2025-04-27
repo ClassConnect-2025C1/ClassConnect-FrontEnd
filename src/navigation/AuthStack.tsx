@@ -10,6 +10,7 @@ import PinScreen from '../screens/PinScreen';
 import StudentCoursesScreen from '../screens/student/StudentCoursesScreen';
 import StudentAvailableCoursesScrenn from '../screens/student/StudentAvailableCoursesScrenn';
 import StudentCourseDetail from '../screens/student/StudentCourseDetail';
+import StudentFeedbackScreen from '../screens/student/StudentFeedbackScreen';
 
 import TeacherCoursesScreen from '../screens/teacher/TeacherCoursesScreen';
 import TeacherCreateNewCourse from '../screens/teacher/TeacherCreateNewCourse';
@@ -38,6 +39,9 @@ const AuthStack = () => (
       component={StudentAvailableCoursesScrenn}
     />
     <Stack.Screen name="StudentCourseDetail" component={StudentCourseDetail} />
+    <Stack.Screen name="StudentFeedback" component={StudentFeedbackScreen} />
+
+    {/* Teacher Screens */}
 
     <Stack.Screen name="TeacherCourses" component={TeacherCoursesScreen} />
     <Stack.Screen name="CreateNewCourse" component={TeacherCreateNewCourse} />
