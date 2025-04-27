@@ -13,6 +13,7 @@ export default function TeacherCourseDetail({ route }) {
   const navigation = useNavigation();
 
   const [activeTab, setActiveTab] = useState('Assignments');
+  const [activeSubTab, setActiveSubTab] = useState('Assignments');
 
   return (
     <View style={styles.mainContainer}>
@@ -23,7 +24,6 @@ export default function TeacherCourseDetail({ route }) {
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
 
-
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{course.title}</Text>
         <Text style={styles.subtitle}>
@@ -32,10 +32,7 @@ export default function TeacherCourseDetail({ route }) {
 
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              { backgroundColor: '#4CAF50' }, 
-            ]}
+            style={[styles.tabButton, { backgroundColor: '#D3D3D3' }]}
             onPress={() =>
               navigation.navigate('TeacherEditCourseDetail', { course })
             }
@@ -44,20 +41,14 @@ export default function TeacherCourseDetail({ route }) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'Feedbacks' && styles.activeTab,
-            ]}
+            style={[styles.tabButton, activeTab === 'Feedbacks' && styles.activeTab]}
             onPress={() => setActiveTab('Feedbacks')}
           >
             <Text style={styles.tabText}>Feedbacks</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'Members' && styles.activeTab,
-            ]}
+            style={[styles.tabButton, activeTab === 'Members' && styles.activeTab]}
             onPress={() => setActiveTab('Members')}
           >
             <Text style={styles.tabText}>Members</Text>
@@ -65,9 +56,29 @@ export default function TeacherCourseDetail({ route }) {
         </View>
       </View>
 
+      {/* Sección de Assignments y Resources con una línea de separación */}
+      <View style={styles.sectionContainer}>
+        <View style={styles.subTabContainer}>
+          <TouchableOpacity
+            style={[styles.tabButton, activeSubTab === 'Assignments' && styles.activeTab]}
+            onPress={() => setActiveSubTab('Assignments')}
+          >
+            <Text style={styles.tabText}>Assignments</Text>
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[styles.tabButton, activeSubTab === 'Resources' && styles.activeTab]}
+            onPress={() => setActiveSubTab('Resources')}
+          >
+            <Text style={styles.tabText}>Resources</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.separator} />
+      </View>
+      
       <ScrollView style={styles.contentContainer}>
-        {activeTab === 'Assignments' && (
+
+        {activeSubTab === 'Assignments' && (
           <View style={styles.assignmentContainer}>
             <View style={styles.assignmentHeader}>
               <Text style={styles.assignmentTitle}>Dijkstra's Algorithm</Text>
@@ -84,12 +95,21 @@ export default function TeacherCourseDetail({ route }) {
                 <Text style={styles.smallButtonText}>Edit assignment</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.smallButton}>
-                <Text style={styles.smallButtonText}>See 8 submissions</Text>
+                <Text style={styles.smallButtonText}>See submissions</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
-        {/* Agregar contenido para otras pestañas si quieres */}
+
+        {activeSubTab === 'Resources' && (
+          <View style={styles.assignmentContainer}>
+            <Text style={styles.assignmentTitle}>Course Resources</Text>
+            <Text style={styles.assignmentDescription}>
+              Here you will find resources such as slides, books, and other
+              materials related to this course.
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -100,6 +120,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingTop: 40,
+    paddingHorizontal: 20,
   },
   backButton: {
     position: 'absolute',
@@ -114,6 +135,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#333',
   },
   headerContainer: {
     paddingTop: 50,
@@ -133,24 +155,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#333',
   },
   subtitle: {
     fontSize: 14,
     color: '#555',
     marginBottom: 10,
-  },
-  editCourseButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 15,
-  },
-  editCourseButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -170,8 +180,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+  sectionContainer: {
+    marginVertical: 20,
+  },
+  subTabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#D3D3D3',
+    marginVertical: 10,
+  },
   contentContainer: {
-    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   assignmentContainer: {
     backgroundColor: '#F0F0F0',
@@ -187,6 +210,7 @@ const styles = StyleSheet.create({
   assignmentTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#333',
   },
   assignmentDate: {
     fontSize: 14,
@@ -194,6 +218,7 @@ const styles = StyleSheet.create({
   },
   assignmentDescription: {
     fontSize: 14,
+    color: '#555',
     marginBottom: 10,
   },
   buttonRow: {
@@ -201,7 +226,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   smallButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#D3D3D3',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
