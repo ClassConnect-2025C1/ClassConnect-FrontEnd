@@ -41,14 +41,20 @@ export default function TeacherCourseDetail({ route }) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'Feedbacks' && styles.activeTab]}
+            style={[
+              styles.tabButton,
+              activeTab === 'Feedbacks' && styles.activeTab,
+            ]}
             onPress={() => setActiveTab('Feedbacks')}
           >
             <Text style={styles.tabText}>Feedbacks</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'Members' && styles.activeTab]}
+            style={[
+              styles.tabButton,
+              activeTab === 'Members' && styles.activeTab,
+            ]}
             onPress={() => setActiveTab('Members')}
           >
             <Text style={styles.tabText}>Members</Text>
@@ -60,14 +66,20 @@ export default function TeacherCourseDetail({ route }) {
       <View style={styles.sectionContainer}>
         <View style={styles.subTabContainer}>
           <TouchableOpacity
-            style={[styles.tabButton, activeSubTab === 'Assignments' && styles.activeTab]}
+            style={[
+              styles.tabButton,
+              activeSubTab === 'Assignments' && styles.activeTab,
+            ]}
             onPress={() => setActiveSubTab('Assignments')}
           >
             <Text style={styles.tabText}>Assignments</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tabButton, activeSubTab === 'Resources' && styles.activeTab]}
+            style={[
+              styles.tabButton,
+              activeSubTab === 'Resources' && styles.activeTab,
+            ]}
             onPress={() => setActiveSubTab('Resources')}
           >
             <Text style={styles.tabText}>Resources</Text>
@@ -75,9 +87,8 @@ export default function TeacherCourseDetail({ route }) {
         </View>
         <View style={styles.separator} />
       </View>
-      
-      <ScrollView style={styles.contentContainer}>
 
+      <ScrollView style={styles.contentContainer}>
         {activeSubTab === 'Assignments' && (
           <View style={styles.assignmentContainer}>
             <View style={styles.assignmentHeader}>
