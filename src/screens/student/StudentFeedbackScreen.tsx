@@ -21,35 +21,35 @@ const StudentFeedbackScreen = () => {
 
   const handleSubmitFeedback = async () => {
     try {
-      const token = await AsyncStorage.getItem('token'); 
+      const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
       const decodedToken = jwtDecode(token);
-      const user_id = decodedToken.sub
-  
+      const user_id = decodedToken.sub;
+
       const response = await fetch(`${API_URL}/${courseId}/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           user_id: user_id,
-          summarty: summary,        
+          summarty: summary,
           rating: rating,
           comment: comment,
         }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error submitting feedback:', errorData);
         return;
       }
-  
+
       const data = await response.json();
       console.log('Feedback enviado exitosamente:', data);
-      navigation.goBack(); 
+      navigation.goBack();
     } catch (error) {
       console.error('Unexpected error:', error);
     }

@@ -32,57 +32,59 @@ export default function TeacherCourseDetail({ route }) {
 
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tabButton, { backgroundColor: '#D3D3D3' }]}
             onPress={() =>
               navigation.navigate('TeacherEditCourseDetail', { course })
             }
           >
-            <Text style={styles.tabText}>Edit Course</Text>
+            <Text style={[styles.tabTextLink]}>Edit Course</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'Feedbacks' && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab('Feedbacks')}
-          >
-            <Text style={styles.tabText}>Feedbacks</Text>
+          <TouchableOpacity onPress={() => setActiveTab('Feedbacks')}>
+            <Text
+              style={[
+                styles.tabTextLink,
+                activeTab === 'Feedbacks' && styles.activeTabText,
+              ]}
+            >
+              Feedbacks
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'Members' && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab('Members')}
-          >
-            <Text style={styles.tabText}>Members</Text>
+          <TouchableOpacity onPress={() => setActiveTab('Members')}>
+            <Text
+              style={[
+                styles.tabTextLink,
+                activeTab === 'Members' && styles.activeTabText,
+              ]}
+            >
+              Members
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Sección de Assignments y Resources con una línea de separación */}
       <View style={styles.sectionContainer}>
         <View style={styles.subTabContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeSubTab === 'Assignments' && styles.activeTab,
-            ]}
-            onPress={() => setActiveSubTab('Assignments')}
-          >
-            <Text style={styles.tabText}>Assignments</Text>
+          <TouchableOpacity onPress={() => setActiveSubTab('Assignments')}>
+            <Text
+              style={[
+                styles.subTabText,
+                activeSubTab === 'Assignments' && styles.activeSubTabText,
+              ]}
+            >
+              Assignments
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeSubTab === 'Resources' && styles.activeTab,
-            ]}
-            onPress={() => setActiveSubTab('Resources')}
-          >
-            <Text style={styles.tabText}>Resources</Text>
+          <TouchableOpacity onPress={() => setActiveSubTab('Resources')}>
+            <Text
+              style={[
+                styles.subTabText,
+                activeSubTab === 'Resources' && styles.activeSubTabText,
+              ]}
+            >
+              Resources
+            </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.separator} />
@@ -122,16 +124,23 @@ export default function TeacherCourseDetail({ route }) {
           </View>
         )}
       </ScrollView>
+      <TouchableOpacity
+        style={[
+          styles.smallButton,
+          { alignSelf: 'flex-end', marginBottom: 40 },
+        ]}
+      >
+        <Text style={styles.smallButtonText}>Create assignment</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingTop: 40,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
   },
   backButton: {
     position: 'absolute',
@@ -149,9 +158,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   headerContainer: {
-    paddingTop: 50,
+    paddingTop: 30,
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 0,
     backgroundColor: '#F8F8F8',
     marginHorizontal: 15,
     marginTop: 40,
@@ -196,14 +205,26 @@ const styles = StyleSheet.create({
   },
   subTabContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 10,
+    justifyContent: 'center',
+    gap: 30,
+    marginBottom: 0,
+  },
+
+  subTabText: {
+    fontSize: 16,
+    color: '#555',
   },
   separator: {
     height: 1,
     backgroundColor: '#D3D3D3',
     marginVertical: 10,
   },
+  activeSubTabText: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+
   contentContainer: {
     paddingBottom: 20,
   },
@@ -240,11 +261,43 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3D3D3',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 5,
   },
   smallButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  tabTextLink: {
+    fontSize: 16,
+    color: '#555',
+    marginHorizontal: 10,
+    paddingVertical: 5,
+  },
+
+  activeTabText: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+
+  createAssignmentButton: {
+    backgroundColor: '#B0B0B0',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 25,
+    marginBottom: 40,
+    alignSelf: 'flex-end',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  createAssignmentButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
