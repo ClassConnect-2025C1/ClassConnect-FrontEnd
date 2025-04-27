@@ -16,17 +16,29 @@ export default function CourseDetail({ route }) {
   const [activeTab, setActiveTab] = useState('Assignments');
 
   const assignments = [
-    "Implement Dijkstra's Algorithm",
-    'Read Chapter 5 of the book',
-    'Solve graph exercises 1 to 5',
+    {
+      title: "Dijkstra's Algorithm",
+      dueDate: '18/02/2025',
+      description: "Implement Dijkstra's algorithm in Python. The file should be a .py file with a main function receiving a Graph instance.",
+    },
+    {
+      title: "Read Chapter 5",
+      dueDate: '20/02/2025',
+      description: 'Read Chapter 5 of the book and prepare a summary.',
+    },
+    {
+      title: "Graph Exercises",
+      dueDate: '22/02/2025',
+      description: 'Solve graph exercises 1 to 5 from the exercise book.',
+    },
   ];
+  
 
   const resources = [
     'Slides Week 1',
     'Graph Theory eBook',
     'Sample Graph Data',
   ];
-  
 
   return (
     <View style={styles.mainContainer}>
@@ -94,7 +106,13 @@ export default function CourseDetail({ route }) {
           {activeTab === 'Assignments' &&
             assignments.map((item, index) => (
               <View key={index} style={styles.itemContainer}>
-                <Text style={styles.itemText}>{item}</Text>
+                <Text style={styles.itemText}>{item.title}</Text>
+                <Text style={styles.itemDescription}>{item.description}</Text>
+                <Text style={styles.itemText}>Due: {item.dueDate}</Text>
+
+                <TouchableOpacity style={styles.submitButton}>
+                  <Text style={styles.submitButtonText}>Enter Submission</Text>
+                </TouchableOpacity>
               </View>
             ))}
 
@@ -214,6 +232,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  itemDescription: {
+    fontSize: 12,
+    color: '#777',
+    marginBottom: 10,
+  },
+  submitButton: {
+    backgroundColor: 'transparent', 
+    paddingVertical: 6, 
+    paddingHorizontal: 15, 
+    borderRadius: 10,
+    marginTop: 10,
+    alignSelf: 'flex-end', 
+    borderWidth: 1,
+    borderColor: '#D3D3D3', 
+  },
+  submitButtonText: {
+    color: 'black', 
+  },
+  
   feedbackContainer: {
     alignItems: 'center',
     marginBottom: 30,
