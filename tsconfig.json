@@ -1,4 +1,21 @@
 {
-  "compilerOptions": {},
-  "extends": "expo/tsconfig.base"
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true, // Para escribir TypeScript más seguro
+    "baseUrl": ".", // Te deja usar imports relativos más limpios
+    "paths": {
+      "@/*": ["src/*"], // Opcional: atajo para tu carpeta src
+      "@env": ["env.d.ts"] // Soluciona el tema de @env
+    },
+    "allowJs": true, // Permite usar también archivos .js
+    "checkJs": false, // No te exige tipar los .js (sino rompe todo)
+    "moduleResolution": "node", // Para que resuelva como Node.js
+    "resolveJsonModule": true, // Si querés importar JSONs
+    "esModuleInterop": true, // Para usar imports comunes sin problemas
+    "skipLibCheck": true // Evita errores de librerías externas
+  },
+  "include": [
+    "src", // Tu código fuente
+    "env.d.ts" // El tipado de @env
+  ]
 }

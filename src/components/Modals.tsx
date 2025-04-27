@@ -64,10 +64,7 @@ export const AcceptOnlyModal = ({
         <View style={styles.modal}>
           <Text style={styles.message}>{message}</Text>
           <View style={styles.buttonRow}>
-            <TouchableOpacity
-              onPress={onAccept}
-              style={styles.confirm}
-            >
+            <TouchableOpacity onPress={onAccept} style={styles.confirm}>
               <Text style={styles.buttonText}>Accept</Text>
             </TouchableOpacity>
           </View>
@@ -123,4 +120,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
