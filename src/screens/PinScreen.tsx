@@ -10,6 +10,8 @@ import {
 import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
+
+
 const PinScreen = () => {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,17 +22,15 @@ const PinScreen = () => {
   const verifyPin = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        `${API_URL}/api/auth/verify-pin`,
-        {
-          userId,
-          pin,
-        },
-      );
+      const response = await axios.post(`${API_URL}/api/auth/verify-pin`, {
+        userId,
+        pin,
+      });
 
       if (response.status === 200) {
         navigation.navigate('Login');
       } else {
+
         Alert.alert('Invalid PIN', 'Please try again.');
       }
     } catch (error) {
@@ -43,13 +43,10 @@ const PinScreen = () => {
 
   const resendPin = async () => {
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/resend-pin`,
-        {
-          userId,
-          phone,
-        },
-      );
+      const response = await axios.post(`${API_URL}/api/auth/resend-pin`, {
+        userId,
+        phone,
+      });
 
       if (response.status === 200) {
         Alert.alert('PIN Sent', 'A new PIN has been sent to your number.');

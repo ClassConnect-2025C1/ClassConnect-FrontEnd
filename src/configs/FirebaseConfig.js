@@ -5,7 +5,7 @@ const firebaseConfig = {
   apiKey: 'AIzaSyBd6mNdGlptYkb_sDbEl8wZBiQhuntwUac',
   authDomain: 'loginclassconnect.firebaseapp.com',
   projectId: 'loginclassconnect',
-  storageBucket: 'loginclassconnect.appspot.com',
+  storageBucket: 'loginclassconnect.firebasestorage.app',
   messagingSenderId: '98403984467',
   appId: '1:98403984467:web:9ff498a7b1534908b1d2a6',
 };

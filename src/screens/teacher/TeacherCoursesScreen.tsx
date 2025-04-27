@@ -75,16 +75,13 @@ const CoursesScreen = ({ route }) => {
   const handleDeleteCourse = async (courseId: string) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await fetch(
-        `${API_URL}/api/courses/${courseId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+      const response = await fetch(`${API_URL}/api/courses/${courseId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       if (!response.ok) {
         let errorMessage = 'Failed to delete the course.';
