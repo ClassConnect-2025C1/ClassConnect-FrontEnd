@@ -24,23 +24,24 @@ const FeedbackScreen = () => {
       id: '1',
       title: 'Another positive feedback',
       content: 'But this time longer',
-      type: 'positive',
+      rating: 5,
     },
     {
       id: '2',
       title: 'Now a negative feedback',
       content:
-        'The professor had us waiting for a while month to give us the grades and we never even got to learn anything',
-      type: 'negative',
+        'The professor had us waiting for a whole month to give us the grades and we never even got to learn anything',
+      rating: 2,
     },
   ];
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Título centrado */}
       <Text style={styles.header}>Course Feedbacks</Text>
 
       <View style={styles.filterContainer}>
+
+
         <View style={styles.dateFilter}>
           <Text style={styles.filterLabel}>From</Text>
           <View style={styles.dateBox}>
@@ -70,15 +71,11 @@ const FeedbackScreen = () => {
         data={feedbacks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View
-            style={[
-              styles.feedbackItem,
-              item.type === 'positive'
-                ? styles.positiveFeedback
-                : styles.negativeFeedback,
-            ]}
-          >
-            <Text style={styles.feedbackTitle}>{item.title}</Text>
+          <View style={styles.feedbackItem}>
+            <View style={styles.feedbackHeader}>
+              <Text style={styles.feedbackTitle}>{item.title}</Text>
+              <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
+            </View>
             <Text style={styles.feedbackContent}>{item.content}</Text>
           </View>
         )}
@@ -86,10 +83,9 @@ const FeedbackScreen = () => {
           <Text style={styles.sectionHeader}>Feedbacks</Text>
         }
         style={styles.feedbackList}
-        contentContainerStyle={{ paddingBottom: 100 }} // Para no tapar la lista con el botón
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {/* Botón Back abajo */}
       <View style={styles.bottomButtonContainer}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Close</Text>
@@ -98,26 +94,24 @@ const FeedbackScreen = () => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f2f4f7',
     paddingHorizontal: 16,
     paddingTop: 40,
   },
   header: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginTop: 20,
     marginBottom: 20,
     textAlign: 'center',
-    color: 'black',
+    color: '#2c3e50',
   },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   dateFilter: {
     flex: 1,
@@ -128,68 +122,98 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#2c3e50',
     marginBottom: 4,
+    fontWeight: '500',
   },
   dateBox: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#ccc',
     borderRadius: 12,
-    padding: 8,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   dateText: {
     fontSize: 14,
+    color: '#2c3e50',
+    marginRight: 8,
   },
   ratingBox: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#ccc',
     borderRadius: 12,
-    padding: 8,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   ratingText: {
     fontSize: 14,
+    color: '#2c3e50',
   },
   divider: {
     height: 1,
-    backgroundColor: '#eee',
+    backgroundColor: '#dcdde1',
     marginVertical: 16,
   },
   sectionHeader: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: '#333',
+    color: '#34495e',
   },
   feedbackList: {
     flex: 1,
   },
   feedbackItem: {
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  feedbackHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
-    borderLeftWidth: 4,
-  },
-  positiveFeedback: {
-    backgroundColor: '#f0f8ff',
-    borderLeftColor: '#4caf50',
-  },
-  negativeFeedback: {
-    backgroundColor: '#fff0f0',
-    borderLeftColor: '#f44336',
   },
   feedbackTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    flex: 1,
+    color: '#2c3e50',
+    marginRight: 10,
+  },
+  feedbackRating: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 8,
+    color: '#27ae60',
   },
   feedbackContent: {
-    fontSize: 14,
-    color: '#555',
+    fontSize: 15,
+    color: '#7f8c8d',
+    lineHeight: 22,
   },
   bottomButtonContainer: {
     position: 'absolute',
@@ -203,17 +227,18 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     paddingVertical: 12,
     paddingHorizontal: 30,
-    elevation: 5, 
-    shadowColor: '#000', 
+    elevation: 5,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
   backButtonText: {
-    color: 'dark',
+    color: '#000000',
     fontWeight: 'bold',
     fontSize: 16,
   },
 });
+
 
 export default FeedbackScreen;
