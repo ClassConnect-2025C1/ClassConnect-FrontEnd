@@ -10,6 +10,8 @@ import {
   Image,
 } from 'react-native';
 import { API_URL } from '@env';
+import Icon from 'react-native-vector-icons/FontAwesome'; 
+
 const CoursesScreen = () => {
   const navigation = useNavigation();
 
@@ -26,6 +28,7 @@ const CoursesScreen = () => {
   ];
 
   const [courses, setCourses] = useState<Course[]>([]);
+  const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(new Set()); 
 
   useEffect(() => {
     const fetchUserCourses = async () => {
@@ -62,6 +65,18 @@ const CoursesScreen = () => {
     fetchUserCourses();
   }, []);
 
+  const toggleFavorite = (courseId: number) => {
+    setFavoriteCourses((prevFavorites) => {
+      const newFavorites = new Set(prevFavorites);
+      if (newFavorites.has(courseId)) {
+        newFavorites.delete(courseId); 
+      } else {
+        newFavorites.add(courseId);
+      }
+      return newFavorites;
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -90,47 +105,32 @@ const CoursesScreen = () => {
               navigation.navigate('StudentCourseDetail', { course })
             }
           >
-            <Text style={styles.courseText}>{course.title}</Text>
+            <View style={styles.courseContent}>
+              <Text style={styles.courseText}>{course.title}</Text>
+
+         
+              <TouchableOpacity onPress={() => toggleFavorite(course.id)}>
+                <Icon
+                  name={favoriteCourses.has(course.id) ? 'star' : 'star-o'}
+                  size={24}
+                  color="yellow"
+                />
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       <TouchableOpacity
-        style={{
-          backgroundColor: '#aaa',
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          borderRadius: 20,
-          alignSelf: 'center',
-          marginBottom: 10,
-        }}
+        style={styles.availableCoursesButton}
         onPress={() => navigation.navigate('AvailableCourses')}
       >
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>
-          Available courses
-        </Text>
+        <Text style={styles.buttonText}>Available courses</Text>
       </TouchableOpacity>
 
-      <View
-        style={{
-          height: 1,
-          backgroundColor: '#ccc',
-          opacity: 0.5,
-          marginHorizontal: 20,
-          marginBottom: 5,
-        }}
-      />
+      <View style={styles.separator} />
 
-      <View
-        style={[
-          styles.bottomBar,
-          {
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-          },
-        ]}
-      >
+      <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.iconContainer}
           onPress={() => console.log('Icon 1')}
@@ -178,12 +178,10 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     justifyContent: 'space-between',
   },
-
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-
   courseList: {
     paddingHorizontal: 16,
     paddingBottom: 20,
@@ -199,16 +197,49 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
   },
   courseText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
   },
+  courseContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    flex: 1, 
+  },
+  availableCoursesButton: {
+    backgroundColor: '#aaa',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#ccc',
+    opacity: 0.5,
+    marginHorizontal: 20,
+    marginBottom: 5,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
   iconContainer: {
     padding: 10,
   },
-
   icon: {
     width: 40,
     height: 40,
