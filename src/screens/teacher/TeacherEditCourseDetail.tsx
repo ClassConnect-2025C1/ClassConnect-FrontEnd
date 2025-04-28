@@ -6,11 +6,16 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { validateFields } from '../../Errors/ValidationsEditCourse'; // Importa la función de validación
 import { API_URL } from '@env';
+
+const { width } = Dimensions.get('window');
+
 export default function EditCourseScreen({ route }) {
   const { course } = route.params;
 
@@ -39,11 +44,10 @@ export default function EditCourseScreen({ route }) {
       eligibilityCriteria,
       startDate,
       endDate,
-    ); // Llamada a la función de validación
-    setErrors(newErrors); // Actualiza los errores
-
+    );
+    setErrors(newErrors); 
     if (Object.keys(newErrors).length > 0) {
-      return; // Si hay errores, no continuar
+      return; 
     }
 
     try {
@@ -81,95 +85,99 @@ export default function EditCourseScreen({ route }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={styles.backButton}
-      >
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.header}>Edit Course</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Title"
-        value={title}
-        onChangeText={setTitle}
-      />
-      {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Title"
+          value={title}
+          onChangeText={setTitle}
+        />
+        {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Description"
-        value={description}
-        onChangeText={setDescription}
-      />
-      {errors.description && (
-        <Text style={styles.errorText}>{errors.description}</Text>
-      )}
+        <TextInput
+          style={styles.input}
+          placeholder="Description"
+          value={description}
+          onChangeText={setDescription}
+        />
+        {errors.description && (
+          <Text style={styles.errorText}>{errors.description}</Text>
+        )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Eligibility Criteria"
-        value={eligibilityCriteria}
-        onChangeText={setEligibilityCriteria}
-      />
-      {errors.eligibilityCriteria && (
-        <Text style={styles.errorText}>{errors.eligibilityCriteria}</Text>
-      )}
+        <TextInput
+          style={styles.input}
+          placeholder="Eligibility Criteria"
+          value={eligibilityCriteria}
+          onChangeText={setEligibilityCriteria}
+        />
+        {errors.eligibilityCriteria && (
+          <Text style={styles.errorText}>{errors.eligibilityCriteria}</Text>
+        )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Start Date (YYYY-MM-DD)"
-        value={startDate}
-        onChangeText={setStartDate}
-      />
-      {errors.startDate && (
-        <Text style={styles.errorText}>{errors.startDate}</Text>
-      )}
+        <TextInput
+          style={styles.input}
+          placeholder="Start Date (YYYY-MM-DD)"
+          value={startDate}
+          onChangeText={setStartDate}
+        />
+        {errors.startDate && (
+          <Text style={styles.errorText}>{errors.startDate}</Text>
+        )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="End Date (YYYY-MM-DD)"
-        value={endDate}
-        onChangeText={setEndDate}
-      />
-      {errors.endDate && <Text style={styles.errorText}>{errors.endDate}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="End Date (YYYY-MM-DD)"
+          value={endDate}
+          onChangeText={setEndDate}
+        />
+        {errors.endDate && <Text style={styles.errorText}>{errors.endDate}</Text>}
 
-      <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
-        <Text style={styles.buttonText}>Save Changes</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
+          <Text style={styles.buttonText}>Save Changes</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      <View style={styles.bottomButtonContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>Close</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#FFFFFF', // Fondo blanco
-    flexGrow: 1,
+    flex: 1,
+    backgroundColor: '#f2f4f7',
+    paddingHorizontal: 16,
+    paddingTop: 40,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#2c3e50',
+  },
+  scrollContainer: {
+    paddingBottom: 100,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#CCCCCC',
+    borderColor: '#ccc',
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
-    backgroundColor: '#F9F9F9',
-    fontSize: 16,
-  },
-  backButton: {
-    backgroundColor: '#E0E0E0', // Gris claro
-    borderRadius: 20,
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
     marginBottom: 20,
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-  },
-  backButtonText: {
-    color: '#333333',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 16,
   },
   errorText: {
     color: '#D32F2F',
@@ -177,12 +185,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#4CAF50', // Verde llamativo
-    borderRadius: 20,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 25,
-    marginTop: 30,
     alignItems: 'center',
+    marginTop: 30,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -193,5 +201,28 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    width: width,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButton: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  backButtonText: {
+    color: '#000000',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

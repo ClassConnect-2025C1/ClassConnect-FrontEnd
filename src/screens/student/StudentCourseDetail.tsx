@@ -7,8 +7,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
-import { API_URL } from '@env'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '@env';
 
 export default function CourseDetail({ route }) {
   const { course } = route.params;
@@ -19,20 +19,20 @@ export default function CourseDetail({ route }) {
     {
       title: "Dijkstra's Algorithm",
       dueDate: '18/02/2025',
-      description: "Implement Dijkstra's algorithm in Python. The file should be a .py file with a main function receiving a Graph instance.",
+      description:
+        "Implement Dijkstra's algorithm in Python. The file should be a .py file with a main function receiving a Graph instance.",
     },
     {
-      title: "Read Chapter 5",
+      title: 'Read Chapter 5',
       dueDate: '20/02/2025',
       description: 'Read Chapter 5 of the book and prepare a summary.',
     },
     {
-      title: "Graph Exercises",
+      title: 'Graph Exercises',
       dueDate: '22/02/2025',
       description: 'Solve graph exercises 1 to 5 from the exercise book.',
     },
   ];
-  
 
   const resources = [
     'Slides Week 1',
@@ -238,19 +238,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   submitButton: {
-    backgroundColor: 'transparent', 
-    paddingVertical: 6, 
-    paddingHorizontal: 15, 
+    backgroundColor: 'transparent',
+    paddingVertical: 6,
+    paddingHorizontal: 15,
     borderRadius: 10,
     marginTop: 10,
-    alignSelf: 'flex-end', 
+    alignSelf: 'flex-end',
     borderWidth: 1,
-    borderColor: '#D3D3D3', 
+    borderColor: '#D3D3D3',
   },
   submitButtonText: {
-    color: 'black', 
+    color: 'black',
   },
-  
+
   feedbackContainer: {
     alignItems: 'center',
     marginBottom: 30,
