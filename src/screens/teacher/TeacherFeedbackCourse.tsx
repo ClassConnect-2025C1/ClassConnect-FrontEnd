@@ -40,8 +40,6 @@ const FeedbackScreen = () => {
       <Text style={styles.header}>Course Feedbacks</Text>
 
       <View style={styles.filterContainer}>
-
-
         <View style={styles.dateFilter}>
           <Text style={styles.filterLabel}>From</Text>
           <View style={styles.dateBox}>
@@ -87,7 +85,10 @@ const FeedbackScreen = () => {
       />
 
       <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.backButtonText}>Close</Text>
         </TouchableOpacity>
       </View>
@@ -239,6 +240,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
 
 export default FeedbackScreen;

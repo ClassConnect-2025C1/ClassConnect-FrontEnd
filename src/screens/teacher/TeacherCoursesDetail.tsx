@@ -32,17 +32,34 @@ export default function TeacherCourseDetail({ route }) {
 
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            onPress={() =>
+            onPress={() => {
+              setActiveTab('Edit Course');
               navigation.navigate('TeacherEditCourseDetail', { course })
             }
+          }
           >
-            <Text style={[styles.tabTextLink]}>Edit Course</Text>
+          
+
+            <Text
+            
+            style={[
+              styles.tabTextLink,
+              activeTab === 'Edit Course' && styles.activeTabText,
+            ]}
+          >
+            Edit Course
+          </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() =>
-          navigation.navigate('TeacherFeedbackCourse', { course })
-        }>
+          <TouchableOpacity
+            onPress={() =>{ 
+              setActiveTab('Feedbacks');
+              navigation.navigate('TeacherFeedbackCourse', { course })
+            }
+          }
+          >
             <Text
+            
               style={[
                 styles.tabTextLink,
                 activeTab === 'Feedbacks' && styles.activeTabText,
@@ -52,7 +69,12 @@ export default function TeacherCourseDetail({ route }) {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setActiveTab('Members')}>
+          <TouchableOpacity
+            onPress={() => {
+              setActiveTab('Members');
+              navigation.navigate('TeacherMembersCourse'); // Navegar a la pantalla de Members
+            }}
+          >
             <Text
               style={[
                 styles.tabTextLink,
