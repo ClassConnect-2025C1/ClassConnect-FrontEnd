@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,31 +9,42 @@ import {
   Dimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
 const FeedbackScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { course } = route.params;
+  const courseId = course.id;
+
   const [selectedFilter, setSelectedFilter] = useState('Any');
   const [fromDate] = useState('25/02/2025');
   const [toDate] = useState('30/02/2025');
+  const [feedbacks, setFeedbacks] = useState([]);
 
-  const feedbacks = [
-    {
-      id: '1',
-      title: 'Another positive feedback',
-      content: 'But this time longer',
-      rating: 5,
-    },
-    {
-      id: '2',
-      title: 'Now a negative feedback',
-      content:
-        'The professor had us waiting for a whole month to give us the grades and we never even got to learn anything',
-      rating: 2,
-    },
-  ];
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      try {
+        const response = await fetch(
+          `http://192.168.0.12:8002/${courseId}/feedback`,
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch feedbacks');
+        }
+        const data = await response.json();
+        console.log(data);
+        setFeedbacks(data);
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load feedbacks.');
+      }
+    };
+
+    fetchFeedbacks();
+  }, [courseId]); // Vuelve a ejecutar si courseId cambia
 
   return (
     <SafeAreaView style={styles.container}>
@@ -66,15 +77,15 @@ const FeedbackScreen = () => {
       <View style={styles.divider} />
 
       <FlatList
-        data={feedbacks}
-        keyExtractor={(item) => item.id}
+        data={feedbacks.data}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.feedbackItem}>
             <View style={styles.feedbackHeader}>
-              <Text style={styles.feedbackTitle}>{item.title}</Text>
+              <Text style={styles.feedbackTitle}>{item.summary}</Text>
               <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
             </View>
-            <Text style={styles.feedbackContent}>{item.content}</Text>
+            <Text style={styles.feedbackContent}>{item.comment}</Text>
           </View>
         )}
         ListHeaderComponent={
@@ -95,6 +106,7 @@ const FeedbackScreen = () => {
     </SafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

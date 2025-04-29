@@ -9,7 +9,9 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { AcceptOnlyModal } from '../../components/Modals';
+import { getUserProfileData } from '../../utils/GetUserProfile';
 import { API_URL } from '@env';
+
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
 
@@ -17,9 +19,21 @@ const TeacherCreateNewCourseScreen = () => {
   const [description, setDescription] = useState('');
   const [eligibilityCriteria, setEligibilityCriteria] = useState('');
   const [capacity, setCapacity] = useState('');
+  const [teacherEmail, setTeacherEmail] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
+  React.useEffect(() => {
+    const fetchTeacher = async () => {
+      const teacher = await getUserProfileData();
+      if (teacher?.email) {
+        setTeacherEmail(teacher.email);
+      }
+    };
+
+    fetchTeacher();
+  }, []);
 
   const handleCreateCourse = async () => {
     if (!title || !description || !eligibilityCriteria || !capacity) {
@@ -49,7 +63,7 @@ const TeacherCreateNewCourseScreen = () => {
           description,
           eligibility_criteria: eligibilityCriteria,
           capacity: parseInt(capacity),
-          created_by: 'teacher',
+          created_by: teacherEmail,
         }),
       });
 

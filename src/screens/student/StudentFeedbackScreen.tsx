@@ -28,7 +28,7 @@ const StudentFeedbackScreen = () => {
       const user_id = decodedToken.sub;
 
       const response = await fetch(
-        `http://192.168.0.14:8002/${courseId}/feedback`,
+        `http://192.168.0.12:8002/${courseId}/feedback`,
         {
           method: 'POST',
           headers: {

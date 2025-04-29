@@ -7,11 +7,12 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { getUserProfileData } from '../../utils/GetUserProfile';
 
 const AvailableCoursesScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { courses = [] } = route.params || {}; // cursos recibidos
+  const { courses = [] } = route.params || {};
 
   return (
     <View style={styles.container}>
@@ -22,9 +23,39 @@ const AvailableCoursesScreen = () => {
             <Text style={styles.courseText}>{course.title}</Text>
             <TouchableOpacity
               style={styles.enrollButton}
-              onPress={() => {
-                // Acción temporal: volver atrás
-                navigation.goBack();
+              onPress={async () => {
+                const user = await getUserProfileData();
+
+                if (!user) {
+                  alert('Could not get user info.');
+                  return;
+                }
+
+                try {
+                  const response = await fetch(
+                    `http://192.168.0.12:8002/${course.id}/enroll`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        user_id: user.userId,
+                        email: user.email,
+                        name: user.name + ' ' + user.lastName,
+                      }),
+                    },
+                  );
+
+                  if (!response.ok) {
+                    throw new Error('Enrollment failed');
+                  }
+
+                  navigation.goBack();
+                } catch (error) {
+                  console.error(error);
+                  alert('Failed to enroll in course.');
+                }
               }}
             >
               <Text style={styles.enrollButtonText}>Enroll</Text>
@@ -62,11 +93,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   courseCard: {
-    backgroundColor: '#E0E0E0', // gris más claro
+    backgroundColor: '#E0E0E0',
     borderRadius: 12,
     padding: 20,
     marginBottom: 12,
-    flexDirection: 'row', // alinear horizontalmente
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -76,19 +107,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   enrollButton: {
-    borderColor: '#BDBDBD', // borde apenas visible
+    borderColor: '#BDBDBD',
     borderWidth: 1,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: '#E0E0E0', // mismo color que el fondo del card
+    backgroundColor: '#E0E0E0',
   },
   enrollButtonText: {
-    color: '#333', // texto gris oscuro
+    color: '#333',
     fontSize: 14,
     fontWeight: 'bold',
   },
-  
+
   doneButton: {
     backgroundColor: '#aaa',
     paddingVertical: 12,
