@@ -66,7 +66,7 @@ export default function TeacherCourseDetail({ route }) {
           <TouchableOpacity
             onPress={() => {
               setActiveTab('Members');
-              navigation.navigate('TeacherMembersCourse'); // Navegar a la pantalla de Members
+              navigation.navigate('TeacherMembersCourse',{course}); // Navegar a la pantalla de Members
             }}
           >
             <Text
