@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { API_URL } from '@env';
 const StudentFeedbackScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -27,19 +27,23 @@ const StudentFeedbackScreen = () => {
       const decodedToken = jwtDecode(token);
       const user_id = decodedToken.sub;
 
-      const response = await fetch(`${API_URL}/${courseId}/feedback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `http://192.168.0.12:8002/${courseId}/feedback`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: user_id,
+            summary: summary,
+
+            rating: rating,
+            comment: comment,
+          }),
         },
-        body: JSON.stringify({
-          user_id: user_id,
-          summarty: summary,
-          rating: rating,
-          comment: comment,
-        }),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.text();

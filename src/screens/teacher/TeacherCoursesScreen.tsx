@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { AcceptRejectModal } from '../../components/Modals';
+import { getUserProfileData } from '../../utils/GetUserProfile';
 import {
   Modal,
   Button,
@@ -36,7 +37,10 @@ const CoursesScreen = ({ route }) => {
     const fetchUserCourses = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        if (token) {
+        const userProfile = await getUserProfileData();
+        const teacherEmail = userProfile?.email;
+
+        if (token && teacherEmail) {
           const response = await fetch(`${API_URL}/api/courses/`, {
             method: 'GET',
             headers: {
@@ -48,19 +52,23 @@ const CoursesScreen = ({ route }) => {
 
           try {
             const json = JSON.parse(text);
+
             if (Array.isArray(json.data)) {
-              setCourses(json.data);
+              const filteredCourses = json.data.filter(
+                (course) => course.createdBy === teacherEmail,
+              );
+              setCourses(filteredCourses);
             } else {
-              console.error('La respuesta no es un array:', json);
+              console.log('La respuesta no es un array:', json);
               setCourses([]);
             }
           } catch (e) {
-            console.error('Respuesta no es JSON válido:', text);
+            console.log('Respuesta no es JSON válido:', text);
             setCourses([]);
           }
         }
       } catch (error) {
-        console.error('Error al obtener los cursos del usuario:', error);
+        console.log('Error al obtener los cursos del usuario:', error);
       }
     };
 

@@ -10,7 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { API_URL } from '@env';
-import Icon from 'react-native-vector-icons/FontAwesome'; 
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const CoursesScreen = () => {
   const navigation = useNavigation();
@@ -28,7 +28,9 @@ const CoursesScreen = () => {
   ];
 
   const [courses, setCourses] = useState<Course[]>([]);
-  const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(new Set()); 
+  const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(
+    new Set(),
+  );
 
   useEffect(() => {
     const fetchUserCourses = async () => {
@@ -69,7 +71,7 @@ const CoursesScreen = () => {
     setFavoriteCourses((prevFavorites) => {
       const newFavorites = new Set(prevFavorites);
       if (newFavorites.has(courseId)) {
-        newFavorites.delete(courseId); 
+        newFavorites.delete(courseId);
       } else {
         newFavorites.add(courseId);
       }
@@ -108,7 +110,6 @@ const CoursesScreen = () => {
             <View style={styles.courseContent}>
               <Text style={styles.courseText}>{course.title}</Text>
 
-         
               <TouchableOpacity onPress={() => toggleFavorite(course.id)}>
                 <Icon
                   name={favoriteCourses.has(course.id) ? 'star' : 'star-o'}
@@ -123,7 +124,7 @@ const CoursesScreen = () => {
 
       <TouchableOpacity
         style={styles.availableCoursesButton}
-        onPress={() => navigation.navigate('AvailableCourses')}
+        onPress={() => navigation.navigate('AvailableCourses', { courses })}
       >
         <Text style={styles.buttonText}>Available courses</Text>
       </TouchableOpacity>
@@ -197,9 +198,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   courseText: {
     color: '#fff',
@@ -208,9 +209,9 @@ const styles = StyleSheet.create({
   },
   courseContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     alignItems: 'center',
-    flex: 1, 
+    flex: 1,
   },
   availableCoursesButton: {
     backgroundColor: '#aaa',

@@ -6,25 +6,61 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-
-const availableCourses = [
-  { id: 1, name: 'Biology' },
-  { id: 2, name: 'Physics' },
-  { id: 3, name: 'Philosophy' },
-  { id: 4, name: 'Economics' },
-];
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { getUserProfileData } from '../../utils/GetUserProfile';
 
 const AvailableCoursesScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { courses = [] } = route.params || {};
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Available Courses</Text>
       <ScrollView contentContainerStyle={styles.courseList}>
-        {availableCourses.map((course) => (
-          <TouchableOpacity key={course.id} style={styles.courseCard}>
-            <Text style={styles.courseText}>{course.name}</Text>
-          </TouchableOpacity>
+        {courses.map((course) => (
+          <View key={course.id} style={styles.courseCard}>
+            <Text style={styles.courseText}>{course.title}</Text>
+            <TouchableOpacity
+              style={styles.enrollButton}
+              onPress={async () => {
+                const user = await getUserProfileData();
+
+                if (!user) {
+                  alert('Could not get user info.');
+                  return;
+                }
+
+                try {
+                  const response = await fetch(
+                    `http://192.168.0.12:8002/${course.id}/enroll`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        user_id: user.userId,
+                        email: user.email,
+                        name: user.name + ' ' + user.lastName,
+                      }),
+                    },
+                  );
+
+                  if (!response.ok) {
+                    throw new Error('Enrollment failed');
+                  }
+
+                  navigation.goBack();
+                } catch (error) {
+                  console.error(error);
+                  alert('Failed to enroll in course.');
+                }
+              }}
+            >
+              <Text style={styles.enrollButtonText}>Enroll</Text>
+            </TouchableOpacity>
+          </View>
         ))}
       </ScrollView>
 
@@ -57,16 +93,33 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   courseCard: {
-    backgroundColor: '#888',
+    backgroundColor: '#E0E0E0',
     borderRadius: 12,
     padding: 20,
     marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   courseText: {
-    color: '#fff',
+    color: '#333',
     fontSize: 18,
     fontWeight: 'bold',
   },
+  enrollButton: {
+    borderColor: '#BDBDBD',
+    borderWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#E0E0E0',
+  },
+  enrollButtonText: {
+    color: '#333',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+
   doneButton: {
     backgroundColor: '#aaa',
     paddingVertical: 12,

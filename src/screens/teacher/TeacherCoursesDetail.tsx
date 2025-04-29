@@ -34,32 +34,26 @@ export default function TeacherCourseDetail({ route }) {
           <TouchableOpacity
             onPress={() => {
               setActiveTab('Edit Course');
-              navigation.navigate('TeacherEditCourseDetail', { course })
-            }
-          }
+              navigation.navigate('TeacherEditCourseDetail', { course });
+            }}
           >
-          
-
             <Text
-            
-            style={[
-              styles.tabTextLink,
-              activeTab === 'Edit Course' && styles.activeTabText,
-            ]}
-          >
-            Edit Course
-          </Text>
+              style={[
+                styles.tabTextLink,
+                activeTab === 'Edit Course' && styles.activeTabText,
+              ]}
+            >
+              Edit Course
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() =>{ 
+            onPress={() => {
               setActiveTab('Feedbacks');
-              navigation.navigate('TeacherFeedbackCourse', { course })
-            }
-          }
+              navigation.navigate('TeacherFeedbackCourse', { course });
+            }}
           >
             <Text
-            
               style={[
                 styles.tabTextLink,
                 activeTab === 'Feedbacks' && styles.activeTabText,

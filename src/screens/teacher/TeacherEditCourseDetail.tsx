@@ -45,9 +45,9 @@ export default function EditCourseScreen({ route }) {
       startDate,
       endDate,
     );
-    setErrors(newErrors); 
+    setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-      return; 
+      return;
     }
 
     try {
@@ -133,7 +133,9 @@ export default function EditCourseScreen({ route }) {
           value={endDate}
           onChangeText={setEndDate}
         />
-        {errors.endDate && <Text style={styles.errorText}>{errors.endDate}</Text>}
+        {errors.endDate && (
+          <Text style={styles.errorText}>{errors.endDate}</Text>
+        )}
 
         <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
           <Text style={styles.buttonText}>Save Changes</Text>
