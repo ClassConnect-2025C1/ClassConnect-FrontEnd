@@ -6,25 +6,30 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-
-const availableCourses = [
-  { id: 1, name: 'Biology' },
-  { id: 2, name: 'Physics' },
-  { id: 3, name: 'Philosophy' },
-  { id: 4, name: 'Economics' },
-];
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const AvailableCoursesScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { courses = [] } = route.params || {}; // cursos recibidos
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Available Courses</Text>
       <ScrollView contentContainerStyle={styles.courseList}>
-        {availableCourses.map((course) => (
-          <TouchableOpacity key={course.id} style={styles.courseCard}>
-            <Text style={styles.courseText}>{course.name}</Text>
-          </TouchableOpacity>
+        {courses.map((course) => (
+          <View key={course.id} style={styles.courseCard}>
+            <Text style={styles.courseText}>{course.title}</Text>
+            <TouchableOpacity
+              style={styles.enrollButton}
+              onPress={() => {
+                // Acción temporal: volver atrás
+                navigation.goBack();
+              }}
+            >
+              <Text style={styles.enrollButtonText}>Enroll</Text>
+            </TouchableOpacity>
+          </View>
         ))}
       </ScrollView>
 
@@ -57,16 +62,33 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   courseCard: {
-    backgroundColor: '#888',
+    backgroundColor: '#E0E0E0', // gris más claro
     borderRadius: 12,
     padding: 20,
     marginBottom: 12,
+    flexDirection: 'row', // alinear horizontalmente
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   courseText: {
-    color: '#fff',
+    color: '#333',
     fontSize: 18,
     fontWeight: 'bold',
   },
+  enrollButton: {
+    borderColor: '#BDBDBD', // borde apenas visible
+    borderWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#E0E0E0', // mismo color que el fondo del card
+  },
+  enrollButtonText: {
+    color: '#333', // texto gris oscuro
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  
   doneButton: {
     backgroundColor: '#aaa',
     paddingVertical: 12,
