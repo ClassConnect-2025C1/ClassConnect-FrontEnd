@@ -95,13 +95,32 @@ const FeedbackScreen = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
+      
+
       <View style={styles.bottomButtonContainer}>
+
+        
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.backButtonText}>Close</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.generateButton}
+          onPress={() => navigation.goBack()} // Aquí en el futuro podrías usar otra lógica
+        >
+          <MaterialIcons
+            name="star"
+            size={20}
+            color="#5B6799"
+            style={{ marginRight: 6 }}
+          />
+          <Text style={styles.generateButtonText}>Generate AI summary</Text>
+        </TouchableOpacity>
+
+  
       </View>
     </SafeAreaView>
   );
@@ -248,6 +267,25 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: '#000000',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  generateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  generateButtonText: {
+    color: '#5B6799',
     fontWeight: 'bold',
     fontSize: 16,
   },

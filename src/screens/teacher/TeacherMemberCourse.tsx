@@ -17,8 +17,8 @@ const MembersScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { course } = route.params;
-  const courseId = course.id; 
-  console.log("courseId", courseId);
+  const courseId = course.id;
+  console.log('courseId', courseId);
 
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,9 @@ const MembersScreen = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch(`http://192.168.0.12:8002/${courseId}/members`);
+        const response = await fetch(
+          `http://192.168.0.12:8002/${courseId}/members`,
+        );
         if (!response.ok) throw new Error('Error al obtener los miembros');
         const data = await response.json();
         setMembers(data.data);
@@ -45,7 +47,11 @@ const MembersScreen = () => {
       <Text style={styles.header}>Course Members</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#2c3e50" style={{ marginTop: 30 }} />
+        <ActivityIndicator
+          size="large"
+          color="#2c3e50"
+          style={{ marginTop: 30 }}
+        />
       ) : (
         <FlatList
           data={members}
@@ -57,7 +63,9 @@ const MembersScreen = () => {
               <Text style={styles.memberEmail}>{item.email}</Text>
             </View>
           )}
-          ListHeaderComponent={<Text style={styles.sectionHeader}>Members</Text>}
+          ListHeaderComponent={
+            <Text style={styles.sectionHeader}>Members</Text>
+          }
           style={styles.memberList}
           contentContainerStyle={{ paddingBottom: 100 }}
         />

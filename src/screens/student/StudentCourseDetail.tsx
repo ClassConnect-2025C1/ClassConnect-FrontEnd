@@ -57,7 +57,7 @@ export default function CourseDetail({ route }) {
 
         <View style={styles.courseInfo}>
           <Text style={styles.infoText}>
-            <Text style={styles.boldText}>Created by: </Text>
+            <Text style={styles.boldText}>Teacher email: </Text>
             {course.createdBy}
           </Text>
           <Text style={styles.infoText}>
