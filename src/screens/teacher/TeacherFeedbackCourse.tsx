@@ -95,11 +95,7 @@ const FeedbackScreen = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      
-
       <View style={styles.bottomButtonContainer}>
-
-        
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -119,8 +115,6 @@ const FeedbackScreen = () => {
           />
           <Text style={styles.generateButtonText}>Generate AI summary</Text>
         </TouchableOpacity>
-
-  
       </View>
     </SafeAreaView>
   );
