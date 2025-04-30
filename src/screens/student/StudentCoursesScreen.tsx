@@ -12,9 +12,7 @@ import {
 import { API_URL } from '@env';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-const CoursesScreen = () => {
-  const navigation = useNavigation();
-
+const getColorForCourse = (id: number) => {
   const cardColors = [
     '#6C5CE7',
     '#00B894',
@@ -26,8 +24,16 @@ const CoursesScreen = () => {
     '#55EFC4',
     '#FAB1A0',
   ];
+  return cardColors[id % cardColors.length];
+};
+
+
+const CoursesScreen = () => {
+  const navigation = useNavigation();
+
 
   const [courses, setCourses] = useState<Course[]>([]);
+  
   const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(
     new Set(),
   );
@@ -96,30 +102,36 @@ const CoursesScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.courseList}>
-        {courses.map((course, index) => (
-          <TouchableOpacity
-            key={course.id}
-            style={[
-              styles.courseCard,
-              { backgroundColor: cardColors[index % cardColors.length] },
-            ]}
-            onPress={() =>
-              navigation.navigate('StudentCourseDetail', { course })
-            }
-          >
-            <View style={styles.courseContent}>
-              <Text style={styles.courseText}>{course.title}</Text>
-
-              <TouchableOpacity onPress={() => toggleFavorite(course.id)}>
-                <Icon
-                  name={favoriteCourses.has(course.id) ? 'star' : 'star-o'}
-                  size={24}
-                  color="yellow"
-                />
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {[...courses]
+          .sort((a, b) => {
+            const aFav = favoriteCourses.has(a.id);
+            const bFav = favoriteCourses.has(b.id);
+            if (aFav === bFav) return 0;
+            return aFav ? -1 : 1; 
+          })
+          .map((course, index) => (
+            <TouchableOpacity
+              key={course.id}
+              style={[
+                styles.courseCard,
+                { backgroundColor: getColorForCourse(course.id) }
+              ]}
+              onPress={() =>
+                navigation.navigate('StudentCourseDetail', { course })
+              }
+            >
+              <View style={styles.courseContent}>
+                <Text style={styles.courseText}>{course.title}</Text>
+                <TouchableOpacity onPress={() => toggleFavorite(course.id)}>
+                  <Icon
+                    name={favoriteCourses.has(course.id) ? 'star' : 'star-o'}
+                    size={24}
+                    color="yellow"
+                  />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))}
       </ScrollView>
 
       <TouchableOpacity

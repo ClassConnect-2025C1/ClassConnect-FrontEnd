@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,53 +7,69 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
 const MembersScreen = () => {
   const navigation = useNavigation();
-  const members = [
-    {
-      id: '1',
-      name: 'John Doe',
-      role: 'Student',
-      email: 'john.doe@example.com',
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      role: 'Student',
-      email: 'jane.smith@example.com',
-    },
-    {
-      id: '3',
-      name: 'Alice Brown',
-      role: 'Student',
-      email: 'alice.brown@example.com',
-    },
-  ];
+  const route = useRoute();
+  const { course } = route.params;
+  const courseId = course.id;
+  console.log('courseId', courseId);
+
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const response = await fetch(
+          `http://192.168.0.12:8002/${courseId}/members`,
+        );
+        if (!response.ok) throw new Error('Error al obtener los miembros');
+        const data = await response.json();
+        setMembers(data.data);
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMembers();
+  }, [courseId]);
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Course Members</Text>
 
-      <FlatList
-        data={members}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.memberItem}>
-            <Text style={styles.memberName}>{item.name}</Text>
-            <Text style={styles.memberRole}>{item.role}</Text>
-            <Text style={styles.memberEmail}>{item.email}</Text>
-          </View>
-        )}
-        ListHeaderComponent={<Text style={styles.sectionHeader}>Members</Text>}
-        style={styles.memberList}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#2c3e50"
+          style={{ marginTop: 30 }}
+        />
+      ) : (
+        <FlatList
+          data={members}
+          keyExtractor={(item) => item.id?.toString() || item.email}
+          renderItem={({ item }) => (
+            <View style={styles.memberItem}>
+              <Text style={styles.memberName}>{item.name}</Text>
+              <Text style={styles.memberRole}>{item.role}</Text>
+              <Text style={styles.memberEmail}>{item.email}</Text>
+            </View>
+          )}
+          ListHeaderComponent={
+            <Text style={styles.sectionHeader}>Members</Text>
+          }
+          style={styles.memberList}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      )}
 
       <View style={styles.bottomButtonContainer}>
         <TouchableOpacity
