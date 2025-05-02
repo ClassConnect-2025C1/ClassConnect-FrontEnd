@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-
+import { API_URL } from '@env';
 const { width } = Dimensions.get('window');
 
 const MembersScreen = () => {
@@ -26,9 +26,7 @@ const MembersScreen = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch(
-          `http://192.168.0.12:8002/${courseId}/members`,
-        );
+        const response = await fetch(`${API_URL}/${courseId}/members`);
         if (!response.ok) throw new Error('Error al obtener los miembros');
         const data = await response.json();
         setMembers(data.data);
