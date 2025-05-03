@@ -67,6 +67,7 @@ const AvailableCoursesScreen = () => {
       alert('Could not get user info.');
       return;
     }
+    console.log('user', user);
 
     try {
       const response = await fetch(
@@ -76,6 +77,7 @@ const AvailableCoursesScreen = () => {
           headers: {
             'Content-Type': 'application/json',
           },
+          
           body: JSON.stringify({
             user_id: user.userId,
             email: user.email,

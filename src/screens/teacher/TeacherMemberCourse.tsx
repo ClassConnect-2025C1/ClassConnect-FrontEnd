@@ -26,7 +26,7 @@ const MembersScreen = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch(`${API_URL}/${courseId}/members`);
+        const response = await fetch(`http://192.168.100.208:8002/${courseId}/members`);
         if (!response.ok) throw new Error('Error al obtener los miembros');
         const data = await response.json();
         setMembers(data.data);
@@ -52,21 +52,20 @@ const MembersScreen = () => {
         />
       ) : (
         <FlatList
-          data={members}
-          keyExtractor={(item) => item.id?.toString() || item.email}
-          renderItem={({ item }) => (
-            <View style={styles.memberItem}>
-              <Text style={styles.memberName}>{item.name}</Text>
-              <Text style={styles.memberRole}>{item.role}</Text>
-              <Text style={styles.memberEmail}>{item.email}</Text>
-            </View>
-          )}
-          ListHeaderComponent={
-            <Text style={styles.sectionHeader}>Members</Text>
-          }
-          style={styles.memberList}
-          contentContainerStyle={{ paddingBottom: 100 }}
-        />
+        data={members}
+        keyExtractor={(item, index) => item.id?.toString() || index.toString()}  // Fallback to index if id is missing
+        renderItem={({ item }) => (
+          <View style={styles.memberItem}>
+            <Text style={styles.memberRole}>{item.role || 'student'}</Text>
+          </View>
+        )}
+        ListHeaderComponent={
+          <Text style={styles.sectionHeader}>Members</Text>
+        }
+        style={styles.memberList}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      />
+      
       )}
 
       <View style={styles.bottomButtonContainer}>
