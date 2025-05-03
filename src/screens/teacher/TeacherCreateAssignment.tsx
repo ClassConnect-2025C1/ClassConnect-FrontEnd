@@ -32,7 +32,7 @@ const TeacherCreateAssignments = () => {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      const response = await fetch(`${API_URL}/api/assignments/`, {
+      const response = await fetch(`${API_URL}/api/courses/assignments/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
