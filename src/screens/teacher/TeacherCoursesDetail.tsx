@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TeacherCourseDetail({ route }) {
   const { course } = route.params;
@@ -14,6 +15,50 @@ export default function TeacherCourseDetail({ route }) {
 
   const [activeTab, setActiveTab] = useState('Assignments');
   const [activeSubTab, setActiveSubTab] = useState('Assignments');
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+
+  const fetchAssignments = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await fetch(`http://192.168.100.208:8002/${course.id}/assignments`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch assignments');
+      }
+
+      const data = await response.json();
+      
+
+      if (data && Array.isArray(data.data)) {
+        setAssignments(data.data); 
+      } else {
+        console.error('Assignments data is not in the expected format:', data);
+        setAssignments([]);
+      }
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      setAssignments([]); 
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+  useEffect(() => {
+    fetchAssignments();
+  }, []);
 
   return (
     <View style={styles.mainContainer}>
@@ -66,7 +111,7 @@ export default function TeacherCourseDetail({ route }) {
           <TouchableOpacity
             onPress={() => {
               setActiveTab('Members');
-              navigation.navigate('TeacherMembersCourse', { course }); // Navegar a la pantalla de Members
+              navigation.navigate('TeacherMembersCourse', { course });
             }}
           >
             <Text
@@ -109,27 +154,30 @@ export default function TeacherCourseDetail({ route }) {
       </View>
 
       <ScrollView style={styles.contentContainer}>
-        {activeSubTab === 'Assignments' && (
-          <View style={styles.assignmentContainer}>
-            <View style={styles.assignmentHeader}>
-              <Text style={styles.assignmentTitle}>Dijkstra's Algorithm</Text>
-              <Text style={styles.assignmentDate}>18/02/2025</Text>
+        {loading ? (
+          <Text>Loading assignments...</Text>
+        ) : (
+          activeSubTab === 'Assignments' && assignments.map((assignment, index) => (
+            <View key={index} style={styles.assignmentContainer}>
+              <View style={styles.assignmentHeader}>
+                <Text style={styles.assignmentTitle}>{assignment.title}</Text>
+                <Text style={styles.assignmentDate}>
+                  {new Date(assignment.deadline).toLocaleDateString()}
+                </Text>
+              </View>
+              <Text style={styles.assignmentDescription}>
+                {assignment.description}
+              </Text>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity style={styles.smallButton}>
+                  <Text style={styles.smallButtonText}>Edit assignment</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.smallButton}>
+                  <Text style={styles.smallButtonText}>See submissions</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <Text style={styles.assignmentDescription}>
-              Implement Dijkstra's algorithm in python. The file to submit
-              should be a .py file with a main function that receives as
-              parameter a Graph instance, you can find the structure in
-              Resources section.
-            </Text>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.smallButton}>
-                <Text style={styles.smallButtonText}>Edit assignment</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.smallButton}>
-                <Text style={styles.smallButtonText}>See submissions</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          ))
         )}
 
         {activeSubTab === 'Resources' && (
@@ -142,11 +190,9 @@ export default function TeacherCourseDetail({ route }) {
           </View>
         )}
       </ScrollView>
+
       <TouchableOpacity
-        style={[
-          styles.smallButton,
-          { alignSelf: 'flex-end', marginBottom: 40 },
-        ]}
+        style={[styles.smallButton, { alignSelf: 'flex-end', marginBottom: 40 }]}
         onPress={() =>
           navigation.navigate('TeacherCreateAssignments', { course })
         }
@@ -156,6 +202,7 @@ export default function TeacherCourseDetail({ route }) {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
@@ -230,7 +277,6 @@ const styles = StyleSheet.create({
     gap: 30,
     marginBottom: 0,
   },
-
   subTabText: {
     fontSize: 16,
     color: '#555',
@@ -245,7 +291,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textDecorationLine: 'underline',
   },
-
   contentContainer: {
     paddingBottom: 20,
   },
@@ -295,13 +340,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     paddingVertical: 5,
   },
-
   activeTabText: {
     color: '#4CAF50',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
   },
-
   createAssignmentButton: {
     backgroundColor: '#B0B0B0',
     paddingVertical: 12,

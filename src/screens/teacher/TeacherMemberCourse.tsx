@@ -53,7 +53,7 @@ const MembersScreen = () => {
       ) : (
         <FlatList
         data={members}
-        keyExtractor={(item, index) => item.id?.toString() || index.toString()}  // Fallback to index if id is missing
+        keyExtractor={(item, index) => item.id?.toString() || index.toString()}  
         renderItem={({ item }) => (
           <View style={styles.memberItem}>
             <Text style={styles.memberRole}>{item.role || 'student'}</Text>
