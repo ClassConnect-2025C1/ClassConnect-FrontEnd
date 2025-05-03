@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,37 +8,53 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_URL } from '@env';
 
 export default function CourseDetail({ route }) {
   const { course } = route.params;
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('Assignments');
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const assignments = [
-    {
-      title: "Dijkstra's Algorithm",
-      dueDate: '18/02/2025',
-      description:
-        "Implement Dijkstra's algorithm in Python. The file should be a .py file with a main function receiving a Graph instance.",
-    },
-    {
-      title: 'Read Chapter 5',
-      dueDate: '20/02/2025',
-      description: 'Read Chapter 5 of the book and prepare a summary.',
-    },
-    {
-      title: 'Graph Exercises',
-      dueDate: '22/02/2025',
-      description: 'Solve graph exercises 1 to 5 from the exercise book.',
-    },
-  ];
 
-  const resources = [
-    'Slides Week 1',
-    'Graph Theory eBook',
-    'Sample Graph Data',
-  ];
+  const fetchAssignments = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await fetch(`http://192.168.100.208:8002/${course.id}/assignments`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch assignments');
+      }
+
+      const data = await response.json();
+      if (data && Array.isArray(data.data)) {
+        setAssignments(data.data);
+      } else {
+        console.error('Assignments data is not in the expected format:', data);
+        setAssignments([]); 
+      }
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      setAssignments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
+    fetchAssignments();
+  }, []);
 
   return (
     <View style={styles.mainContainer}>
@@ -54,29 +70,6 @@ export default function CourseDetail({ route }) {
         <Text style={styles.subtitle}>
           {course.description || 'No description available'}
         </Text>
-
-        <View style={styles.courseInfo}>
-          <Text style={styles.infoText}>
-            <Text style={styles.boldText}>Teacher email: </Text>
-            {course.createdBy}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.boldText}>Capacity: </Text>
-            {course.capacity}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.boldText}>Eligibility: </Text>
-            {course.eligibilityCriteria || 'Not specified'}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.boldText}>Start Date: </Text>
-            {course.startDate}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.boldText}>End Date: </Text>
-            {course.endDate}
-          </Text>
-        </View>
 
         <View style={styles.tabContainer}>
           <TouchableOpacity
@@ -103,25 +96,31 @@ export default function CourseDetail({ route }) {
 
       <View style={styles.sectionContainer}>
         <ScrollView contentContainerStyle={styles.contentContainer}>
-          {activeTab === 'Assignments' &&
+          {loading ? (
+            <Text>Loading assignments...</Text>
+          ) : (
+            activeTab === 'Assignments' &&
             assignments.map((item, index) => (
               <View key={index} style={styles.itemContainer}>
                 <Text style={styles.itemText}>{item.title}</Text>
                 <Text style={styles.itemDescription}>{item.description}</Text>
-                <Text style={styles.itemText}>Due: {item.dueDate}</Text>
+                <Text style={styles.itemText}>Due: {new Date(item.deadline).toLocaleDateString()}</Text>
 
                 <TouchableOpacity style={styles.submitButton}>
                   <Text style={styles.submitButtonText}>Enter Submission</Text>
                 </TouchableOpacity>
               </View>
-            ))}
+            ))
+          )}
 
-          {activeTab === 'Resources' &&
-            resources.map((item, index) => (
-              <View key={index} style={styles.itemContainer}>
-                <Text style={styles.itemText}>{item}</Text>
-              </View>
-            ))}
+          {activeTab === 'Resources' && (
+            <View style={styles.itemContainer}>
+              <Text style={styles.itemText}>Course Resources</Text>
+              <Text style={styles.itemDescription}>
+                Here you will find resources such as slides, books, and other materials related to this course.
+              </Text>
+            </View>
+          )}
         </ScrollView>
       </View>
 
@@ -138,6 +137,7 @@ export default function CourseDetail({ route }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   mainContainer: {
