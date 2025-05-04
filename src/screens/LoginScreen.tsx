@@ -110,7 +110,7 @@ const LoginScreen = () => {
           if (userRole === 'teacher') {
             navigation.navigate('TeacherCourses');
           } else {
-            navigation.navigate('StudentCourses');
+            navigation.navigate('StudentCourses', { userId: user_id });
           }
         } catch (profileError) {
           console.error('Error fetching user profile:', profileError);

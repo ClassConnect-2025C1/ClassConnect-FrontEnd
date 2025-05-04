@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,111 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getUserProfileData } from '../../utils/GetUserProfile';
+import { API_URL } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AvailableCoursesScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { courses = [] } = route.params || {};
+  const { userId, onEnroll } = route.params || {};
+
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchAvailableCourses();
+  }, []);
+
+  const fetchAvailableCourses = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const response = await fetch(
+          `${API_URL}/api/courses/available/${userId}`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        const text = await response.text();
+
+        try {
+          const json = JSON.parse(text);
+          if (Array.isArray(json.data)) {
+            setCourses(json.data);
+          } else {
+            console.error('La respuesta no es un array:', json);
+            setCourses([]);
+          }
+        } catch (e) {
+          console.error('Respuesta no es JSON válido:', text);
+          setCourses([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error al obtener los cursos disponibles:', error);
+      setError('Error al cargar los cursos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  const enrollInCourse = async (courseId) => {
+    const user = await getUserProfileData();
+
+    if (!user) {
+      alert('Could not get user info.');
+      return;
+    }
+    console.log('user', user);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/courses/${courseId}/enroll/${user.userId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          
+          body: JSON.stringify({
+            user_id: user.userId,
+            email: user.email,
+            name: `${user.name} ${user.lastName}`,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Enrollment failed');
+      }
+
+      if (onEnroll) onEnroll(); // <-- Llamamos a la función pasada desde StudentCoursesScreen
+
+      navigation.goBack();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to enroll in course.');
+    }
+  };
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -23,40 +123,7 @@ const AvailableCoursesScreen = () => {
             <Text style={styles.courseText}>{course.title}</Text>
             <TouchableOpacity
               style={styles.enrollButton}
-              onPress={async () => {
-                const user = await getUserProfileData();
-
-                if (!user) {
-                  alert('Could not get user info.');
-                  return;
-                }
-
-                try {
-                  const response = await fetch(
-                    `http://192.168.0.12:8002/${course.id}/enroll`,
-                    {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({
-                        user_id: user.userId,
-                        email: user.email,
-                        name: user.name + ' ' + user.lastName,
-                      }),
-                    },
-                  );
-
-                  if (!response.ok) {
-                    throw new Error('Enrollment failed');
-                  }
-
-                  navigation.goBack();
-                } catch (error) {
-                  console.error(error);
-                  alert('Failed to enroll in course.');
-                }
-              }}
+              onPress={() => enrollInCourse(course.id)} // Llamamos a enrollInCourse al hacer clic
             >
               <Text style={styles.enrollButtonText}>Enroll</Text>
             </TouchableOpacity>

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { API_URL } from '@env';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useRoute } from '@react-navigation/native';
 
 const getColorForCourse = (id: number) => {
   const cardColors = [
@@ -27,50 +28,50 @@ const getColorForCourse = (id: number) => {
   return cardColors[id % cardColors.length];
 };
 
-
 const CoursesScreen = () => {
   const navigation = useNavigation();
-
-
+  const route = useRoute();
+  const { userId } = route.params;
   const [courses, setCourses] = useState<Course[]>([]);
-  
+
   const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(
     new Set(),
   );
-
-  useEffect(() => {
-    const fetchUserCourses = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (token) {
-          const response = await fetch(`${API_URL}/api/courses/`, {
+  const refreshCourses = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const response = await fetch(
+          `${API_URL}/api/courses/enrolled/${userId}`,
+          {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          });
+          },
+        );
 
-          const text = await response.text();
+        const text = await response.text();
 
-          try {
-            const json = JSON.parse(text);
-            if (Array.isArray(json.data)) {
-              setCourses(json.data);
-            } else {
-              console.error('La respuesta no es un array:', json);
-              setCourses([]);
-            }
-          } catch (e) {
-            console.error('Respuesta no es JSON válido:', text);
+        try {
+          const json = JSON.parse(text);
+          if (Array.isArray(json.data)) {
+            setCourses(json.data);
+          } else {
+            console.error('La respuesta no es un array:', json);
             setCourses([]);
           }
+        } catch (e) {
+          console.error('Respuesta no es JSON válido:', text);
+          setCourses([]);
         }
-      } catch (error) {
-        console.error('Error al obtener los cursos del usuario:', error);
       }
-    };
-
-    fetchUserCourses();
+    } catch (error) {
+      console.error('Error al obtener los cursos del usuario:', error);
+    }
+  };
+  useEffect(() => {
+    refreshCourses();
   }, []);
 
   const toggleFavorite = (courseId: number) => {
@@ -107,14 +108,14 @@ const CoursesScreen = () => {
             const aFav = favoriteCourses.has(a.id);
             const bFav = favoriteCourses.has(b.id);
             if (aFav === bFav) return 0;
-            return aFav ? -1 : 1; 
+            return aFav ? -1 : 1;
           })
           .map((course, index) => (
             <TouchableOpacity
               key={course.id}
               style={[
                 styles.courseCard,
-                { backgroundColor: getColorForCourse(course.id) }
+                { backgroundColor: getColorForCourse(course.id) },
               ]}
               onPress={() =>
                 navigation.navigate('StudentCourseDetail', { course })
@@ -136,7 +137,12 @@ const CoursesScreen = () => {
 
       <TouchableOpacity
         style={styles.availableCoursesButton}
-        onPress={() => navigation.navigate('AvailableCourses', { courses })}
+        onPress={() =>
+          navigation.navigate('AvailableCourses', {
+            userId,
+            onEnroll: refreshCourses,
+          })
+        }
       >
         <Text style={styles.buttonText}>Available courses</Text>
       </TouchableOpacity>

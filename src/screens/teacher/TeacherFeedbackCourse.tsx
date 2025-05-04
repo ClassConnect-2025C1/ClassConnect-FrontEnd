@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { API_URL } from '@env';
 
 const { width } = Dimensions.get('window');
 
@@ -28,7 +29,7 @@ const FeedbackScreen = () => {
     const fetchFeedbacks = async () => {
       try {
         const response = await fetch(
-          `http://192.168.0.12:8002/${courseId}/feedback`,
+          `${API_URL}/api/courses/${courseId}/feedbacks`,
         );
 
         if (!response.ok) {

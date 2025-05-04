@@ -7,12 +7,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { AcceptOnlyModal } from '../../components/Modals';
 import { API_URL } from '@env';
 
 const TeacherCreateAssignments = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { course } = route.params; // <-- courseId viene desde la pantalla anterior
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -21,18 +23,36 @@ const TeacherCreateAssignments = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
+
   const handleCreateAssignment = async () => {
     if (!title || !description || !dueDate) {
       setModalMessage('All fields must be filled.');
       setShowModal(true);
       return;
     }
+    
+
+  const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(dueDate);
+  if (!isValidDate) {
+    setModalMessage('Invalid date format. Use YYYY-MM-DD.');
+    setShowModal(true);
+    return;
+  }
+
+  const parsedDate = new Date(`${dueDate}T23:59:59Z`);
+  if (isNaN(parsedDate.getTime())) {
+    setModalMessage('Invalid date. Please check the value.');
+    setShowModal(true);
+    return;
+  }
+
+  const isoDueDate = parsedDate.toISOString();
 
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      const response = await fetch(`${API_URL}/api/assignments/`, {
+      const response = await fetch(`http://192.168.100.208:8002/${course.id}/assignment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,7 +61,8 @@ const TeacherCreateAssignments = () => {
         body: JSON.stringify({
           title,
           description,
-          due_date: dueDate,
+          deadline: isoDueDate,
+          course_id:  Number(course.id),
         }),
       });
 
@@ -53,7 +74,7 @@ const TeacherCreateAssignments = () => {
         return;
       }
 
-      navigation.navigate('TeacherCoursesDetail');
+      navigation.goBack();
     } catch (error) {
       console.error('Error:', error);
       setModalMessage('An error occurred. Please try again.');
@@ -106,11 +127,12 @@ const TeacherCreateAssignments = () => {
         </TouchableOpacity>
       </View>
 
-      <AcceptOnlyModal
-        visible={showModal}
-        message={modalMessage}
-        onClose={() => setShowModal(false)}
-      />
+         <AcceptOnlyModal
+              visible={showModal}
+              message={modalMessage}
+              onAccept={() => setShowModal(false)}
+              onClose={() => setShowModal(false)}
+            />
     </View>
   );
 };
