@@ -127,11 +127,12 @@ const TeacherCreateAssignments = () => {
         </TouchableOpacity>
       </View>
 
-      <AcceptOnlyModal
-        visible={showModal}
-        message={modalMessage}
-        onClose={() => setShowModal(false)}
-      />
+         <AcceptOnlyModal
+              visible={showModal}
+              message={modalMessage}
+              onAccept={() => setShowModal(false)}
+              onClose={() => setShowModal(false)}
+            />
     </View>
   );
 };
