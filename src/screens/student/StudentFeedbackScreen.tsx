@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '@env';
 import StatusOverlay from '../../components/StatusOverlay';
+import { AcceptOnlyModal } from '../../components/Modals';
 
 
 const StudentFeedbackScreen = () => {
@@ -25,9 +26,16 @@ const StudentFeedbackScreen = () => {
   const [rating, setRating] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false); 
-
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const handleSubmitFeedback = async () => {
+    if (!rating) {
+      setModalMessage('Please provide a rating.');
+      setShowModal(true);
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -114,6 +122,12 @@ const StudentFeedbackScreen = () => {
             multiline
             placeholder="Write your detailed comment here"
           />
+          <AcceptOnlyModal
+                        visible={showModal}
+                        message={modalMessage}
+                        onAccept={() => setShowModal(false)}
+                        onClose={() => setShowModal(false)}
+                      />
   
           <Text style={styles.label}>Rating</Text>
           <View style={styles.ratingContainer}>

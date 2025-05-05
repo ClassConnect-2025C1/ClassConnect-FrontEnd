@@ -56,7 +56,15 @@ const MembersScreen = () => {
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}  
         renderItem={({ item }) => (
           <View style={styles.memberItem}>
-            <Text style={styles.memberRole}>{item.role || 'student'}</Text>
+            <View style={styles.memberInfo}>
+              <Text style={styles.memberRole}>{item.role || 'student'}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.approveButton}
+              onPress={() => console.log(`Aprobado: ${item.id}`)}
+            >
+              <Text style={styles.approveButtonText}>Approve</Text>
+            </TouchableOpacity>
           </View>
         )}
         ListHeaderComponent={
@@ -110,6 +118,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
+    flexDirection: 'row', 
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
@@ -129,6 +138,24 @@ const styles = StyleSheet.create({
     color: '#7f8c8d',
     marginTop: 4,
   },
+  memberInfo: {
+    flex: 1,
+  },
+  
+  approveButton: {
+    backgroundColor: '#27ae60',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  
+  approveButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+
   bottomButtonContainer: {
     position: 'absolute',
     bottom: 20,
