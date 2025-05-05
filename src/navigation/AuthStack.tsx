@@ -6,6 +6,7 @@ import StartScreen from '../screens/StartScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LocationScreen from '../screens/LocationScreen';
 import PinScreen from '../screens/PinScreen';
+import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
 
 import StudentCoursesScreen from '../screens/student/StudentCoursesScreen';
 import StudentAvailableCoursesScrenn from '../screens/student/StudentAvailableCoursesScrenn';
@@ -33,8 +34,11 @@ const AuthStack = () => (
     <Stack.Screen name="Register" component={RegisterScreen} />
     <Stack.Screen name="Location" component={LocationScreen} />
     <Stack.Screen name="PinScreen" component={PinScreen} />
-
     <Stack.Screen name="Profile" component={ProfileScreen} />
+    <Stack.Screen
+      name="PasswordRecovery"
+      component={PasswordRecoveryScreen}
+    />
 
     <Stack.Screen name="StudentCourses" component={StudentCoursesScreen} />
     <Stack.Screen

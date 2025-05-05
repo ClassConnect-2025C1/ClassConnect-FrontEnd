@@ -14,7 +14,7 @@ import { API_URL } from '@env';
 const TeacherCreateAssignments = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { course } = route.params; // <-- courseId viene desde la pantalla anterior
+  const { course } = route.params; 
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
