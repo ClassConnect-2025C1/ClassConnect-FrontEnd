@@ -54,12 +54,10 @@ const AvailableCoursesScreen = () => {
 
         const approvedRes = await fetch(`http://192.168.100.208:8002/approved/${userId}`);
         const approvedJson = await approvedRes.json();
-        console.log("approvedJson", approvedJson);
-        
-        const approvedCourseNames = approvedJson.data?.map((course) => course.name) || [];
 
+        console.log(approvedJson);
         setCourses(availableCourses);
-        setApprovedCourses(approvedCourseNames);
+        setApprovedCourses(approvedJson.data || []);
       }
     } catch (error) {
       console.error('Error al obtener datos:', error);
@@ -106,11 +104,13 @@ const AvailableCoursesScreen = () => {
   };
 
   const isEligible = (course) => {
-    console.log("course.eligibility_criteria", course);
-
+ 
     if (!course.eligibilityCriteria || course.eligibilityCriteria.length === 0) {
       return true;
     }
+    console.log(course.eligibilityCriteria);
+    console.log(approvedCourses);
+
     return course.eligibilityCriteria.every((reqName) => approvedCourses.includes(reqName));
   };
 

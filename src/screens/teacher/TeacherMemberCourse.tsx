@@ -18,10 +18,11 @@ const MembersScreen = () => {
   const route = useRoute();
   const { course } = route.params;
   const courseId = course.id;
-  console.log('courseId', courseId);
+
 
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [approvedMembers, setApprovedMembers] = useState([]);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -40,6 +41,17 @@ const MembersScreen = () => {
     fetchMembers();
   }, [courseId]);
 
+  const handleApprove = async (userId) => {
+    try {
+      const res = await fetch(`http://192.168.100.208:8002/approve/${userId}/${courseId}`);
+      if (!res.ok) throw new Error('Aprobación fallida');
+
+      setApprovedMembers((prev) => [...prev, userId]);
+    } catch (error) {
+      console.error('Error al aprobar:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Course Members</Text>
@@ -52,28 +64,36 @@ const MembersScreen = () => {
         />
       ) : (
         <FlatList
-        data={members}
-        keyExtractor={(item, index) => item.id?.toString() || index.toString()}  
-        renderItem={({ item }) => (
-          <View style={styles.memberItem}>
-            <View style={styles.memberInfo}>
-              <Text style={styles.memberRole}>{item.role || 'student'}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.approveButton}
-              onPress={() => console.log(`Aprobado: ${item.id}`)}
-            >
-              <Text style={styles.approveButtonText}>Approve</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        ListHeaderComponent={
-          <Text style={styles.sectionHeader}>Members</Text>
-        }
-        style={styles.memberList}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
-      
+          data={members}
+          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+          renderItem={({ item }) => {
+            const isApproved = approvedMembers.includes(item.id);
+            return (
+              <View style={styles.memberItem}>
+                <View style={styles.memberInfo}>
+                  <Text style={styles.memberRole}>{item.role || 'student'}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.approveButton,
+                    isApproved && { backgroundColor: '#bdc3c7' },
+                  ]}
+                  onPress={() => handleApprove(item.user_id)}
+                  disabled={isApproved}
+                >
+                  <Text style={styles.approveButtonText}>
+                    {isApproved ? 'Approved' : 'Approve'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          }}
+          ListHeaderComponent={
+            <Text style={styles.sectionHeader}>Members</Text>
+          }
+          style={styles.memberList}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
       )}
 
       <View style={styles.bottomButtonContainer}>
@@ -118,7 +138,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    flexDirection: 'row', 
+    flexDirection: 'row',
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
@@ -141,7 +161,6 @@ const styles = StyleSheet.create({
   memberInfo: {
     flex: 1,
   },
-  
   approveButton: {
     backgroundColor: '#27ae60',
     paddingVertical: 8,
@@ -149,13 +168,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignSelf: 'center',
   },
-  
   approveButtonText: {
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 14,
   },
-
   bottomButtonContainer: {
     position: 'absolute',
     bottom: 20,
