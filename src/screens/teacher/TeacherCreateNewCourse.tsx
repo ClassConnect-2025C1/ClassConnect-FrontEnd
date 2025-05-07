@@ -12,6 +12,7 @@ import { AcceptOnlyModal } from '../../components/Modals';
 import { getUserProfileData } from '../../utils/GetUserProfile';
 import { API_URL } from '@env';
 import MultiSelect from 'react-native-multiple-select';
+import StatusOverlay from '../../components/StatusOverlay'; // Importamos el StatusOverlay
 
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
@@ -24,6 +25,8 @@ const TeacherCreateNewCourseScreen = () => {
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);  // Estado para controlar la carga
+  const [feedbackSent, setFeedbackSent] = useState(false); // Estado para saber si el feedback fue enviado correctamente
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -72,6 +75,8 @@ const TeacherCreateNewCourseScreen = () => {
     }
 
     try {
+      setIsLoading(true);  // Establece isLoading a true cuando se empieza a crear el curso
+
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
@@ -93,15 +98,29 @@ const TeacherCreateNewCourseScreen = () => {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
+        setIsLoading(false);  // Desactiva la carga si hay un error
         setModalMessage('Failed to create course. Please try again.');
         setShowModal(true);
         return;
       }
 
       const data = await response.json();
-      console.log('Curso creado exitosamente:', data);
-      navigation.navigate('TeacherCourses', { newCourse: data });
+      setFeedbackSent(true);  
+      setIsLoading(false);  
+
+      setTimeout(() => {
+        setFeedbackSent(true);
+      
+        setTimeout(() => {
+          setIsLoading(false); 
+          setFeedbackSent(false);
+          
+          navigation.navigate('TeacherCourses', { newCourse: data });
+        }, 2000);
+      
+      }, 1500);
     } catch (error) {
+      setIsLoading(false);  
       setModalMessage('An unexpected error occurred.');
       setShowModal(true);
     }
@@ -109,63 +128,74 @@ const TeacherCreateNewCourseScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create New Course</Text>
+      {isLoading ? (
+        <StatusOverlay
+          loading={!feedbackSent}
+          success={feedbackSent}
+          loadingMsg="Creating course..."
+          successMsg="Course created successfully!"
+        />
+      ) : (
+        <>
+          <Text style={styles.title}>Create New Course</Text>
 
-      <Text style={styles.label}>Course Name</Text>
-      <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+          <Text style={styles.label}>Course Name</Text>
+          <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
-      <Text style={styles.label}>Description</Text>
-      <TextInput
-        style={[styles.input, styles.description]}
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.description]}
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
 
-      <Text style={styles.label}>Eligibility Criteria</Text>
-      <MultiSelect
-        items={eligibilityOptions}
-        uniqueKey="id"
-        onSelectedItemsChange={setSelectedCriteria}
-        selectedItems={selectedCriteria}
-        selectText="Select criteria"
-        searchInputPlaceholderText="Search criteria..."
-        tagRemoveIconColor="#333"
-        tagBorderColor="#333"
-        tagTextColor="#333"
-        selectedItemTextColor="#333"
-        selectedItemIconColor="#333"
-        itemTextColor="#000"
-        displayKey="name"
-        searchInputStyle={{ color: '#333' }}
-        submitButtonColor="#333"
-        submitButtonText="Confirm"
-        styleMainWrapper={styles.multiSelect}
-      />
+          <Text style={styles.label}>Eligibility Criteria</Text>
+          <MultiSelect
+            items={eligibilityOptions}
+            uniqueKey="id"
+            onSelectedItemsChange={setSelectedCriteria}
+            selectedItems={selectedCriteria}
+            selectText="Select criteria"
+            searchInputPlaceholderText="Search criteria..."
+            tagRemoveIconColor="#333"
+            tagBorderColor="#333"
+            tagTextColor="#333"
+            selectedItemTextColor="#333"
+            selectedItemIconColor="#333"
+            itemTextColor="#000"
+            displayKey="name"
+            searchInputStyle={{ color: '#333' }}
+            submitButtonColor="#333"
+            submitButtonText="Confirm"
+            styleMainWrapper={styles.multiSelect}
+          />
 
-      <Text style={styles.label}>Capacity</Text>
-      <TextInput
-        style={styles.input}
-        value={capacity}
-        onChangeText={setCapacity}
-        keyboardType="numeric"
-      />
+          <Text style={styles.label}>Capacity</Text>
+          <TextInput
+            style={styles.input}
+            value={capacity}
+            onChangeText={setCapacity}
+            keyboardType="numeric"
+          />
 
-      <AcceptOnlyModal
-        visible={showModal}
-        message={modalMessage}
-        onAccept={() => setShowModal(false)}
-      />
+          <AcceptOnlyModal
+            visible={showModal}
+            message={modalMessage}
+            onAccept={() => setShowModal(false)}
+          />
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateCourse}>
-          <Text style={styles.buttonText}>Create</Text>
-        </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.createButton} onPress={handleCreateCourse}>
+              <Text style={styles.buttonText}>Create</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 };

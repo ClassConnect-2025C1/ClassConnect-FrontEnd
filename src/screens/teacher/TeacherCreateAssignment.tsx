@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { AcceptOnlyModal } from '../../components/Modals';
 import * as DocumentPicker from 'expo-document-picker'; 
 import StatusOverlay from '../../components/StatusOverlay';
+import { AcceptOnlyModal } from '../../components/Modals';
 
 const TeacherCreateAssignments = () => {
   const navigation = useNavigation();
@@ -32,22 +32,26 @@ const TeacherCreateAssignments = () => {
 
   const handleSelectFiles = async () => {
     try {
-      const results = await DocumentPicker.getDocumentAsync({
-        type: '*/*', 
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+        multiple: false,
       });
-
-      if (results.type === 'success') {
-        setFiles((prevFiles) => [...prevFiles, results]); 
+  
+      if (!result.canceled && result.assets?.length > 0) {
+        const selectedFile = result.assets[0]; // solo uno porque multiple: false
+  
+        setFiles((prevFiles) => [...prevFiles, selectedFile]);
+  
+        console.log('File selected:', selectedFile);
+      } else {
+        console.log('User cancelled file picker');
       }
     } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        console.log('User cancelled file picker');
-      } else {
-        console.error('Unknown error', err);
-      }
+      console.error('Error picking document:', err);
     }
   };
-
+  
   const handleRemoveFile = (fileUri) => {
     setFiles(files.filter((file) => file.uri !== fileUri)); 
   };
@@ -77,10 +81,18 @@ const TeacherCreateAssignments = () => {
 
     const fileContents = await Promise.all(
       files.map(async (file) => {
-        const content = await file.uri; 
+        const fileContent = await fetch(file.uri);  // Fetch the file from the URI
+        const contentBlob = await fileContent.blob();  // Convert to blob
+        const base64Content = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(contentBlob);
+        });
+
         return {
           name: file.name,
-          content: content, 
+          content: base64Content.split(',')[1],  // Extract the base64 string without the prefix
           size: file.size,
         };
       })
@@ -113,26 +125,24 @@ const TeacherCreateAssignments = () => {
         console.error('Error creating assignment:', errorData);
         setModalMessage('Failed to create assignment. Please try again.');
         setShowModal(true);
-        setIsLoading(false); // End loading
+        setIsLoading(false); 
         return;
       }
 
       setTimeout(() => {
         setFeedbackSent(true);
-      
         setTimeout(() => {
-          setIsLoading(false); // End loading
+          setIsLoading(false); 
           setFeedbackSent(false);
           navigation.goBack();
         }, 2000);
-      
       }, 1500);
 
     } catch (error) {
       console.error('Error:', error);
       setModalMessage('An error occurred. Please try again.');
       setShowModal(true);
-      setIsLoading(false); // End loading
+      setIsLoading(false);
     }
   };
 
@@ -151,7 +161,6 @@ const TeacherCreateAssignments = () => {
         />
       ) : (
         <>
-
           <Text style={styles.title}>Create Assignment</Text>
 
           <Text style={styles.label}>Title</Text>
@@ -188,31 +197,28 @@ const TeacherCreateAssignments = () => {
           />
 
           <Text style={styles.label}>Files</Text>
+
+          {/* Display selected files */}
+          <View style={styles.filesContainer}>
+            {files.map((file, index) => (
+              <View key={index} style={styles.fileItem}>
+                <Text style={styles.fileName}>{file.name}</Text>
+                <TouchableOpacity
+                  onPress={() => handleRemoveFile(file.uri)}
+                  style={styles.removeButton}
+                >
+                  <Text style={styles.removeButtonText}>X</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+
           <TouchableOpacity
             style={[styles.addFileButton, files.length > 0 && { backgroundColor: '#ddd' }]}
             onPress={handleSelectFiles}
           >
             <Text style={styles.buttonText}>{files.length === 0 ? 'Add Files' : 'Add More Files'}</Text>
           </TouchableOpacity>
-
-          {files.length > 0 && (
-            <FlatList
-              data={files}
-              keyExtractor={(item) => item.uri}
-              renderItem={({ item }) => (
-                <View style={styles.fileItem}>
-                  <Text style={styles.fileName}>{item.name}</Text>
-                  <TouchableOpacity
-                    onPress={() => handleRemoveFile(item.uri)}
-                    style={styles.removeButton}
-                  >
-                    <Text style={styles.removeButtonText}>X</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              style={styles.fileList}
-            />
-          )}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -267,22 +273,28 @@ const styles = StyleSheet.create({
   },
   addFileButton: {
     backgroundColor: '#eee',
-    padding: 12,
+    padding: 8,
     borderRadius: 8,
     marginBottom: 10,
     alignItems: 'center',
   },
-  fileItem: {
+  filesContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    marginBottom: 10,
+  },
+  fileItem: {
+    backgroundColor: '#ddd',
+    padding: 8,
+    margin: 5,
+    borderRadius: 5,
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
   },
   fileName: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#333',
+    marginRight: 5,
   },
   removeButton: {
     backgroundColor: '#ff4d4d',
@@ -292,9 +304,7 @@ const styles = StyleSheet.create({
   removeButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-  },
-  fileList: {
-    marginTop: 10,
+    fontSize: 12,
   },
   buttonContainer: {
     flexDirection: 'row',
