@@ -17,18 +17,20 @@ const AvailableCoursesScreen = () => {
   const { userId, onEnroll } = route.params || {};
 
   const [courses, setCourses] = useState([]);
+  const [approvedCourses, setApprovedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchAvailableCourses();
+    fetchCoursesAndApprovals();
   }, []);
 
-  const fetchAvailableCourses = async () => {
+  const fetchCoursesAndApprovals = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (token) {
-        const response = await fetch(
+
+        const coursesRes = await fetch(
           `${API_URL}/api/courses/available/${userId}`,
           {
             method: 'GET',
@@ -37,29 +39,36 @@ const AvailableCoursesScreen = () => {
             },
           },
         );
-
-        const text = await response.text();
-
+        const coursesText = await coursesRes.text();
+        let availableCourses = [];
         try {
-          const json = JSON.parse(text);
+          const json = JSON.parse(coursesText);
           if (Array.isArray(json.data)) {
-            setCourses(json.data);
+            availableCourses = json.data;
           } else {
-            console.error('La respuesta no es un array:', json);
-            setCourses([]);
+            console.error('La respuesta de cursos no es un array:', json);
           }
         } catch (e) {
-          console.error('Respuesta no es JSON válido:', text);
-          setCourses([]);
+          console.error('Cursos no es JSON válido:', coursesText);
         }
+
+        const approvedRes = await fetch(`http://192.168.100.208:8002/approved/${userId}`);
+        const approvedJson = await approvedRes.json();
+        console.log("approvedJson", approvedJson);
+        
+        const approvedCourseNames = approvedJson.data?.map((course) => course.name) || [];
+
+        setCourses(availableCourses);
+        setApprovedCourses(approvedCourseNames);
       }
     } catch (error) {
-      console.error('Error al obtener los cursos disponibles:', error);
+      console.error('Error al obtener datos:', error);
       setError('Error al cargar los cursos.');
     } finally {
       setLoading(false);
     }
   };
+
   const enrollInCourse = async (courseId) => {
     const user = await getUserProfileData();
 
@@ -67,7 +76,6 @@ const AvailableCoursesScreen = () => {
       alert('Could not get user info.');
       return;
     }
-    console.log('user', user);
 
     try {
       const response = await fetch(
@@ -77,7 +85,6 @@ const AvailableCoursesScreen = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          
           body: JSON.stringify({
             user_id: user.userId,
             email: user.email,
@@ -90,14 +97,23 @@ const AvailableCoursesScreen = () => {
         throw new Error('Enrollment failed');
       }
 
-      if (onEnroll) onEnroll(); // <-- Llamamos a la función pasada desde StudentCoursesScreen
-
+      if (onEnroll) onEnroll();
       navigation.goBack();
     } catch (error) {
       console.error(error);
       alert('Failed to enroll in course.');
     }
   };
+
+  const isEligible = (course) => {
+    console.log("course.eligibility_criteria", course);
+
+    if (!course.eligibilityCriteria || course.eligibilityCriteria.length === 0) {
+      return true;
+    }
+    return course.eligibilityCriteria.every((reqName) => approvedCourses.includes(reqName));
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -121,12 +137,21 @@ const AvailableCoursesScreen = () => {
         {courses.map((course) => (
           <View key={course.id} style={styles.courseCard}>
             <Text style={styles.courseText}>{course.title}</Text>
-            <TouchableOpacity
-              style={styles.enrollButton}
-              onPress={() => enrollInCourse(course.id)} // Llamamos a enrollInCourse al hacer clic
-            >
-              <Text style={styles.enrollButtonText}>Enroll</Text>
-            </TouchableOpacity>
+            {isEligible(course) ? (
+              <TouchableOpacity
+                style={styles.enrollButton}
+                onPress={() => enrollInCourse(course.id)}
+              >
+                <Text style={styles.enrollButtonText}>Enroll</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.enrollButton, { backgroundColor: '#ccc' }]}
+                onPress={() => alert('Not eligible. See details coming soon.')}
+              >
+                <Text style={styles.enrollButtonText}>See Details</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ))}
       </ScrollView>
