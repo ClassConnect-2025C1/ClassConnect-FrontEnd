@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,47 +11,75 @@ import { useNavigation } from '@react-navigation/native';
 import { AcceptOnlyModal } from '../../components/Modals';
 import { getUserProfileData } from '../../utils/GetUserProfile';
 import { API_URL } from '@env';
+import MultiSelect from 'react-native-multiple-select';
+import StatusOverlay from '../../components/StatusOverlay';
 
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [eligibilityCriteria, setEligibilityCriteria] = useState('');
   const [capacity, setCapacity] = useState('');
   const [teacherEmail, setTeacherEmail] = useState('');
-
+  const [eligibilityOptions, setEligibilityOptions] = useState([]);
+  const [selectedCriteria, setSelectedCriteria] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [courseCreated, setCourseCreated] = useState(false); // Nombre cambiado
 
-  React.useEffect(() => {
-    const fetchTeacher = async () => {
+  useEffect(() => {
+    const fetchInitialData = async () => {
       const teacher = await getUserProfileData();
       if (teacher?.email) {
         setTeacherEmail(teacher.email);
       }
+
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/courses/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const json = await response.json();
+        const coursesArray = Array.isArray(json.data) ? json.data : [];
+
+        const options = coursesArray.map((course: any) => ({
+          id: course.title,
+          name: course.title,
+        }));
+        setEligibilityOptions(options);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        setModalMessage('Could not load eligibility criteria.');
+        setShowModal(true);
+      }
     };
 
-    fetchTeacher();
+    fetchInitialData();
   }, []);
 
   const handleCreateCourse = async () => {
-    if (!title || !description || !eligibilityCriteria || !capacity) {
+    if (!title || !description || !capacity) {
       setModalMessage('All fields must be filled.');
       setShowModal(true);
       return;
     }
+  
     const capacityNumber = parseInt(capacity, 10);
     if (isNaN(capacityNumber) || capacityNumber <= 0) {
       setModalMessage('Capacity must be a valid number greater than zero.');
       setShowModal(true);
       return;
     }
-
+  
     try {
+      //setIsLoading(true);
+  
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
-
+  
       const response = await fetch(`${API_URL}/api/courses/`, {
         method: 'POST',
         headers: {
@@ -61,84 +89,110 @@ const TeacherCreateNewCourseScreen = () => {
         body: JSON.stringify({
           title,
           description,
-          eligibility_criteria: eligibilityCriteria,
-          capacity: parseInt(capacity),
+          eligibility_criteria: selectedCriteria,
+          capacity: capacityNumber,
           created_by: teacherEmail,
         }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
+        //setIsLoading(false);
         setModalMessage('Failed to create course. Please try again.');
         setShowModal(true);
         return;
       }
-
+  
       const data = await response.json();
-      console.log('Curso creado exitosamente:', data);
-
+      //setCourseCreated(true); 
+      //setIsLoading(false);
+  
+     
       navigation.navigate('TeacherCourses', { newCourse: data });
+      
     } catch (error) {
+      //setIsLoading(false);
       setModalMessage('An unexpected error occurred.');
       setShowModal(true);
     }
   };
+  
+  
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create New Course</Text>
+      {isLoading ? (
+        <StatusOverlay
+          loading={!courseCreated} 
+          success={courseCreated} 
+          loadingMsg="Creating course..."
+          successMsg="Course created successfully!"
+        />
+      ) : (
+        <>
+          <Text style={styles.title}>Create New Course</Text>
 
-      <Text style={styles.label}>Course Name</Text>
-      <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+          <Text style={styles.label}>Course Name</Text>
+          <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
-      <Text style={styles.label}>Description</Text>
-      <TextInput
-        style={[styles.input, styles.description]}
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-      <AcceptOnlyModal
-        visible={showModal}
-        message={modalMessage}
-        onAccept={() => setShowModal(false)}
-      />
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.description]}
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
 
-      <Text style={styles.label}>Eligibility Criteria</Text>
-      <TextInput
-        style={styles.input}
-        value={eligibilityCriteria}
-        onChangeText={setEligibilityCriteria}
-      />
+          <Text style={styles.label}>Eligibility Criteria</Text>
+          <MultiSelect
+            items={eligibilityOptions}
+            uniqueKey="id"
+            onSelectedItemsChange={setSelectedCriteria}
+            selectedItems={selectedCriteria}
+            selectText="Select criteria"
+            searchInputPlaceholderText="Search criteria..."
+            tagRemoveIconColor="#333"
+            tagBorderColor="#333"
+            tagTextColor="#333"
+            selectedItemTextColor="#333"
+            selectedItemIconColor="#333"
+            itemTextColor="#000"
+            displayKey="name"
+            searchInputStyle={{ color: '#333' }}
+            submitButtonColor="#333"
+            submitButtonText="Confirm"
+            styleMainWrapper={styles.multiSelect}
+          />
 
-      <Text style={styles.label}>Capacity</Text>
-      <TextInput
-        style={styles.input}
-        value={capacity}
-        onChangeText={setCapacity}
-        keyboardType="numeric"
-      />
+          <Text style={styles.label}>Capacity</Text>
+          <TextInput
+            style={styles.input}
+            value={capacity}
+            onChangeText={setCapacity}
+            keyboardType="numeric"
+          />
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={handleCreateCourse}
-        >
-          <Text style={styles.buttonText}>Create</Text>
-        </TouchableOpacity>
+          <AcceptOnlyModal
+            visible={showModal}
+            message={modalMessage}
+            onAccept={() => setShowModal(false)}
+          />
 
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.createButton} onPress={handleCreateCourse}>
+              <Text style={styles.buttonText}>Create</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -168,6 +222,10 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
+  multiSelect: {
+    marginTop: 10,
+    marginBottom: 20,
+  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -190,18 +248,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 43,
-    left: 16,
-    backgroundColor: '#d0d0d0',
-    padding: 5,
-    borderRadius: 10,
-  },
-  backButtonText: {
-    color: 'white',
-    fontSize: 15,
   },
 });
 

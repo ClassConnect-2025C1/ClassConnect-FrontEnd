@@ -118,7 +118,6 @@ const CoursesScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header and other components */}
       <View style={styles.header}>
         <Image
           source={require('../../../assets/images/logo.png')}
