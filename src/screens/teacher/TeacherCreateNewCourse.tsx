@@ -12,7 +12,7 @@ import { AcceptOnlyModal } from '../../components/Modals';
 import { getUserProfileData } from '../../utils/GetUserProfile';
 import { API_URL } from '@env';
 import MultiSelect from 'react-native-multiple-select';
-import StatusOverlay from '../../components/StatusOverlay'; // Importamos el StatusOverlay
+import StatusOverlay from '../../components/StatusOverlay';
 
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
@@ -25,8 +25,8 @@ const TeacherCreateNewCourseScreen = () => {
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);  // Estado para controlar la carga
-  const [feedbackSent, setFeedbackSent] = useState(false); // Estado para saber si el feedback fue enviado correctamente
+  const [isLoading, setIsLoading] = useState(false);
+  const [courseCreated, setCourseCreated] = useState(false); // Nombre cambiado
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -66,20 +66,20 @@ const TeacherCreateNewCourseScreen = () => {
       setShowModal(true);
       return;
     }
-
+  
     const capacityNumber = parseInt(capacity, 10);
     if (isNaN(capacityNumber) || capacityNumber <= 0) {
       setModalMessage('Capacity must be a valid number greater than zero.');
       setShowModal(true);
       return;
     }
-
+  
     try {
-      setIsLoading(true);  // Establece isLoading a true cuando se empieza a crear el curso
-
+      setIsLoading(true);
+  
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
-
+  
       const response = await fetch(`${API_URL}/api/courses/`, {
         method: 'POST',
         headers: {
@@ -94,44 +94,38 @@ const TeacherCreateNewCourseScreen = () => {
           created_by: teacherEmail,
         }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
-        setIsLoading(false);  // Desactiva la carga si hay un error
+        setIsLoading(false);
         setModalMessage('Failed to create course. Please try again.');
         setShowModal(true);
         return;
       }
-
+  
       const data = await response.json();
-      setFeedbackSent(true);  
-      setIsLoading(false);  
-
-      setTimeout(() => {
-        setFeedbackSent(true);
+      setCourseCreated(true); 
+      setIsLoading(false);
+  
+     
+      navigation.navigate('TeacherCourses', { newCourse: data });
       
-        setTimeout(() => {
-          setIsLoading(false); 
-          setFeedbackSent(false);
-          
-          navigation.navigate('TeacherCourses', { newCourse: data });
-        }, 2000);
-      
-      }, 1500);
     } catch (error) {
-      setIsLoading(false);  
+      setIsLoading(false);
       setModalMessage('An unexpected error occurred.');
       setShowModal(true);
     }
   };
+  
+  
 
   return (
     <View style={styles.container}>
       {isLoading ? (
         <StatusOverlay
-          loading={!feedbackSent}
-          success={feedbackSent}
+          loading={!courseCreated} 
+          success={courseCreated} 
           loadingMsg="Creating course..."
           successMsg="Course created successfully!"
         />
@@ -199,7 +193,6 @@ const TeacherCreateNewCourseScreen = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
