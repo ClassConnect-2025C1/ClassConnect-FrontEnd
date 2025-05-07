@@ -75,7 +75,7 @@ const TeacherCreateNewCourseScreen = () => {
     }
   
     try {
-      setIsLoading(true);
+      //setIsLoading(true);
   
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
@@ -98,21 +98,21 @@ const TeacherCreateNewCourseScreen = () => {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
-        setIsLoading(false);
+        //setIsLoading(false);
         setModalMessage('Failed to create course. Please try again.');
         setShowModal(true);
         return;
       }
   
       const data = await response.json();
-      setCourseCreated(true); 
-      setIsLoading(false);
+      //setCourseCreated(true); 
+      //setIsLoading(false);
   
      
       navigation.navigate('TeacherCourses', { newCourse: data });
       
     } catch (error) {
-      setIsLoading(false);
+      //setIsLoading(false);
       setModalMessage('An unexpected error occurred.');
       setShowModal(true);
     }
