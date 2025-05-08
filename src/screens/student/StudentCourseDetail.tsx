@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '@env';
 
 export default function CourseDetail({ route }) {
   const { course } = route.params;
@@ -24,7 +25,7 @@ export default function CourseDetail({ route }) {
         throw new Error('No token found');
       }
 
-      const response = await fetch(`http://192.168.100.208:8002/${course.id}/assignments`, {
+      const response = await fetch(`${API_URL}/api/courses/${course.id}/assignments`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -37,6 +38,7 @@ export default function CourseDetail({ route }) {
       }
 
       const data = await response.json();
+      console.log("assigments data", data);
       if (data && Array.isArray(data.data)) {
         setAssignments(data.data);
       } else {

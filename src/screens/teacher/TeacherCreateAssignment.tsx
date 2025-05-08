@@ -12,6 +12,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker'; 
 import StatusOverlay from '../../components/StatusOverlay';
 import { AcceptOnlyModal } from '../../components/Modals';
+import { API_URL } from '@env';
 
 const TeacherCreateAssignments = () => {
   const navigation = useNavigation();
@@ -104,7 +105,7 @@ const TeacherCreateAssignments = () => {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      const response = await fetch(`http://192.168.100.208:8002/${course.id}/assignment`, {
+      const response = await fetch(`${API_URL}/api/courses/${course.id}/assignment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,6 +128,11 @@ const TeacherCreateAssignments = () => {
         setShowModal(true);
         setIsLoading(false); 
         return;
+      }
+
+      if (response.ok){
+        const data = await response.json();
+        console.log('Assignment created successfully:', data);
       }
 
       setTimeout(() => {
