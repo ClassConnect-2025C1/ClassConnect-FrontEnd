@@ -10,6 +10,7 @@ import {
   View,
   Text,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   Image,
@@ -33,6 +34,12 @@ const CoursesScreen = ({ route }) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState('');
+
+  const filteredCourses = courses.filter((course) =>
+    course.title.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
   useEffect(() => {
     const fetchUserCourses = async () => {
       try {
@@ -131,9 +138,19 @@ const CoursesScreen = ({ route }) => {
           />
         </TouchableOpacity>
       </View>
+      <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="🔍 Search"
+                placeholderTextColor="#aaa"
+                value={searchText}
+                onChangeText={setSearchText}
+              />
+            </View>
 
       <ScrollView contentContainerStyle={styles.courseList}>
-        {courses.map((course, index) => (
+      {filteredCourses.map((course, index) => (
+
           <View
             key={course.id}
             style={[
@@ -309,6 +326,19 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     resizeMode: 'contain',
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  searchInput: {
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    fontSize: 16,
+    borderColor: '#ccc',
+    borderWidth: 1,
   },
 });
 
