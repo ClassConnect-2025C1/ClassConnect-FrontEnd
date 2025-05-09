@@ -66,20 +66,20 @@ const TeacherCreateNewCourseScreen = () => {
       setShowModal(true);
       return;
     }
-  
+
     const capacityNumber = parseInt(capacity, 10);
     if (isNaN(capacityNumber) || capacityNumber <= 0) {
       setModalMessage('Capacity must be a valid number greater than zero.');
       setShowModal(true);
       return;
     }
-  
+
     try {
       //setIsLoading(true);
-  
+
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
-  
+
       const response = await fetch(`${API_URL}/api/courses/`, {
         method: 'POST',
         headers: {
@@ -94,7 +94,7 @@ const TeacherCreateNewCourseScreen = () => {
           created_by: teacherEmail,
         }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
@@ -103,29 +103,25 @@ const TeacherCreateNewCourseScreen = () => {
         setShowModal(true);
         return;
       }
-  
+
       const data = await response.json();
-      //setCourseCreated(true); 
+      //setCourseCreated(true);
       //setIsLoading(false);
-  
-     
+
       navigation.navigate('TeacherCourses', { newCourse: data });
-      
     } catch (error) {
       //setIsLoading(false);
       setModalMessage('An unexpected error occurred.');
       setShowModal(true);
     }
   };
-  
-  
 
   return (
     <View style={styles.container}>
       {isLoading ? (
         <StatusOverlay
-          loading={!courseCreated} 
-          success={courseCreated} 
+          loading={!courseCreated}
+          success={courseCreated}
           loadingMsg="Creating course..."
           successMsg="Course created successfully!"
         />
@@ -134,7 +130,11 @@ const TeacherCreateNewCourseScreen = () => {
           <Text style={styles.title}>Create New Course</Text>
 
           <Text style={styles.label}>Course Name</Text>
-          <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+          />
 
           <Text style={styles.label}>Description</Text>
           <TextInput
@@ -180,11 +180,17 @@ const TeacherCreateNewCourseScreen = () => {
           />
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.createButton} onPress={handleCreateCourse}>
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={handleCreateCourse}
+            >
               <Text style={styles.buttonText}>Create</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => navigation.goBack()}
+            >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TextInput,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   SafeAreaView,
@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { validateFields } from '../../Errors/ValidationsEditCourse'; // Importa la función de validación
+import { validateFields } from '../../Errors/ValidationsEditCourse';
 import { API_URL } from '@env';
+import MultiSelect from 'react-native-multiple-select';
 
 const { width } = Dimensions.get('window');
 
@@ -21,11 +22,13 @@ export default function EditCourseScreen({ route }) {
 
   const [title, setTitle] = useState(course.title);
   const [description, setDescription] = useState(course.description);
-  const [eligibilityCriteria, setEligibilityCriteria] = useState(
-    course.eligibilityCriteria || '',
-  );
   const [startDate, setStartDate] = useState(course.startDate);
   const [endDate, setEndDate] = useState(course.endDate);
+
+  const [eligibilityOptions, setEligibilityOptions] = useState([]);
+  const [selectedCriteria, setSelectedCriteria] = useState<string[]>(
+    course.eligibilityCriteria || [],
+  );
 
   const [errors, setErrors] = useState({
     title: '',
@@ -37,11 +40,36 @@ export default function EditCourseScreen({ route }) {
 
   const navigation = useNavigation();
 
+  useEffect(() => {
+    const fetchEligibilityOptions = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/courses/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const json = await response.json();
+        const coursesArray = Array.isArray(json.data) ? json.data : [];
+
+        const options = coursesArray.map((course: any) => ({
+          id: course.title,
+          name: course.title,
+        }));
+        setEligibilityOptions(options);
+      } catch (error) {
+        console.error('Error fetching eligibility options:', error);
+      }
+    };
+
+    fetchEligibilityOptions();
+  }, []);
+
   const handleSaveChanges = async () => {
     const newErrors = validateFields(
       title,
       description,
-      eligibilityCriteria,
+      selectedCriteria,
       startDate,
       endDate,
     );
@@ -65,7 +93,7 @@ export default function EditCourseScreen({ route }) {
         body: JSON.stringify({
           title,
           description,
-          eligibility_criteria: eligibilityCriteria,
+          eligibility_criteria: selectedCriteria,
           start_date: formattedStartDate,
           end_date: formattedEndDate,
         }),
@@ -107,15 +135,26 @@ export default function EditCourseScreen({ route }) {
           <Text style={styles.errorText}>{errors.description}</Text>
         )}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Eligibility Criteria"
-          value={eligibilityCriteria}
-          onChangeText={setEligibilityCriteria}
+        <Text style={{ marginBottom: 6 }}>Eligibility Criteria</Text>
+        <MultiSelect
+          items={eligibilityOptions}
+          uniqueKey="id"
+          onSelectedItemsChange={setSelectedCriteria}
+          selectedItems={selectedCriteria}
+          selectText="Select criteria"
+          searchInputPlaceholderText="Search criteria..."
+          tagRemoveIconColor="#333"
+          tagBorderColor="#333"
+          tagTextColor="#333"
+          selectedItemTextColor="#333"
+          selectedItemIconColor="#333"
+          itemTextColor="#000"
+          displayKey="name"
+          searchInputStyle={{ color: '#333' }}
+          submitButtonColor="#333"
+          submitButtonText="Confirm"
+          styleMainWrapper={{ marginBottom: 16 }}
         />
-        {errors.eligibilityCriteria && (
-          <Text style={styles.errorText}>{errors.eligibilityCriteria}</Text>
-        )}
 
         <TextInput
           style={styles.input}

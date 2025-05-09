@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  TextInput,
 } from 'react-native';
 import { API_URL } from '@env';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -33,9 +34,14 @@ const CoursesScreen = () => {
   const route = useRoute();
   const { userId } = route.params;
   const [courses, setCourses] = useState<Course[]>([]);
+  const [searchText, setSearchText] = useState('');
 
   const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(
     new Set(),
+  );
+
+  const filteredCourses = courses.filter((course) =>
+    course.title.toLowerCase().includes(searchText.toLowerCase()),
   );
   const refreshCourses = async () => {
     try {
@@ -101,9 +107,18 @@ const CoursesScreen = () => {
           />
         </TouchableOpacity>
       </View>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="🔍 Search"
+          placeholderTextColor="#aaa"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+      </View>
 
       <ScrollView contentContainerStyle={styles.courseList}>
-        {[...courses]
+        {[...filteredCourses]
           .sort((a, b) => {
             const aFav = favoriteCourses.has(a.id);
             const bFav = favoriteCourses.has(b.id);
@@ -263,6 +278,19 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     resizeMode: 'contain',
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  searchInput: {
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    fontSize: 16,
+    borderColor: '#ccc',
+    borderWidth: 1,
   },
 });
 

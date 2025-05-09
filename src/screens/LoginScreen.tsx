@@ -204,15 +204,15 @@ const LoginScreen = () => {
         <View
           style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
         >
+          <TouchableOpacity
+            onPress={() => navigation.navigate('PasswordRecovery')}
+          >
+            <Text style={styles.bottomLink}>
+              Forgot your password?{' '}
+              <Text style={styles.signUp}>Click here</Text>
+            </Text>
+          </TouchableOpacity>
 
-          
-        <TouchableOpacity onPress={() => navigation.navigate('PasswordRecovery')}>
-          <Text style={styles.bottomLink}>
-          Forgot your password? <Text style={styles.signUp}>Click here</Text>
-          </Text>
-        </TouchableOpacity>
-
-        
           <TouchableOpacity
             style={{
               backgroundColor: '#fff',
@@ -226,7 +226,6 @@ const LoginScreen = () => {
               promptAsync();
             }}
           >
-            
             <Image
               source={require('../../assets/images/googlelog.png')}
               style={{ width: 20, height: 20, marginRight: 10 }}

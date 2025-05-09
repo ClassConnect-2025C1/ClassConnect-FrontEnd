@@ -17,7 +17,7 @@ const PasswordRecoveryScreen = () => {
   const handleSubmit = async () => {
     let valid = true;
     setEmailError('');
-  
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
       setEmailError('Please enter your email');
@@ -26,18 +26,21 @@ const PasswordRecoveryScreen = () => {
       setEmailError('Email is invalid');
       valid = false;
     }
-  
+
     if (!valid) return;
-  
+
     try {
-      const response = await fetch('https://<TU_BACKEND>/api/auth/recovery-password/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'https://<TU_BACKEND>/api/auth/recovery-password/',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
         },
-        body: JSON.stringify({ email }),
-      });
-  
+      );
+
       if (response.ok) {
         alert('Recovery email sent successfully.');
         navigation.goBack();
@@ -51,7 +54,6 @@ const PasswordRecoveryScreen = () => {
       alert('An error occurred. Please try again later.');
     }
   };
-  
 
   return (
     <View style={styles.container}>
@@ -81,9 +83,12 @@ const PasswordRecoveryScreen = () => {
           <Text style={styles.submitButtonText}>Send Recovery Email</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-  <Text style={styles.backButtonText}>Back to Login</Text>
-</TouchableOpacity>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>Back to Login</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

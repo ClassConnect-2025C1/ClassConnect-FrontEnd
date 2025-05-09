@@ -19,7 +19,6 @@ const MembersScreen = () => {
   const { course } = route.params;
   const courseId = course.id;
 
-
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvedMembers, setApprovedMembers] = useState([]);
@@ -27,7 +26,9 @@ const MembersScreen = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch(`http://192.168.100.208:8002/${courseId}/members`);
+        const response = await fetch(
+          `http://192.168.100.208:8002/${courseId}/members`,
+        );
         if (!response.ok) throw new Error('Error al obtener los miembros');
         const data = await response.json();
         setMembers(data.data);
@@ -43,7 +44,9 @@ const MembersScreen = () => {
 
   const handleApprove = async (userId) => {
     try {
-      const res = await fetch(`http://192.168.100.208:8002/approve/${userId}/${courseId}`);
+      const res = await fetch(
+        `http://192.168.100.208:8002/approve/${userId}/${courseId}`,
+      );
       if (!res.ok) throw new Error('Aprobación fallida');
 
       setApprovedMembers((prev) => [...prev, userId]);
@@ -65,18 +68,22 @@ const MembersScreen = () => {
       ) : (
         <FlatList
           data={members}
-          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+          keyExtractor={(item, index) =>
+            item.id?.toString() || index.toString()
+          }
           renderItem={({ item }) => {
             const isApproved = approvedMembers.includes(item.id);
             return (
               <View style={styles.memberItem}>
                 <View style={styles.memberInfo}>
-                  <Text style={styles.memberRole}>{item.role || 'student'}</Text>
+                  <Text style={styles.memberRole}>
+                    {item.role || 'student'}
+                  </Text>
                 </View>
                 <TouchableOpacity
                   style={[
                     styles.approveButton,
-                    isApproved && { backgroundColor: '#bdc3c7' },
+                    isApproved && { backgroundColor: '#bdc3c7', opacity: 0.6 },
                   ]}
                   onPress={() => handleApprove(item.user_id)}
                   disabled={isApproved}

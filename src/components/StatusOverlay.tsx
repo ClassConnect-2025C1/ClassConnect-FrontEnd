@@ -2,7 +2,12 @@ import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const StatusOverlay = ({ loading = true, success = false, loadingMsg = 'Loading...', successMsg = 'Success!' }) => {
+const StatusOverlay = ({
+  loading = true,
+  success = false,
+  loadingMsg = 'Loading...',
+  successMsg = 'Success!',
+}) => {
   return (
     <View style={styles.container}>
       {success ? (

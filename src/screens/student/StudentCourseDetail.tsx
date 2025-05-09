@@ -18,8 +18,7 @@ export default function CourseDetail({ route }) {
   const [activeTab, setActiveTab] = useState('Assignments');
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
-
-
+  
   const fetchAssignments = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -27,25 +26,28 @@ export default function CourseDetail({ route }) {
         throw new Error('No token found');
       }
 
-      const response = await fetch(`${API_URL}/api/courses/${course.id}/assignments`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignments`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch assignments');
       }
 
       const data = await response.json();
-      console.log("assigments data", data);
+      console.log('assigments data', data);
       if (data && Array.isArray(data.data)) {
         setAssignments(data.data);
       } else {
         console.error('Assignments data is not in the expected format:', data);
-        setAssignments([]); 
+        setAssignments([]);
       }
     } catch (error) {
       console.error('Error fetching assignments:', error);
@@ -54,7 +56,6 @@ export default function CourseDetail({ route }) {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     fetchAssignments();
@@ -68,13 +69,23 @@ export default function CourseDetail({ route }) {
       >
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
-  
+
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{course.title}</Text>
         <Text style={styles.subtitle}>
           {course.description || 'No description available'}
         </Text>
-  
+
+        <Text style={styles.detail}>
+          Created by: {course.created_by || 'Unknown'}
+        </Text>
+        <Text style={styles.detail}>
+          Capacity: {course.capacity || 'Not specified'}
+        </Text>
+        <Text style={styles.detail}>
+          {course.eligibility_criteria || "Don't have eligibility criteria."}
+        </Text>
+
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={[
@@ -85,7 +96,7 @@ export default function CourseDetail({ route }) {
           >
             <Text style={styles.tabText}>Assignments</Text>
           </TouchableOpacity>
-  
+
           <TouchableOpacity
             style={[
               styles.tabButton,
@@ -97,7 +108,7 @@ export default function CourseDetail({ route }) {
           </TouchableOpacity>
         </View>
       </View>
-  
+
       <View style={styles.sectionContainer}>
         {loading ? (
           <Text>Loading assignments...</Text>
@@ -110,8 +121,10 @@ export default function CourseDetail({ route }) {
               <View style={styles.itemContainer}>
                 <Text style={styles.itemText}>{item.title}</Text>
                 <Text style={styles.itemDescription}>{item.description}</Text>
-                <Text style={styles.itemText}>Due: {new Date(item.deadline).toLocaleDateString()}</Text>
-  
+                <Text style={styles.itemText}>
+                  Due: {new Date(item.deadline).toLocaleDateString()}
+                </Text>
+
                 {Array.isArray(item.files) && item.files.length > 0 && (
                   <View style={{ marginTop: 10 }}>
                     {item.files.map((file, idx) => (
@@ -120,12 +133,14 @@ export default function CourseDetail({ route }) {
                         style={styles.downloadButton}
                         onPress={() => downloadAndShareFile(file)}
                       >
-                        <Text style={styles.downloadButtonText}>Download {file.name}</Text>
+                        <Text style={styles.downloadButtonText}>
+                          Download {file.name}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 )}
-  
+
                 <TouchableOpacity style={styles.submitButton}>
                   <Text style={styles.submitButtonText}>Enter Submission</Text>
                 </TouchableOpacity>
@@ -140,13 +155,14 @@ export default function CourseDetail({ route }) {
             <View style={styles.itemContainer}>
               <Text style={styles.itemText}>Course Resources</Text>
               <Text style={styles.itemDescription}>
-                Here you will find resources such as slides, books, and other materials related to this course.
+                Here you will find resources such as slides, books, and other
+                materials related to this course.
               </Text>
             </View>
           </ScrollView>
         )}
       </View>
-  
+
       <View style={styles.feedbackContainer}>
         <TouchableOpacity
           style={styles.feedbackButton}
@@ -300,5 +316,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 13,
     fontWeight: '500',
+  },
+  detail: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
 });
