@@ -35,10 +35,7 @@ const AuthStack = () => (
     <Stack.Screen name="Location" component={LocationScreen} />
     <Stack.Screen name="PinScreen" component={PinScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
-    <Stack.Screen
-      name="PasswordRecovery"
-      component={PasswordRecoveryScreen}
-    />
+    <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
 
     <Stack.Screen name="StudentCourses" component={StudentCoursesScreen} />
     <Stack.Screen

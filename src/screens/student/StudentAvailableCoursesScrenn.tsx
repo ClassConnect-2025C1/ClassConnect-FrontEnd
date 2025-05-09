@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  TextInput,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getUserProfileData } from '../../utils/GetUserProfile';
@@ -20,6 +21,8 @@ const AvailableCoursesScreen = () => {
   const [approvedCourses, setApprovedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [courseSearchText, setCourseSearchText] = useState('');
+
 
   useEffect(() => {
     fetchCoursesAndApprovals();
@@ -29,7 +32,6 @@ const AvailableCoursesScreen = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (token) {
-
         const coursesRes = await fetch(
           `${API_URL}/api/courses/available/${userId}`,
           {
@@ -52,7 +54,9 @@ const AvailableCoursesScreen = () => {
           console.error('Cursos no es JSON válido:', coursesText);
         }
 
-        const approvedRes = await fetch(`http://192.168.100.208:8002/approved/${userId}`);
+        const approvedRes = await fetch(
+          `http://192.168.100.208:8002/approved/${userId}`,
+        );
         const approvedJson = await approvedRes.json();
 
         console.log(approvedJson);
@@ -66,6 +70,9 @@ const AvailableCoursesScreen = () => {
       setLoading(false);
     }
   };
+  const filteredCourses = courses.filter((course) => {
+    return course.title.toLowerCase().includes(courseSearchText.toLowerCase());
+  });
 
   const enrollInCourse = async (courseId) => {
     const user = await getUserProfileData();
@@ -104,14 +111,18 @@ const AvailableCoursesScreen = () => {
   };
 
   const isEligible = (course) => {
- 
-    if (!course.eligibilityCriteria || course.eligibilityCriteria.length === 0) {
+    if (
+      !course.eligibilityCriteria ||
+      course.eligibilityCriteria.length === 0
+    ) {
       return true;
     }
     console.log(course.eligibilityCriteria);
     console.log(approvedCourses);
 
-    return course.eligibilityCriteria.every((reqName) => approvedCourses.includes(reqName));
+    return course.eligibilityCriteria.every((reqName) =>
+      approvedCourses.includes(reqName),
+    );
   };
 
   if (loading) {
@@ -133,27 +144,38 @@ const AvailableCoursesScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Available Courses</Text>
+      <View style={styles.searchContainer}>
+  <TextInput
+    style={styles.searchInput}
+    placeholder="🔍 Search Course"
+    placeholderTextColor="#aaa"
+    value={courseSearchText}
+    onChangeText={setCourseSearchText}
+  />
+</View>
+
+      
       <ScrollView contentContainerStyle={styles.courseList}>
-        {courses.map((course) => (
-          <View key={course.id} style={styles.courseCard}>
-            <Text style={styles.courseText}>{course.title}</Text>
-            {isEligible(course) ? (
-              <TouchableOpacity
-                style={styles.enrollButton}
-                onPress={() => enrollInCourse(course.id)}
-              >
-                <Text style={styles.enrollButtonText}>Enroll</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={[styles.enrollButton, { backgroundColor: '#ccc' }]}
-                onPress={() => alert('Not eligible. See details coming soon.')}
-              >
-                <Text style={styles.enrollButtonText}>See Details</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
+      {filteredCourses.map((course) => (
+  <View key={course.id} style={styles.courseCard}>
+    <Text style={styles.courseText}>{course.title}</Text>
+    {isEligible(course) ? (
+      <TouchableOpacity
+        style={styles.enrollButton}
+        onPress={() => enrollInCourse(course.id)}
+      >
+        <Text style={styles.enrollButtonText}>Enroll</Text>
+      </TouchableOpacity>
+    ) : (
+      <TouchableOpacity
+        style={[styles.enrollButton, { backgroundColor: '#ccc' }]}
+        onPress={() => alert('Not eligible. See details coming soon.')}
+      >
+        <Text style={styles.enrollButtonText}>See Details</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+))}
       </ScrollView>
 
       <TouchableOpacity

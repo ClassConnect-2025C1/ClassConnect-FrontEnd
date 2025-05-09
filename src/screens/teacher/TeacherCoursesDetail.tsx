@@ -18,7 +18,6 @@ export default function TeacherCourseDetail({ route }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
   const fetchAssignments = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -26,13 +25,16 @@ export default function TeacherCourseDetail({ route }) {
         throw new Error('No token found');
       }
 
-      const response = await fetch(`http://192.168.100.208:8002/${course.id}/assignments`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `http://192.168.100.208:8002/${course.id}/assignments`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch assignments');
@@ -40,23 +42,21 @@ export default function TeacherCourseDetail({ route }) {
 
       const data = await response.json();
       console.log('Assignments data:', data);
-      
 
       if (data && Array.isArray(data.data)) {
-        setAssignments(data.data); 
+        setAssignments(data.data);
       } else {
         console.error('Assignments data is not in the expected format:', data);
         setAssignments([]);
       }
     } catch (error) {
       console.error('Error fetching assignments:', error);
-      setAssignments([]); 
+      setAssignments([]);
     } finally {
       setLoading(false);
     }
   };
 
-  
   useEffect(() => {
     fetchAssignments();
   }, []);
@@ -158,7 +158,8 @@ export default function TeacherCourseDetail({ route }) {
         {loading ? (
           <Text>Loading assignments...</Text>
         ) : (
-          activeSubTab === 'Assignments' && assignments.map((assignment, index) => (
+          activeSubTab === 'Assignments' &&
+          assignments.map((assignment, index) => (
             <View key={index} style={styles.assignmentContainer}>
               <View style={styles.assignmentHeader}>
                 <Text style={styles.assignmentTitle}>{assignment.title}</Text>
@@ -193,7 +194,10 @@ export default function TeacherCourseDetail({ route }) {
       </ScrollView>
 
       <TouchableOpacity
-        style={[styles.smallButton, { alignSelf: 'flex-end', marginBottom: 40 }]}
+        style={[
+          styles.smallButton,
+          { alignSelf: 'flex-end', marginBottom: 40 },
+        ]}
         onPress={() =>
           navigation.navigate('TeacherCreateAssignments', { course })
         }

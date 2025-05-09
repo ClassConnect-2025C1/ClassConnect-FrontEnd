@@ -5,7 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator, 
+  ActivityIndicator,
 } from 'react-native';
 import { jwtDecode } from 'jwt-decode';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '@env';
 import StatusOverlay from '../../components/StatusOverlay';
 import { AcceptOnlyModal } from '../../components/Modals';
-
 
 const StudentFeedbackScreen = () => {
   const navigation = useNavigation();
@@ -25,7 +24,7 @@ const StudentFeedbackScreen = () => {
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [feedbackSent, setFeedbackSent] = useState(false); 
+  const [feedbackSent, setFeedbackSent] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
@@ -66,24 +65,21 @@ const StudentFeedbackScreen = () => {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error submitting feedback:', errorData);
-        setIsLoading(false); 
+        setIsLoading(false);
         return;
       }
 
       const data = await response.json();
-   
 
       setTimeout(() => {
         setFeedbackSent(true);
-      
+
         setTimeout(() => {
           setIsLoading(false);
           setFeedbackSent(false);
           navigation.goBack();
         }, 2000);
-      
       }, 1500);
-
     } catch (error) {
       setIsLoading(false);
     }
@@ -105,7 +101,7 @@ const StudentFeedbackScreen = () => {
       ) : (
         <>
           <Text style={styles.title}>Send Feedback</Text>
-  
+
           <Text style={styles.label}>Summary</Text>
           <TextInput
             style={styles.input}
@@ -113,7 +109,7 @@ const StudentFeedbackScreen = () => {
             onChangeText={setSummary}
             placeholder="Summary of your feedback"
           />
-  
+
           <Text style={styles.label}>Comment</Text>
           <TextInput
             style={[styles.input, styles.commentInput]}
@@ -123,12 +119,12 @@ const StudentFeedbackScreen = () => {
             placeholder="Write your detailed comment here"
           />
           <AcceptOnlyModal
-                        visible={showModal}
-                        message={modalMessage}
-                        onAccept={() => setShowModal(false)}
-                        onClose={() => setShowModal(false)}
-                      />
-  
+            visible={showModal}
+            message={modalMessage}
+            onAccept={() => setShowModal(false)}
+            onClose={() => setShowModal(false)}
+          />
+
           <Text style={styles.label}>Rating</Text>
           <View style={styles.ratingContainer}>
             {[1, 2, 3, 4, 5].map((num) => (
@@ -151,13 +147,19 @@ const StudentFeedbackScreen = () => {
               </TouchableOpacity>
             ))}
           </View>
-  
+
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.sendButton} onPress={handleSubmitFeedback}>
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={handleSubmitFeedback}
+            >
               <Text style={styles.buttonText}>Send</Text>
             </TouchableOpacity>
-  
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+            >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -165,7 +167,7 @@ const StudentFeedbackScreen = () => {
       )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -253,7 +255,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  
 });
 
 export default StudentFeedbackScreen;

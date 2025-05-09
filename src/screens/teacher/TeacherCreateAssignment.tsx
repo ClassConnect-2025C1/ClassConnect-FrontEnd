@@ -9,9 +9,10 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import * as DocumentPicker from 'expo-document-picker'; 
+import * as DocumentPicker from 'expo-document-picker';
 import StatusOverlay from '../../components/StatusOverlay';
 import { AcceptOnlyModal } from '../../components/Modals';
+import { API_URL } from '@env';
 
 const TeacherCreateAssignments = () => {
   const navigation = useNavigation();
@@ -22,10 +23,10 @@ const TeacherCreateAssignments = () => {
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [timeLimit, setTimeLimit] = useState('');
-  const [files, setFiles] = useState([]); 
+  const [files, setFiles] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [feedbackSent, setFeedbackSent] = useState(false); 
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -37,12 +38,12 @@ const TeacherCreateAssignments = () => {
         copyToCacheDirectory: true,
         multiple: false,
       });
-  
+
       if (!result.canceled && result.assets?.length > 0) {
         const selectedFile = result.assets[0]; // solo uno porque multiple: false
-  
+
         setFiles((prevFiles) => [...prevFiles, selectedFile]);
-  
+
         console.log('File selected:', selectedFile);
       } else {
         console.log('User cancelled file picker');
@@ -51,13 +52,13 @@ const TeacherCreateAssignments = () => {
       console.error('Error picking document:', err);
     }
   };
-  
+
   const handleRemoveFile = (fileUri) => {
-    setFiles(files.filter((file) => file.uri !== fileUri)); 
+    setFiles(files.filter((file) => file.uri !== fileUri));
   };
 
   const handleCreateAssignment = async () => {
-    if (!title || !description || !dueDate || !timeLimit ) {
+    if (!title || !description || !dueDate || !timeLimit) {
       setModalMessage('All fields must be filled.');
       setShowModal(true);
       return;
@@ -81,8 +82,8 @@ const TeacherCreateAssignments = () => {
 
     const fileContents = await Promise.all(
       files.map(async (file) => {
-        const fileContent = await fetch(file.uri);  // Fetch the file from the URI
-        const contentBlob = await fileContent.blob();  // Convert to blob
+        const fileContent = await fetch(file.uri); // Fetch the file from the URI
+        const contentBlob = await fileContent.blob(); // Convert to blob
         const base64Content = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result);
@@ -92,52 +93,59 @@ const TeacherCreateAssignments = () => {
 
         return {
           name: file.name,
-          content: base64Content.split(',')[1],  // Extract the base64 string without the prefix
+          content: base64Content.split(',')[1], // Extract the base64 string without the prefix
           size: file.size,
         };
-      })
+      }),
     );
 
     try {
-      setIsLoading(true);  // Start loading
+      setIsLoading(true); // Start loading
 
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      const response = await fetch(`http://192.168.100.208:8002/${course.id}/assignment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignment`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            course_id: Number(course.id),
+            title,
+            description,
+            deadline: isoDueDate,
+            time_limit: Number(timeLimit),
+            files: fileContents,
+          }),
         },
-        body: JSON.stringify({
-          course_id: Number(course.id),
-          title,
-          description,
-          deadline: isoDueDate,
-          time_limit: Number(timeLimit),
-          files: fileContents,
-        }),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating assignment:', errorData);
         setModalMessage('Failed to create assignment. Please try again.');
         setShowModal(true);
-        setIsLoading(false); 
+        setIsLoading(false);
         return;
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Assignment created successfully:', data);
       }
 
       setTimeout(() => {
         setFeedbackSent(true);
         setTimeout(() => {
-          setIsLoading(false); 
+          setIsLoading(false);
           setFeedbackSent(false);
           navigation.goBack();
         }, 2000);
       }, 1500);
-
     } catch (error) {
       console.error('Error:', error);
       setModalMessage('An error occurred. Please try again.');
@@ -214,10 +222,15 @@ const TeacherCreateAssignments = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.addFileButton, files.length > 0 && { backgroundColor: '#ddd' }]}
+            style={[
+              styles.addFileButton,
+              files.length > 0 && { backgroundColor: '#ddd' },
+            ]}
             onPress={handleSelectFiles}
           >
-            <Text style={styles.buttonText}>{files.length === 0 ? 'Add Files' : 'Add More Files'}</Text>
+            <Text style={styles.buttonText}>
+              {files.length === 0 ? 'Add Files' : 'Add More Files'}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.buttonContainer}>
@@ -228,7 +241,10 @@ const TeacherCreateAssignments = () => {
               <Text style={styles.buttonText}>Create</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+            >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -256,7 +272,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 20,
-    marginTop: 20, 
+    marginTop: 20,
   },
   label: {
     fontSize: 14,
