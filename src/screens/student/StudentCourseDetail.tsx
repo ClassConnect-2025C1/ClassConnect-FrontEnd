@@ -9,6 +9,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
+import { downloadAndShareFile } from '../../utils/FileDowloader';
+import { FlatList } from 'react-native';
 
 export default function CourseDetail({ route }) {
   const { course } = route.params;
@@ -66,13 +68,13 @@ export default function CourseDetail({ route }) {
       >
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
-
+  
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{course.title}</Text>
         <Text style={styles.subtitle}>
           {course.description || 'No description available'}
         </Text>
-
+  
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={[
@@ -83,7 +85,7 @@ export default function CourseDetail({ route }) {
           >
             <Text style={styles.tabText}>Assignments</Text>
           </TouchableOpacity>
-
+  
           <TouchableOpacity
             style={[
               styles.tabButton,
@@ -95,37 +97,56 @@ export default function CourseDetail({ route }) {
           </TouchableOpacity>
         </View>
       </View>
-
+  
       <View style={styles.sectionContainer}>
-        <ScrollView contentContainerStyle={styles.contentContainer}>
-          {loading ? (
-            <Text>Loading assignments...</Text>
-          ) : (
-            activeTab === 'Assignments' &&
-            assignments.map((item, index) => (
-              <View key={index} style={styles.itemContainer}>
+        {loading ? (
+          <Text>Loading assignments...</Text>
+        ) : activeTab === 'Assignments' ? (
+          <FlatList
+            contentContainerStyle={styles.contentContainer}
+            data={assignments}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.itemContainer}>
                 <Text style={styles.itemText}>{item.title}</Text>
                 <Text style={styles.itemDescription}>{item.description}</Text>
                 <Text style={styles.itemText}>Due: {new Date(item.deadline).toLocaleDateString()}</Text>
-
+  
+                {Array.isArray(item.files) && item.files.length > 0 && (
+                  <View style={{ marginTop: 10 }}>
+                    {item.files.map((file, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        style={styles.downloadButton}
+                        onPress={() => downloadAndShareFile(file)}
+                      >
+                        <Text style={styles.downloadButtonText}>Download {file.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+  
                 <TouchableOpacity style={styles.submitButton}>
                   <Text style={styles.submitButtonText}>Enter Submission</Text>
                 </TouchableOpacity>
               </View>
-            ))
-          )}
-
-          {activeTab === 'Resources' && (
+            )}
+            ListEmptyComponent={<Text>No assignments available</Text>}
+            refreshing={loading}
+            onRefresh={fetchAssignments}
+          />
+        ) : (
+          <ScrollView contentContainerStyle={styles.contentContainer}>
             <View style={styles.itemContainer}>
               <Text style={styles.itemText}>Course Resources</Text>
               <Text style={styles.itemDescription}>
                 Here you will find resources such as slides, books, and other materials related to this course.
               </Text>
             </View>
-          )}
-        </ScrollView>
+          </ScrollView>
+        )}
       </View>
-
+  
       <View style={styles.feedbackContainer}>
         <TouchableOpacity
           style={styles.feedbackButton}
@@ -139,7 +160,6 @@ export default function CourseDetail({ route }) {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   mainContainer: {
@@ -267,5 +287,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  downloadButton: {
+    marginTop: 5,
+    backgroundColor: '#2196F3',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  downloadButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '500',
   },
 });
