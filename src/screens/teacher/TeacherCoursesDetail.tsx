@@ -174,7 +174,15 @@ export default function TeacherCourseDetail({ route }) {
                 <TouchableOpacity style={styles.smallButton}>
                   <Text style={styles.smallButtonText}>Edit assignment</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.smallButton}>
+                <TouchableOpacity
+                  style={styles.smallButton}
+                  onPress={() =>
+                    navigation.navigate('StudentsSubmissions', {
+                      course,
+                      assignmentId: assignment.id,
+                    })
+                  }
+                >
                   <Text style={styles.smallButtonText}>See submissions</Text>
                 </TouchableOpacity>
               </View>
