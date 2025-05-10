@@ -11,9 +11,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
 import { FlatList } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
-
-import { isValidDate } from '../../Errors/ValidationsEditCourse';
 
 export default function CourseDetail({ route }) {
   const { course, userId } = route.params;
@@ -63,64 +60,6 @@ export default function CourseDetail({ route }) {
   useEffect(() => {
     fetchAssignments();
   }, []);
-
-  const handleSubmission = async (assignmentId) => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) throw new Error('No token found');
-
-      const result = await DocumentPicker.getDocumentAsync({ multiple: true });
-
-      if (result.canceled) return;
-
-      const files = await Promise.all(
-        result.assets.map(async (file) => {
-          const fileContent = await fetch(file.uri); 
-          const contentBlob = await fileContent.blob();
-          const base64Content = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(contentBlob);
-          });
-
-          return {
-            name: file.name,
-            content: base64Content.split(',')[1], 
-            size: Number(file.size),
-          };
-        }),
-      );
-
-      const body = {
-        course_id: Number(course.id),
-        assignment_id: Number(assignmentId),
-        content: 'This is the submission from me, user1',
-        files: files,
-      };
-      console.log('Submission body:', body);
-
-      const response = await fetch(
-        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(body),
-        },
-      );
-
-      if (!response.ok) throw new Error('Failed to submit assignment');
-
-      alert('Submission successful!');
-    } catch (err) {
-      console.error(err);
-      alert('Submission failed!');
-    }
-  };
-
 
   return (
     <View style={styles.mainContainer}>
@@ -204,9 +143,13 @@ export default function CourseDetail({ route }) {
 
                 <TouchableOpacity
                   style={styles.submitButton}
-                  
-                  onPress={() => 
-                    handleSubmission(item.id)}
+                  onPress={() =>
+                    navigation.navigate('StudentEditAssigment', {
+                      course,
+                      userId,
+                      assignmentId: item.id,
+                    })
+                  }
                 >
                   <Text style={styles.submitButtonText}>Enter Submission</Text>
                 </TouchableOpacity>

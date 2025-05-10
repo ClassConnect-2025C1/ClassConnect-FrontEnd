@@ -12,6 +12,7 @@ import StudentCoursesScreen from '../screens/student/StudentCoursesScreen';
 import StudentAvailableCoursesScrenn from '../screens/student/StudentAvailableCoursesScrenn';
 import StudentCourseDetail from '../screens/student/StudentCourseDetail';
 import StudentFeedbackScreen from '../screens/student/StudentFeedbackScreen';
+import StudentEditAssigment from '../screens/student/StudentEditAssigment';
 
 import TeacherCoursesScreen from '../screens/teacher/TeacherCoursesScreen';
 import TeacherCreateNewCourse from '../screens/teacher/TeacherCreateNewCourse';
@@ -44,6 +45,10 @@ const AuthStack = () => (
     />
     <Stack.Screen name="StudentCourseDetail" component={StudentCourseDetail} />
     <Stack.Screen name="StudentFeedback" component={StudentFeedbackScreen} />
+    <Stack.Screen
+      name="StudentEditAssigment"
+      component={StudentEditAssigment}
+    />
 
     {/* Teacher Screens */}
 
