@@ -84,7 +84,10 @@ const MembersScreen = () => {
                   <TouchableOpacity
                     style={[
                       styles.approveButton,
-                      isApproved && { backgroundColor: '#bdc3c7', opacity: 0.6 },
+                      isApproved && {
+                        backgroundColor: '#bdc3c7',
+                        opacity: 0.6,
+                      },
                     ]}
                     onPress={() => handleApprove(item.user_id)}
                     disabled={isApproved}
@@ -96,7 +99,11 @@ const MembersScreen = () => {
 
                   <TouchableOpacity
                     style={styles.profileButton}
-                    onPress={() => navigation.navigate('ShowProfileData', { userId: item.user_id })}
+                    onPress={() =>
+                      navigation.navigate('ShowProfileData', {
+                        userId: item.user_id,
+                      })
+                    }
                   >
                     <Text style={styles.profileButtonText}>Profile</Text>
                   </TouchableOpacity>

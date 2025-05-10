@@ -47,7 +47,9 @@ const ViewProfileScreen = () => {
         <View style={styles.imageContainer}>
           <Image
             source={{
-              uri: profile.photo || 'https://www.w3schools.com/howto/img_avatar.png',
+              uri:
+                profile.photo ||
+                'https://www.w3schools.com/howto/img_avatar.png',
             }}
             style={styles.profileImage}
           />

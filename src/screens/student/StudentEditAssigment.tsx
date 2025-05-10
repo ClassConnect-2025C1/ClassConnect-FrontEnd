@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { API_URL } from '@env';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
@@ -18,7 +25,7 @@ const UploadFilesScreen = ({ route }) => {
       try {
         const response = await fetch(
           `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
-          { method: 'GET', headers: { Accept: 'application/json' } }
+          { method: 'GET', headers: { Accept: 'application/json' } },
         );
         const json = await response.json();
         console.log('Fetched files:', json);
@@ -43,11 +50,11 @@ const UploadFilesScreen = ({ route }) => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
-  
+
       const result = await DocumentPicker.getDocumentAsync({ multiple: true });
-  
+
       if (result.canceled) return;
-  
+
       const newFiles = await Promise.all(
         result.assets.map(async (file) => {
           const fileContent = await fetch(file.uri);
@@ -58,22 +65,22 @@ const UploadFilesScreen = ({ route }) => {
             reader.onerror = reject;
             reader.readAsDataURL(contentBlob);
           });
-  
+
           return {
             name: file.name,
             content: base64Content.split(',')[1],
             size: Number(file.size),
           };
-        })
+        }),
       );
-  
+
       const body = {
         course_id: Number(course.id),
         assignment_id: Number(assignmentId),
         content: 'Updated submission',
         files: newFiles,
       };
-  
+
       const response = await fetch(
         `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
         {
@@ -83,13 +90,13 @@ const UploadFilesScreen = ({ route }) => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(body),
-        }
+        },
       );
-  
+
       if (!response.ok) throw new Error('Failed to submit files');
-  
+
       alert('Files uploaded successfully!');
-      setFiles((prev) => [...prev, ...newFiles.map(f => ({ name: f.name }))]); // para mostrar en lista
+      setFiles((prev) => [...prev, ...newFiles.map((f) => ({ name: f.name }))]); // para mostrar en lista
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload files!');
@@ -106,7 +113,7 @@ const UploadFilesScreen = ({ route }) => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
-  
+
       const response = await fetch(
         `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
         {
@@ -115,27 +122,30 @@ const UploadFilesScreen = ({ route }) => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
-  
+
       if (!response.ok) throw new Error('Failed to delete file');
-  
-     
-  
+
       alert(`File deleted successfully!`);
     } catch (error) {
       console.error('Error deleting file:', error);
       alert(`Failed to delete `);
     }
   };
-  
 
   const renderFileItem = ({ item }) => (
     <View style={styles.fileItem}>
-      <TouchableOpacity style={styles.fileContainer} onPress={() => handleDownloadFile(item)}>
+      <TouchableOpacity
+        style={styles.fileContainer}
+        onPress={() => handleDownloadFile(item)}
+      >
         <Text style={styles.fileName}>{item.name}</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveFile()}>
+      <TouchableOpacity
+        style={styles.removeButton}
+        onPress={() => handleRemoveFile()}
+      >
         <Text style={styles.removeButtonText}>X</Text>
       </TouchableOpacity>
     </View>
@@ -172,7 +182,6 @@ const UploadFilesScreen = ({ route }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

@@ -22,6 +22,7 @@ import TeacherEditCourseDetail from '../screens/teacher/TeacherEditCourseDetail'
 import TeacherCreateAssignments from '@/screens/teacher/TeacherCreateAssignment';
 import TeacherFeedbackCourse from '@/screens/teacher/TeacherFeedbackCourse';
 import TeacherMembersCourse from '@/screens/teacher/TeacherMemberCourse';
+import ShowCourseData from '../utils/ShowCourseData';
 
 const Stack = createNativeStackNavigator();
 
@@ -55,7 +56,11 @@ const AuthStack = () => (
       component={ShowProfileData}
       options={{ headerShown: true, title: 'My Profile' }}
     />
-
+    <Stack.Screen
+      name="ShowCourseData"
+      component={ShowCourseData}
+      options={{ headerShown: true, title: 'Course Detail' }}
+    />
 
     {/* Teacher Screens */}
 

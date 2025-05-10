@@ -157,21 +157,26 @@ const AvailableCoursesScreen = () => {
         {filteredCourses.map((course) => (
           <View key={course.id} style={styles.courseCard}>
             <Text style={styles.courseText}>{course.title}</Text>
-            {isEligible(course) ? (
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {isEligible(course) && (
+                <TouchableOpacity
+                  style={styles.enrollButton}
+                  onPress={() => enrollInCourse(course.id)}
+                >
+                  <Text style={styles.enrollButtonText}>Enroll</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
-                style={styles.enrollButton}
-                onPress={() => enrollInCourse(course.id)}
+                style={[styles.enrollButton, { backgroundColor: '#4CAF50' }]}
+                onPress={() =>
+                  navigation.navigate('ShowCourseData', { course })
+                }
               >
-                <Text style={styles.enrollButtonText}>Enroll</Text>
+                <Text style={[styles.enrollButtonText, { color: '#fff' }]}>
+                  Details
+                </Text>
               </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={[styles.enrollButton, { backgroundColor: '#ccc' }]}
-                onPress={() => alert('Not eligible. See details coming soon.')}
-              >
-                <Text style={styles.enrollButtonText}>See Details</Text>
-              </TouchableOpacity>
-            )}
+            </View>
           </View>
         ))}
       </ScrollView>
