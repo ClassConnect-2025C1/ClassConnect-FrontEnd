@@ -133,7 +133,7 @@ const CoursesScreen = () => {
                 { backgroundColor: getColorForCourse(course.id) },
               ]}
               onPress={() =>
-                navigation.navigate('StudentCourseDetail', { course })
+                navigation.navigate('StudentCourseDetail', { course, userId })
               }
             >
               <View style={styles.courseContent}>

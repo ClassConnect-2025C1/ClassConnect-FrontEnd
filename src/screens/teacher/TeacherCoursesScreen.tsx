@@ -37,7 +37,7 @@ const CoursesScreen = ({ route }) => {
   const [searchText, setSearchText] = useState('');
 
   const filteredCourses = courses.filter((course) =>
-    course.title.toLowerCase().includes(searchText.toLowerCase()),
+    course.title?.toLowerCase().includes(searchText.toLowerCase()),
   );
 
   useEffect(() => {
@@ -139,18 +139,17 @@ const CoursesScreen = ({ route }) => {
         </TouchableOpacity>
       </View>
       <View style={styles.searchContainer}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="🔍 Search"
-                placeholderTextColor="#aaa"
-                value={searchText}
-                onChangeText={setSearchText}
-              />
-            </View>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="🔍 Search"
+          placeholderTextColor="#aaa"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+      </View>
 
       <ScrollView contentContainerStyle={styles.courseList}>
-      {filteredCourses.map((course, index) => (
-
+        {filteredCourses.map((course, index) => (
           <View
             key={course.id}
             style={[
