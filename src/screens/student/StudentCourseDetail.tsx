@@ -13,12 +13,12 @@ import { downloadAndShareFile } from '../../utils/FileDowloader';
 import { FlatList } from 'react-native';
 
 export default function CourseDetail({ route }) {
-  const { course } = route.params;
+  const { course, userId } = route.params;
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('Assignments');
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const fetchAssignments = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -42,11 +42,11 @@ export default function CourseDetail({ route }) {
       }
 
       const data = await response.json();
-      console.log('assigments data', data);
+
       if (data && Array.isArray(data.data)) {
         setAssignments(data.data);
       } else {
-        console.error('Assignments data is not in the expected format:', data);
+        console.error('Assignments data is not in the expected format');
         setAssignments([]);
       }
     } catch (error) {
@@ -141,7 +141,16 @@ export default function CourseDetail({ route }) {
                   </View>
                 )}
 
-                <TouchableOpacity style={styles.submitButton}>
+                <TouchableOpacity
+                  style={styles.submitButton}
+                  onPress={() =>
+                    navigation.navigate('StudentEditAssigment', {
+                      course,
+                      userId,
+                      assignmentId: item.id,
+                    })
+                  }
+                >
                   <Text style={styles.submitButtonText}>Enter Submission</Text>
                 </TouchableOpacity>
               </View>

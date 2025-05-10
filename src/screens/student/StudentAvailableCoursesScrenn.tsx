@@ -23,7 +23,6 @@ const AvailableCoursesScreen = () => {
   const [error, setError] = useState(null);
   const [courseSearchText, setCourseSearchText] = useState('');
 
-
   useEffect(() => {
     fetchCoursesAndApprovals();
   }, []);
@@ -145,37 +144,41 @@ const AvailableCoursesScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Available Courses</Text>
       <View style={styles.searchContainer}>
-  <TextInput
-    style={styles.searchInput}
-    placeholder="🔍 Search Course"
-    placeholderTextColor="#aaa"
-    value={courseSearchText}
-    onChangeText={setCourseSearchText}
-  />
-</View>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="🔍 Search Course"
+          placeholderTextColor="#aaa"
+          value={courseSearchText}
+          onChangeText={setCourseSearchText}
+        />
+      </View>
 
-      
       <ScrollView contentContainerStyle={styles.courseList}>
-      {filteredCourses.map((course) => (
-  <View key={course.id} style={styles.courseCard}>
-    <Text style={styles.courseText}>{course.title}</Text>
-    {isEligible(course) ? (
-      <TouchableOpacity
-        style={styles.enrollButton}
-        onPress={() => enrollInCourse(course.id)}
-      >
-        <Text style={styles.enrollButtonText}>Enroll</Text>
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity
-        style={[styles.enrollButton, { backgroundColor: '#ccc' }]}
-        onPress={() => alert('Not eligible. See details coming soon.')}
-      >
-        <Text style={styles.enrollButtonText}>See Details</Text>
-      </TouchableOpacity>
-    )}
-  </View>
-))}
+        {filteredCourses.map((course) => (
+          <View key={course.id} style={styles.courseCard}>
+            <Text style={styles.courseText}>{course.title}</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {isEligible(course) && (
+                <TouchableOpacity
+                  style={styles.enrollButton}
+                  onPress={() => enrollInCourse(course.id)}
+                >
+                  <Text style={styles.enrollButtonText}>Enroll</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.enrollButton, { backgroundColor: '#4CAF50' }]}
+                onPress={() =>
+                  navigation.navigate('ShowCourseData', { course })
+                }
+              >
+                <Text style={[styles.enrollButtonText, { color: '#fff' }]}>
+                  Details
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
       </ScrollView>
 
       <TouchableOpacity
