@@ -13,6 +13,7 @@ import StudentAvailableCoursesScrenn from '../screens/student/StudentAvailableCo
 import StudentCourseDetail from '../screens/student/StudentCourseDetail';
 import StudentFeedbackScreen from '../screens/student/StudentFeedbackScreen';
 import StudentEditAssigment from '../screens/student/StudentEditAssigment';
+import ShowProfileData from '../utils/ShowProfileData';
 
 import TeacherCoursesScreen from '../screens/teacher/TeacherCoursesScreen';
 import TeacherCreateNewCourse from '../screens/teacher/TeacherCreateNewCourse';
@@ -49,6 +50,12 @@ const AuthStack = () => (
       name="StudentEditAssigment"
       component={StudentEditAssigment}
     />
+    <Stack.Screen
+      name="ShowProfileData"
+      component={ShowProfileData}
+      options={{ headerShown: true, title: 'My Profile' }}
+    />
+
 
     {/* Teacher Screens */}
 

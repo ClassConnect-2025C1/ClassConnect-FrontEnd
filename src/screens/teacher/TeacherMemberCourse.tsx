@@ -80,18 +80,27 @@ const MembersScreen = () => {
                     {item.role || 'student'}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  style={[
-                    styles.approveButton,
-                    isApproved && { backgroundColor: '#bdc3c7', opacity: 0.6 },
-                  ]}
-                  onPress={() => handleApprove(item.user_id)}
-                  disabled={isApproved}
-                >
-                  <Text style={styles.approveButtonText}>
-                    {isApproved ? 'Approved' : 'Approve'}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.buttonsContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.approveButton,
+                      isApproved && { backgroundColor: '#bdc3c7', opacity: 0.6 },
+                    ]}
+                    onPress={() => handleApprove(item.user_id)}
+                    disabled={isApproved}
+                  >
+                    <Text style={styles.approveButtonText}>
+                      {isApproved ? 'Approved' : 'Approve'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.profileButton}
+                    onPress={() => navigation.navigate('ShowProfileData', { userId: item.user_id })}
+                  >
+                    <Text style={styles.profileButtonText}>Profile</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             );
           }}
@@ -168,6 +177,11 @@ const styles = StyleSheet.create({
   memberInfo: {
     flex: 1,
   },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   approveButton: {
     backgroundColor: '#27ae60',
     paddingVertical: 8,
@@ -176,6 +190,17 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   approveButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  profileButton: {
+    backgroundColor: '#3498db',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  profileButtonText: {
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 14,
