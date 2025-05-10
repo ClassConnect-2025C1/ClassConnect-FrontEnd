@@ -32,8 +32,6 @@ export default function ShowCourseDetail() {
           {course.eligibility_criteria || "Don't have eligibility criteria."}
         </Text>
       </View>
-
-
     </ScrollView>
   );
 }

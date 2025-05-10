@@ -12,6 +12,8 @@ import { API_URL } from '@env';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import StatusOverlay from '../../components/StatusOverlay';
+import { AcceptOnlyModal } from '../../components/Modals';
 
 const UploadFilesScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -19,29 +21,33 @@ const UploadFilesScreen = ({ route }) => {
   const [loading, setLoading] = useState(false);
   const { course, userId, assignmentId } = route.params;
 
-  useEffect(() => {
-    const fetchFiles = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
-          { method: 'GET', headers: { Accept: 'application/json' } },
-        );
-        const json = await response.json();
-        console.log('Fetched files:', json);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-        if (json?.data?.files && Array.isArray(json.data.files)) {
-          setFiles(json.data.files);
-        } else {
-          console.error('No files found or unexpected response format.');
-        }
-      } catch (error) {
-        console.error('Error fetching files:', error);
-      } finally {
-        setLoading(false);
+  const fetchFiles = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
+        { method: 'GET', headers: { Accept: 'application/json' } },
+      );
+      const json = await response.json();
+      console.log('Fetched files:', json);
+
+      if (json?.data?.files && Array.isArray(json.data.files)) {
+        setFiles(json.data.files);
+      } else {
+        console.error('No files found or unexpected response format.');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchFiles();
   }, [course.id, assignmentId, userId]);
 
@@ -95,13 +101,24 @@ const UploadFilesScreen = ({ route }) => {
 
       if (!response.ok) throw new Error('Failed to submit files');
 
-      alert('Files uploaded successfully!');
-      setFiles((prev) => [...prev, ...newFiles.map((f) => ({ name: f.name }))]); // para mostrar en lista
+      setIsUploading(true);
+      setUploadSuccess(false);
+
+      setTimeout(() => {
+        setUploadSuccess(true);
+
+        setTimeout(() => {
+          setIsUploading(false);
+          setUploadSuccess(false);
+          navigation.goBack();
+        }, 2000);
+      }, 1500);
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload files!');
     }
   };
+
   const handleDownloadFile = async (file) => {
     try {
       await downloadAndShareFile(file);
@@ -109,7 +126,8 @@ const UploadFilesScreen = ({ route }) => {
       console.error('Error downloading file:', error);
     }
   };
-  const handleRemoveFile = async () => {
+
+  const handleRemoveAllFiles = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
@@ -125,12 +143,17 @@ const UploadFilesScreen = ({ route }) => {
         },
       );
 
-      if (!response.ok) throw new Error('Failed to delete file');
+      if (!response.ok) throw new Error('Failed to delete files');
 
-      alert(`File deleted successfully!`);
+      setShowDeleteModal(true);
+      await fetchFiles();
+
+      setTimeout(() => {
+        setShowDeleteModal(false);
+        navigation.goBack();
+      }, 3000);
     } catch (error) {
-      console.error('Error deleting file:', error);
-      alert(`Failed to delete `);
+      console.error('Error deleting files:', error);
     }
   };
 
@@ -141,12 +164,6 @@ const UploadFilesScreen = ({ route }) => {
         onPress={() => handleDownloadFile(item)}
       >
         <Text style={styles.fileName}>{item.name}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => handleRemoveFile()}
-      >
-        <Text style={styles.removeButtonText}>X</Text>
       </TouchableOpacity>
     </View>
   );
@@ -159,8 +176,21 @@ const UploadFilesScreen = ({ route }) => {
     );
   }
 
-  return (
+  return isUploading ? (
+    <StatusOverlay
+      loading={!uploadSuccess}
+      success={uploadSuccess}
+      loadingMsg="Uploading files..."
+      successMsg="Files uploaded successfully!"
+    />
+  ) : (
     <View style={styles.container}>
+      <AcceptOnlyModal
+        visible={showDeleteModal}
+        message="Files deleted successfully!"
+        onAccept={() => setShowDeleteModal(false)}
+        onClose={() => setShowDeleteModal(false)}
+      />
       <Text style={styles.title}>Upload Files</Text>
 
       <FlatList
@@ -175,6 +205,12 @@ const UploadFilesScreen = ({ route }) => {
         <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
           <Text style={styles.buttonText}>Add new files</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={handleRemoveAllFiles}
+        >
+          <Text style={styles.buttonText}>Delete files</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
           <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
@@ -182,7 +218,6 @@ const UploadFilesScreen = ({ route }) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -221,31 +256,27 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#34495e',
   },
-  removeButton: {
-    backgroundColor: '#e74c3c',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    marginLeft: 12,
-  },
-  removeButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: 30,
   },
   sendButton: {
-    backgroundColor: '#2ecc71',
+    backgroundColor: '#2ecc71', 
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+    elevation: 3,
+  },
+  deleteButton: {
+    backgroundColor: '#e74c3c', 
     paddingVertical: 14,
     paddingHorizontal: 30,
     borderRadius: 12,
     elevation: 3,
   },
   cancelButton: {
-    backgroundColor: '#95a5a6',
+    backgroundColor: '#95a5a6', 
     paddingVertical: 14,
     paddingHorizontal: 30,
     borderRadius: 12,
