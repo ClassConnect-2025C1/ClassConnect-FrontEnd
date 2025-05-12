@@ -1,10 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import { API_URL } from '@env';
-import { useAuth } from '../navigation/AuthContext';
 
-export const getUserProfileData = async (userIdParam = null) => {
-  const { token } = useAuth();
+
+export const getUserProfileData = async (token, userIdParam = null) => {
   try {
     if (!token) return null;
 

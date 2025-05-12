@@ -9,13 +9,12 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { API_URL } from '@env';
-import { useAuth } from '../../navigation/AuthContext';
+
 
 const PasswordRecoveryScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
-  const { token } = useAuth();
 
   const handleSubmit = async () => {
     let valid = true;
@@ -39,7 +38,7 @@ const PasswordRecoveryScreen = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      
         },
         body: JSON.stringify({ userEmail: email }),
       });

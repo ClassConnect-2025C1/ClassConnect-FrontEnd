@@ -10,7 +10,7 @@ import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { AcceptOnlyModal } from '../../components/Modals';
 import { API_URL } from '@env';
-import { useAuth } from '../../navigation/AuthContext'; // Import the AuthContext
+
 
 const VerifyPinScreen = () => {
   const [pin, setPin] = useState('');
@@ -20,7 +20,7 @@ const VerifyPinScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { email } = route.params;
-  const { token } = useAuth(); // Get the token from AuthContext
+
 
   const verifyPin = async () => {
     try {
@@ -31,7 +31,7 @@ const VerifyPinScreen = () => {
         {
           headers: {
             'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }), // Agrega el token si existe
+
           },
         },
       );

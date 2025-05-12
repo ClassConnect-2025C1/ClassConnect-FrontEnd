@@ -80,7 +80,7 @@ const AvailableCoursesScreen = () => {
   });
 
   const enrollInCourse = async (courseId) => {
-    const user = await getUserProfileData();
+    const user = await getUserProfileData(token);
 
     if (!user) {
       alert('Could not get user info.');

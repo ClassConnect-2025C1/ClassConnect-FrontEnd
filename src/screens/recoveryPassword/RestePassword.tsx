@@ -19,7 +19,7 @@ const ResetPasswordScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { email } = route.params;
-  const { token } = useAuth();
+
 
   const resetPassword = async () => {
     if (newPassword.length < 5) {
@@ -38,7 +38,6 @@ const ResetPasswordScreen = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         },

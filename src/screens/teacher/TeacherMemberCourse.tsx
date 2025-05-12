@@ -28,7 +28,7 @@ const MembersScreen = () => {
     const fetchMembers = async () => {
       try {
         const response = await fetch(
-          `http://192.168.100.208:8002/${courseId}/members`,
+          `http://192.168.0.12:8002/${courseId}/members`,
           {
             method: 'GET',
             headers: {
@@ -53,7 +53,8 @@ const MembersScreen = () => {
   const handleApprove = async (userId) => {
     try {
       const res = await fetch(
-        `http://192.168.100.208:8002/approve/${userId}/${courseId}`,
+        `http://192.168.0.12:8002/approve/${userId}/${courseId}`,
+        
         {
           method: 'POST',
           headers: {
@@ -117,6 +118,7 @@ const MembersScreen = () => {
                     onPress={() =>
                       navigation.navigate('ShowProfileData', {
                         userId: item.user_id,
+                        token: token,
                       })
                     }
                   >

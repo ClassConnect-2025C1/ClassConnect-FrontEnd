@@ -31,7 +31,7 @@ const TeacherCreateNewCourseScreen = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const teacher = await getUserProfileData();
+      const teacher = await getUserProfileData(token);
       if (teacher?.email) {
         setTeacherEmail(teacher.email);
       }

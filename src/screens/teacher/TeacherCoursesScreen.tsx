@@ -46,7 +46,7 @@ const CoursesScreen = ({ route }) => {
   useEffect(() => {
     const fetchUserCourses = async () => {
       try {
-        const userProfile = await getUserProfileData();
+        const userProfile = await getUserProfileData(token);
         const teacherEmail = userProfile?.email;
 
         if (token && teacherEmail) {
