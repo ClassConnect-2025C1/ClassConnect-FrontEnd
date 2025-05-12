@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../navigation/AuthContext';
 
 export default function TeacherCourseDetail({ route }) {
   const { course } = route.params;
@@ -17,10 +18,10 @@ export default function TeacherCourseDetail({ route }) {
   const [activeSubTab, setActiveSubTab] = useState('Assignments');
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { token } = useAuth();
 
   const fetchAssignments = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }

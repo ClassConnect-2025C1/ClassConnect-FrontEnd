@@ -13,7 +13,7 @@ import { getUserProfileData } from '../../utils/GetUserProfile';
 import { API_URL } from '@env';
 import MultiSelect from 'react-native-multiple-select';
 import StatusOverlay from '../../components/StatusOverlay';
-
+import { useAuth } from '../../navigation/AuthContext';
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
 
@@ -26,7 +26,8 @@ const TeacherCreateNewCourseScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [courseCreated, setCourseCreated] = useState(false); // Nombre cambiado
+  const [courseCreated, setCourseCreated] = useState(false);
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -36,7 +37,6 @@ const TeacherCreateNewCourseScreen = () => {
       }
 
       try {
-        const token = await AsyncStorage.getItem('token');
         const response = await fetch(`${API_URL}/api/courses/`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -75,9 +75,6 @@ const TeacherCreateNewCourseScreen = () => {
     }
 
     try {
-      //setIsLoading(true);
-
-      const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
       const response = await fetch(`${API_URL}/api/courses/`, {

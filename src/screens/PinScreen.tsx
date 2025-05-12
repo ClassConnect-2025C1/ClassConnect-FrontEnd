@@ -10,6 +10,7 @@ import {
 import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
+import { useAuth } from '../navigation/AuthContext';
 
 const PinScreen = () => {
   const [pin, setPin] = useState('');
@@ -17,14 +18,23 @@ const PinScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userId, phone } = route.params;
+  const { token } = useAuth();
 
   const verifyPin = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/api/auth/verify-pin`, {
-        userId,
-        pin,
-      });
+      const response = await axios.post(
+        `${API_URL}/api/auth/verify-pin`,
+        {
+          userId,
+          pin,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       if (response.status === 200) {
         navigation.navigate('Login');
@@ -41,10 +51,18 @@ const PinScreen = () => {
 
   const resendPin = async () => {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/resend-pin`, {
-        userId,
-        phone,
-      });
+      const response = await axios.post(
+        `${API_URL}/api/auth/resend-pin`,
+        {
+          userId,
+          phone,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       if (response.status === 200) {
         Alert.alert('PIN Sent', 'A new PIN has been sent to your number.');

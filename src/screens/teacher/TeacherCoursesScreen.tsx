@@ -16,6 +16,8 @@ import {
   Image,
 } from 'react-native';
 import { API_URL } from '@env';
+import { useAuth } from '../../navigation/AuthContext';
+
 const CoursesScreen = ({ route }) => {
   const navigation = useNavigation();
 
@@ -35,6 +37,7 @@ const CoursesScreen = ({ route }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
+  const { token } = useAuth();
 
   const filteredCourses = courses.filter((course) =>
     course.title?.toLowerCase().includes(searchText.toLowerCase()),
@@ -43,7 +46,6 @@ const CoursesScreen = ({ route }) => {
   useEffect(() => {
     const fetchUserCourses = async () => {
       try {
-        const token = await AsyncStorage.getItem('token');
         const userProfile = await getUserProfileData();
         const teacherEmail = userProfile?.email;
 
@@ -89,7 +91,6 @@ const CoursesScreen = ({ route }) => {
 
   const handleDeleteCourse = async (courseId: string) => {
     try {
-      const token = await AsyncStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/courses/${courseId}`, {
         method: 'DELETE',
         headers: {

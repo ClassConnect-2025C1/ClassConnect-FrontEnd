@@ -10,6 +10,7 @@ import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { AcceptOnlyModal } from '../../components/Modals';
 import { API_URL } from '@env';
+import { useAuth } from '../../navigation/AuthContext'; // Import the AuthContext
 
 const VerifyPinScreen = () => {
   const [pin, setPin] = useState('');
@@ -19,6 +20,7 @@ const VerifyPinScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { email } = route.params;
+  const { token } = useAuth(); // Get the token from AuthContext
 
   const verifyPin = async () => {
     try {
@@ -26,7 +28,12 @@ const VerifyPinScreen = () => {
       const response = await axios.post(
         `${API_URL}/api/auth/recovery-password/verify-pin`,
         { pin, userEmail: email },
-        { headers: { 'Content-Type': 'application/json' } }
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }), // Agrega el token si existe
+          },
+        },
       );
 
       if (response.status === 200) {
@@ -34,13 +41,16 @@ const VerifyPinScreen = () => {
         setShowModal(true);
         setTimeout(() => {
           navigation.navigate('ResetPassword', { email });
-        }, 1500); // Optional delay for modal message
+        }, 1500);
       } else {
         setModalMessage('Invalid PIN, please try again.');
         setShowModal(true);
       }
     } catch (error) {
-      console.error('Error verifying PIN:', error.response?.data || error.message);
+      console.error(
+        'Error verifying PIN:',
+        error.response?.data || error.message,
+      );
       setModalMessage('Invalid PIN, please resend the PIN again.');
       setShowModal(true);
     } finally {
@@ -56,7 +66,7 @@ const VerifyPinScreen = () => {
       const response = await axios.post(
         `${API_URL}/api/auth/recovery-password`,
         { userEmail: email },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { 'Content-Type': 'application/json' } },
       );
 
       if (response.status === 200) {
@@ -67,7 +77,10 @@ const VerifyPinScreen = () => {
         setShowModal(true);
       }
     } catch (error) {
-      console.error('Error resending PIN:', error.response?.data || error.message);
+      console.error(
+        'Error resending PIN:',
+        error.response?.data || error.message,
+      );
       setModalMessage('Could not resend PIN. Please try again.');
       setShowModal(true);
     } finally {

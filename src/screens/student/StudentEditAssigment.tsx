@@ -14,37 +14,35 @@ import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import StatusOverlay from '../../components/StatusOverlay';
 import { AcceptOnlyModal } from '../../components/Modals';
+import { useAuth } from '../../navigation/AuthContext'; // Import the AuthContext
 
 const UploadFilesScreen = ({ route }) => {
   const navigation = useNavigation();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const { course, userId, assignmentId } = route.params;
-  const [token, setToken] = useState(null);
-  const [showNoFilesToDeleteModal, setShowNoFilesToDeleteModal] = useState(false);
+
+  const [showNoFilesToDeleteModal, setShowNoFilesToDeleteModal] =
+    useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [noFilesFound, setNoFilesFound] = useState(false);
-  
+  const { token } = useAuth();
 
-  // Solo se carga el token una vez
-  useEffect(() => {
-    const loadToken = async () => {
-      const storedToken = await AsyncStorage.getItem('token');
-      setToken(storedToken);
-    };
-    loadToken();
-  }, []);
-
-  // useCallback para evitar re-renderizados innecesarios
   const fetchFiles = useCallback(async () => {
     setLoading(true);
     setNoFilesFound(false);
     try {
       const response = await fetch(
         `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
-        { method: 'GET', headers: { Accept: 'application/json' } },
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
       const json = await response.json();
       console.log('Fetched files:', json);
@@ -63,15 +61,14 @@ const UploadFilesScreen = ({ route }) => {
     } finally {
       setLoading(false);
     }
-  }, [course.id, assignmentId, userId]);
+  }, [course.id, assignmentId, userId, token]);
 
-  // Solo ejecuta fetchFiles cuando cambian course, assignmentId o userId
   useEffect(() => {
     fetchFiles();
   }, [fetchFiles]);
 
   const handleCancel = () => navigation.goBack();
-  
+
   const handleSend = async () => {
     try {
       if (!token) throw new Error('No token found');
@@ -152,9 +149,9 @@ const UploadFilesScreen = ({ route }) => {
         setShowNoFilesToDeleteModal(true);
         return;
       }
-  
+
       if (!token) throw new Error('No token found');
-  
+
       const response = await fetch(
         `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
         {
@@ -165,12 +162,12 @@ const UploadFilesScreen = ({ route }) => {
           },
         },
       );
-  
+
       if (!response.ok) throw new Error('Failed to delete files');
-  
+
       setShowDeleteModal(true);
       await fetchFiles();
-  
+
       setTimeout(() => {
         setShowDeleteModal(false);
         navigation.goBack();
@@ -208,19 +205,19 @@ const UploadFilesScreen = ({ route }) => {
     />
   ) : (
     <View style={styles.container}>
-     <AcceptOnlyModal
-  visible={showDeleteModal}
-  message="Files deleted successfully!"
-  onAccept={() => setShowDeleteModal(false)}
-  onClose={() => setShowDeleteModal(false)}
-/>
+      <AcceptOnlyModal
+        visible={showDeleteModal}
+        message="Files deleted successfully!"
+        onAccept={() => setShowDeleteModal(false)}
+        onClose={() => setShowDeleteModal(false)}
+      />
 
-<AcceptOnlyModal
-  visible={showNoFilesToDeleteModal}
-  message="There are no files to delete."
-  onAccept={() => setShowNoFilesToDeleteModal(false)}
-  onClose={() => setShowNoFilesToDeleteModal(false)}
-/>
+      <AcceptOnlyModal
+        visible={showNoFilesToDeleteModal}
+        message="There are no files to delete."
+        onAccept={() => setShowNoFilesToDeleteModal(false)}
+        onClose={() => setShowNoFilesToDeleteModal(false)}
+      />
       <Text style={styles.title}>Upload Files</Text>
 
       <FlatList
@@ -228,7 +225,7 @@ const UploadFilesScreen = ({ route }) => {
         renderItem={renderFileItem}
         keyExtractor={(item) => item.id?.toString() ?? item.name}
         style={styles.filesContainer}
-        ListEmptyComponent={<Text>No archives uploaded</Text>} 
+        ListEmptyComponent={<Text>No archives uploaded</Text>}
       />
 
       <View style={styles.buttonContainer}>
@@ -289,9 +286,9 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',  // Changed from space-around to space-between
+    justifyContent: 'space-between', // Changed from space-around to space-between
     marginTop: 30,
-    marginBottom: 20,  // Added marginBottom to add space below the buttons
+    marginBottom: 20, // Added marginBottom to add space below the buttons
   },
   sendButton: {
     backgroundColor: '#2ecc71',
@@ -299,8 +296,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     borderRadius: 12,
     elevation: 3,
-    flex: 1,  // Make buttons take up equal space
-    marginRight: 10,  // Added margin between buttons
+    flex: 1, // Make buttons take up equal space
+    marginRight: 10, // Added margin between buttons
   },
   deleteButton: {
     backgroundColor: '#e74c3c',
@@ -308,8 +305,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     borderRadius: 12,
     elevation: 3,
-    flex: 1,  
-    marginRight: 10,  
+    flex: 1,
+    marginRight: 10,
   },
   cancelButton: {
     backgroundColor: '#95a5a6',
@@ -317,13 +314,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     borderRadius: 12,
     elevation: 3,
-    flex: 1, 
+    flex: 1,
   },
   buttonText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 16,  
-    textAlign: 'center',  
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 

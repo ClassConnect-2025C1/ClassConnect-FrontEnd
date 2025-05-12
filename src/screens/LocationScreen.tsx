@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
+import { useAuth } from '../navigation/AuthContext';
 
 const LocationScreen = () => {
   const [country, setCountry] = useState(null);
@@ -16,6 +17,7 @@ const LocationScreen = () => {
 
   const [permissionRequested, setPermissionRequested] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(null);
+  const { token } = useAuth();
 
   const handleAccept = async () => {
     setPermissionRequested(true);
@@ -78,11 +80,17 @@ const LocationScreen = () => {
       currentLocation.coords.longitude,
     );
   };
+
   const updateUserLocation = async (country) => {
     try {
       const response = await axios.put(
         `${API_URL}/api/users/profile/${userId}/location`,
         { location: country },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
       if (response.status === 200) {
         console.log('Ubicación actualizada con éxito');

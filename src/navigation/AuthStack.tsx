@@ -44,7 +44,6 @@ const AuthStack = () => (
     <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
     <Stack.Screen name="VerifyPin" component={VerifyPin} />
     <Stack.Screen name="ResetPassword" component={RestPassword} />
-  
 
     <Stack.Screen name="StudentCourses" component={StudentCoursesScreen} />
     <Stack.Screen

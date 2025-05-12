@@ -11,11 +11,13 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { getUserProfileData } from '../../utils/GetUserProfile';
 import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../navigation/AuthContext';
 
 const AvailableCoursesScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userId, onEnroll } = route.params || {};
+  const { token } = useAuth();
 
   const [courses, setCourses] = useState([]);
   const [approvedCourses, setApprovedCourses] = useState([]);
@@ -29,7 +31,6 @@ const AvailableCoursesScreen = () => {
 
   const fetchCoursesAndApprovals = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
       if (token) {
         const coursesRes = await fetch(
           `${API_URL}/api/courses/available/${userId}`,
@@ -55,6 +56,11 @@ const AvailableCoursesScreen = () => {
 
         const approvedRes = await fetch(
           `http://192.168.0.12:8002/approved/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
         const approvedJson = await approvedRes.json();
 
@@ -88,6 +94,7 @@ const AvailableCoursesScreen = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             user_id: user.userId,

@@ -13,6 +13,7 @@ import {
 import { API_URL } from '@env';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRoute } from '@react-navigation/native';
+import { useAuth } from '../../navigation/AuthContext';
 
 const getColorForCourse = (id: number) => {
   const cardColors = [
@@ -38,6 +39,7 @@ const CoursesScreen = () => {
   const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(
     new Set(),
   );
+  const { token } = useAuth();
 
   const filteredCourses = courses.filter((course) =>
     course.title.toLowerCase().includes(searchText.toLowerCase()),
@@ -45,7 +47,6 @@ const CoursesScreen = () => {
 
   const refreshCourses = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
       if (token) {
         const response = await fetch(
           `${API_URL}/api/courses/enrolled/${userId}`,
@@ -63,10 +64,10 @@ const CoursesScreen = () => {
           const json = JSON.parse(text);
           if (Array.isArray(json.data)) {
             setCourses(json.data);
-            
+
             // Set favorites from backend
             const favoritesSet = new Set(
-              json.data.filter((course) => course.is_favorite).map((c) => c.id)
+              json.data.filter((course) => course.is_favorite).map((c) => c.id),
             );
             setFavoriteCourses(favoritesSet);
           } else {
@@ -89,7 +90,6 @@ const CoursesScreen = () => {
 
   const toggleFavorite = async (courseId: number) => {
     try {
-      const token = await AsyncStorage.getItem('token');
       if (!token) return;
 
       const response = await fetch(
@@ -99,7 +99,7 @@ const CoursesScreen = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {

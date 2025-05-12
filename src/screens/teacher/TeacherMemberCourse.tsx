@@ -12,7 +12,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 const { width } = Dimensions.get('window');
-
+import { useAuth } from '../../navigation/AuthContext';
 const MembersScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -22,12 +22,20 @@ const MembersScreen = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvedMembers, setApprovedMembers] = useState([]);
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchMembers = async () => {
       try {
         const response = await fetch(
           `http://192.168.100.208:8002/${courseId}/members`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
         if (!response.ok) throw new Error('Error al obtener los miembros');
         const data = await response.json();
@@ -40,12 +48,19 @@ const MembersScreen = () => {
     };
 
     fetchMembers();
-  }, [courseId]);
+  }, [courseId, token]); // Agregar token como dependencia
 
   const handleApprove = async (userId) => {
     try {
       const res = await fetch(
         `http://192.168.100.208:8002/approve/${userId}/${courseId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
       if (!res.ok) throw new Error('Aprobación fallida');
 

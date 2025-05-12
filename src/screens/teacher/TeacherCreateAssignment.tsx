@@ -13,6 +13,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import StatusOverlay from '../../components/StatusOverlay';
 import { AcceptOnlyModal } from '../../components/Modals';
 import { API_URL } from '@env';
+import { useAuth } from '../../navigation/AuthContext';
 
 const TeacherCreateAssignments = () => {
   const navigation = useNavigation();
@@ -30,6 +31,8 @@ const TeacherCreateAssignments = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
+  const { token } = useAuth();
 
   const handleSelectFiles = async () => {
     try {
@@ -100,9 +103,7 @@ const TeacherCreateAssignments = () => {
     );
 
     try {
-      setIsLoading(true); // Start loading
-
-      const token = await AsyncStorage.getItem('token');
+      setIsLoading(true);
       if (!token) throw new Error('No token found');
 
       const response = await fetch(

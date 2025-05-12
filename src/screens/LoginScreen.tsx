@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { API_URL } from '@env';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import { AuthContext } from '../navigation/AuthContext';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -36,6 +37,7 @@ const LoginScreen = () => {
   const [passwordError, setPasswordError] = useState('');
 
   const [googleLoginPressed, setGoogleLoginPressed] = useState(false);
+  const { token, setToken } = useContext(AuthContext);
 
   const [request, response, promptAsync] = useAuthRequest({
     androidClientId:
@@ -79,6 +81,7 @@ const LoginScreen = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ email, password }),
       });
@@ -86,16 +89,28 @@ const LoginScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
+
+        
+
         await AsyncStorage.setItem('token', data.access_token);
+        setToken(data.access_token);
+        
+    
         const decodedToken: any = jwtDecode(data.access_token);
         const user_id = decodedToken.sub;
+
+      
+        console.log('El token que seteo es:', data.access_token);
+        setToken(data.access_token);
 
         try {
           const profileResponse = await fetch(
             `${API_URL}/api/users/profile/${user_id}`,
             {
               method: 'GET',
-              headers: {},
+              headers: {
+                'Authorization': `Bearer ${data.access_token}`,
+              },
             },
           );
 
@@ -140,6 +155,7 @@ const LoginScreen = () => {
       setShowGeneralErrorModal(true);
     }
   };
+
   return (
     <View style={styles.container}>
       <AcceptOnlyModal

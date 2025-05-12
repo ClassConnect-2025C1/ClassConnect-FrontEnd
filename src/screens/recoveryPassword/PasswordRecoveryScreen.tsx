@@ -9,16 +9,18 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { API_URL } from '@env';
+import { useAuth } from '../../navigation/AuthContext';
 
 const PasswordRecoveryScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const { token } = useAuth();
 
   const handleSubmit = async () => {
     let valid = true;
     setEmailError('');
-  
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
       setEmailError('Please enter your email');
@@ -27,29 +29,26 @@ const PasswordRecoveryScreen = () => {
       setEmailError('Email is invalid');
       valid = false;
     }
-  
+
     if (!valid) return;
     const requestData = { userEmail: email };
     console.log('Data being sent:', requestData);
-  
+
     try {
-      const response = await fetch(
-        `${API_URL}/api/auth/recovery-password`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userEmail: email }), 
-        }
-      );
-      
+      const response = await fetch(`${API_URL}/api/auth/recovery-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userEmail: email }),
+      });
+
       const data = await response.json();
       console.log('Response data:', data);
       if (response.ok) {
-        navigation.navigate('VerifyPin', { email }); 
+        navigation.navigate('VerifyPin', { email });
       } else {
-    
         const errorMessage = data?.detail || 'Something went wrong';
         alert(errorMessage);
       }
@@ -59,7 +58,6 @@ const PasswordRecoveryScreen = () => {
       console.log('Catcheo el error');
     }
   };
-  
 
   return (
     <View style={styles.container}>

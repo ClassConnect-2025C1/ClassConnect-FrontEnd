@@ -10,20 +10,28 @@ import {
 import { API_URL } from '@env';
 import { useNavigation } from '@react-navigation/native';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
+import { useAuth } from '../../navigation/AuthContext';
 
 const DownloadFilesScreen = ({ route }) => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const { course } = route.params;
   const navigation = useNavigation();
+  const { token } = useAuth();
 
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/courses/${course.id}/assignments`, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-      });
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignments`,
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       const json = await response.json();
 
@@ -89,7 +97,10 @@ const DownloadFilesScreen = ({ route }) => {
         ListEmptyComponent={<Text>No tasks found.</Text>}
       />
 
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
     </View>

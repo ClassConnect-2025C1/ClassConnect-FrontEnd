@@ -1,49 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { jwtDecode } from 'jwt-decode';
-import { Alert } from 'react-native';
-import RegisterErrors from '../Errors/RegisterErrors';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
+import { AcceptOnlyModal } from '../components/Modals';
 import { API_URL } from '@env';
+import { AuthContext } from '../navigation/AuthContext';// Importa el contexto
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
+ const { token, setToken } = useContext(AuthContext); // Obtén el setToken y setIsAuthenticated del contexto
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [location, setLocation] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
-  const [errors, setErrors] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    phone: '',
-    role: ''
-  });
-
   const handleRegister = async () => {
     const newErrors: any = {};
 
-    // Validaciones
     if (firstName.length < 2) {
       newErrors.firstName = 'First name must be at least 2 characters';
     }
@@ -90,10 +78,13 @@ const RegisterScreen = () => {
       const data = await response.json();
       const detailMsg = data.detail?.detail || data.detail;
       if (response.ok) {
+        await AsyncStorage.setItem('token', data.access_token);
         const token = data.access_token;
         const decoded = jwtDecode(token);
         const userId = decoded.sub;
-        console.log('Registration successful:', data);
+
+        setToken(data.access_token);
+
         navigation.navigate('Location', { userId, phone });
       } else {
         setModalMessage(detailMsg);

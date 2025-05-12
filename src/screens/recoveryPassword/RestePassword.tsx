@@ -10,7 +10,7 @@ import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 import StatusOverlay from '../../components/StatusOverlay';
-
+import { useAuth } from '../../navigation/AuthContext';
 const ResetPasswordScreen = () => {
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,6 +19,7 @@ const ResetPasswordScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { email } = route.params;
+  const { token } = useAuth();
 
   const resetPassword = async () => {
     if (newPassword.length < 5) {
@@ -34,7 +35,13 @@ const ResetPasswordScreen = () => {
         {
           new_password: newPassword,
           userEmail: email,
-        }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
       );
 
       if (response.status === 200) {
@@ -57,7 +64,6 @@ const ResetPasswordScreen = () => {
 
   return (
     <View style={styles.container}>
-
       {/* Mostrar el overlay si se está cargando */}
       {loading && !feedbackSent && (
         <View style={styles.overlayContainer}>
@@ -91,8 +97,10 @@ const ResetPasswordScreen = () => {
             value={newPassword}
             onChangeText={setNewPassword}
           />
-          
-          {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+
+          {passwordError ? (
+            <Text style={styles.errorText}>{passwordError}</Text>
+          ) : null}
 
           <TouchableOpacity
             style={styles.resetButton}
