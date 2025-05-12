@@ -5,45 +5,54 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import axios from 'axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { AcceptOnlyModal } from '../../components/Modals';
 import { API_URL } from '@env';
-import { useAuth } from '../navigation/AuthContext';
 
-const PinScreen = () => {
+
+const VerifyPinScreen = () => {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   const navigation = useNavigation();
   const route = useRoute();
-  const { userId, phone } = route.params;
-  const { token } = useAuth();
+  const { email } = route.params;
+
 
   const verifyPin = async () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_URL}/api/auth/verify-pin`,
-        {
-          userId,
-          pin,
-        },
+        `${API_URL}/api/auth/recovery-password/verify-pin`,
+        { pin, userEmail: email },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+
           },
         },
       );
 
       if (response.status === 200) {
-        navigation.navigate('Login');
+        setModalMessage('PIN verified successfully.');
+        setShowModal(true);
+        setTimeout(() => {
+          navigation.navigate('ResetPassword', { email });
+        }, 1500);
       } else {
-        Alert.alert('Invalid PIN', 'Please try again.');
+        setModalMessage('Invalid PIN, please try again.');
+        setShowModal(true);
       }
     } catch (error) {
-      console.error('Error verifying PIN:', error);
-      Alert.alert('Invalid PIN', 'Please try again.');
+      console.error(
+        'Error verifying PIN:',
+        error.response?.data || error.message,
+      );
+      setModalMessage('Invalid PIN, please resend the PIN again.');
+      setShowModal(true);
     } finally {
       setLoading(false);
     }
@@ -51,30 +60,43 @@ const PinScreen = () => {
 
   const resendPin = async () => {
     try {
+      setLoading(true);
+      console.log('🌐 Request body for resending PIN:', { userEmail: email });
+
       const response = await axios.post(
-        `${API_URL}/api/auth/resend-pin`,
-        {
-          userId,
-          phone,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        `${API_URL}/api/auth/recovery-password`,
+        { userEmail: email },
+        { headers: { 'Content-Type': 'application/json' } },
       );
 
       if (response.status === 200) {
-        Alert.alert('PIN Sent', 'A new PIN has been sent to your number.');
+        setModalMessage('PIN resent successfully.');
+        setShowModal(true);
+      } else {
+        setModalMessage('Could not resend PIN. Please try again.');
+        setShowModal(true);
       }
     } catch (error) {
-      console.error('Error resending PIN:', error);
-      Alert.alert('Error', 'Could not resend PIN. Please try again.');
+      console.error(
+        'Error resending PIN:',
+        error.response?.data || error.message,
+      );
+      setModalMessage('Could not resend PIN. Please try again.');
+      setShowModal(true);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
+      <AcceptOnlyModal
+        visible={showModal}
+        message={modalMessage}
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
+
       <Text style={styles.title}>Enter your verification code</Text>
       <TextInput
         style={styles.input}
@@ -95,8 +117,14 @@ const PinScreen = () => {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.resendButton} onPress={resendPin}>
-        <Text style={styles.resendText}>Resend Code</Text>
+      <TouchableOpacity
+        style={styles.resendButton}
+        onPress={resendPin}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Resending...' : 'Resend PIN'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -137,12 +165,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   resendButton: {
-    paddingVertical: 10,
-  },
-  resendText: {
-    color: '#2196F3',
-    fontSize: 16,
-    textDecorationLine: 'underline',
+    backgroundColor: '#FFC107',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 15,
   },
   buttonText: {
     color: '#fff',
@@ -150,4 +178,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PinScreen;
+export default VerifyPinScreen;

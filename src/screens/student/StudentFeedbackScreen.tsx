@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '@env';
 import StatusOverlay from '../../components/StatusOverlay';
 import { AcceptOnlyModal } from '../../components/Modals';
+import { useAuth } from '../../navigation/AuthContext';
 
 const StudentFeedbackScreen = () => {
   const navigation = useNavigation();
@@ -27,6 +28,7 @@ const StudentFeedbackScreen = () => {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const { token } = useAuth();
 
   const handleSubmitFeedback = async () => {
     if (!rating) {
@@ -38,7 +40,6 @@ const StudentFeedbackScreen = () => {
     try {
       setIsLoading(true);
 
-      const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
       const decodedToken = jwtDecode(token);

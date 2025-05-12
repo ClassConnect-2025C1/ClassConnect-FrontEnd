@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { validateFields } from '../../Errors/ValidationsEditCourse';
 import { API_URL } from '@env';
 import MultiSelect from 'react-native-multiple-select';
+import { useAuth } from '../../navigation/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -24,6 +25,7 @@ export default function EditCourseScreen({ route }) {
   const [description, setDescription] = useState(course.description);
   const [startDate, setStartDate] = useState(course.startDate);
   const [endDate, setEndDate] = useState(course.endDate);
+  const { token } = useAuth();
 
   const [eligibilityOptions, setEligibilityOptions] = useState([]);
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>(
@@ -43,7 +45,6 @@ export default function EditCourseScreen({ route }) {
   useEffect(() => {
     const fetchEligibilityOptions = async () => {
       try {
-        const token = await AsyncStorage.getItem('token');
         const response = await fetch(`${API_URL}/api/courses/`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -79,7 +80,6 @@ export default function EditCourseScreen({ route }) {
     }
 
     try {
-      const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found');
       const formattedStartDate = `${startDate}T00:00:00Z`;
       const formattedEndDate = `${endDate}T00:00:00Z`;

@@ -11,6 +11,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
+import { useAuth } from '../../navigation/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -24,12 +25,19 @@ const FeedbackScreen = () => {
   const [fromDate] = useState('25/02/2025');
   const [toDate] = useState('30/02/2025');
   const [feedbacks, setFeedbacks] = useState([]);
-
+  const { token } = useAuth();
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
         const response = await fetch(
           `${API_URL}/api/courses/${courseId}/feedbacks`,
+          {
+            method: 'GET', // Especificamos el método como 'GET' aunque sea implícito en este caso
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`, // Agregar el token en los headers
+            },
+          },
         );
 
         if (!response.ok) {
@@ -45,8 +53,7 @@ const FeedbackScreen = () => {
     };
 
     fetchFeedbacks();
-  }, [courseId]); // Vuelve a ejecutar si courseId cambia
-
+  }, [courseId, token]);
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Course Feedbacks</Text>

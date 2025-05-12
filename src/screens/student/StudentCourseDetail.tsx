@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
 import { FlatList } from 'react-native';
+import { useAuth } from '../../navigation/AuthContext';
 
 export default function CourseDetail({ route }) {
   const { course, userId } = route.params;
@@ -18,10 +19,11 @@ export default function CourseDetail({ route }) {
   const [activeTab, setActiveTab] = useState('Assignments');
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { token } = useAuth();
+  console.log('el token de los assigments es:', token);
 
   const fetchAssignments = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }

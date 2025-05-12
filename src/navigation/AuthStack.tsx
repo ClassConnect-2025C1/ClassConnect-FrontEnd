@@ -6,7 +6,9 @@ import StartScreen from '../screens/StartScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LocationScreen from '../screens/LocationScreen';
 import PinScreen from '../screens/PinScreen';
-import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
+import PasswordRecoveryScreen from '../screens/recoveryPassword/PasswordRecoveryScreen';
+import RestPassword from '../screens/recoveryPassword/RestePassword';
+import VerifyPin from '../screens/recoveryPassword/VerifyPin';
 
 import StudentCoursesScreen from '../screens/student/StudentCoursesScreen';
 import StudentAvailableCoursesScrenn from '../screens/student/StudentAvailableCoursesScrenn';
@@ -22,6 +24,7 @@ import TeacherEditCourseDetail from '../screens/teacher/TeacherEditCourseDetail'
 import TeacherCreateAssignments from '@/screens/teacher/TeacherCreateAssignment';
 import TeacherFeedbackCourse from '@/screens/teacher/TeacherFeedbackCourse';
 import TeacherMembersCourse from '@/screens/teacher/TeacherMemberCourse';
+import StudentsSubmissions from '../screens/teacher/StudentsSubmissions';
 import ShowCourseData from '../utils/ShowCourseData';
 
 const Stack = createNativeStackNavigator();
@@ -39,6 +42,8 @@ const AuthStack = () => (
     <Stack.Screen name="PinScreen" component={PinScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
+    <Stack.Screen name="VerifyPin" component={VerifyPin} />
+    <Stack.Screen name="ResetPassword" component={RestPassword} />
 
     <Stack.Screen name="StudentCourses" component={StudentCoursesScreen} />
     <Stack.Screen
@@ -83,6 +88,7 @@ const AuthStack = () => (
       name="TeacherMembersCourse"
       component={TeacherMembersCourse}
     />
+    <Stack.Screen name="StudentsSubmissions" component={StudentsSubmissions} />
   </Stack.Navigator>
 );
 

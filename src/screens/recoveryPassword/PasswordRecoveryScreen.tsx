@@ -8,6 +8,8 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { API_URL } from '@env';
+
 
 const PasswordRecoveryScreen = () => {
   const navigation = useNavigation();
@@ -28,30 +30,31 @@ const PasswordRecoveryScreen = () => {
     }
 
     if (!valid) return;
+    const requestData = { userEmail: email };
+    console.log('Data being sent:', requestData);
 
     try {
-      const response = await fetch(
-        'https://<TU_BACKEND>/api/auth/recovery-password/',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
+      const response = await fetch(`${API_URL}/api/auth/recovery-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+      
         },
-      );
+        body: JSON.stringify({ userEmail: email }),
+      });
 
+      const data = await response.json();
+      console.log('Response data:', data);
       if (response.ok) {
-        alert('Recovery email sent successfully.');
-        navigation.goBack();
+        navigation.navigate('VerifyPin', { email });
       } else {
-        const data = await response.json();
         const errorMessage = data?.detail || 'Something went wrong';
         alert(errorMessage);
       }
     } catch (error) {
       console.error('Error sending recovery email:', error);
-      alert('An error occurred. Please try again later.');
+      alert('Failed to send recovery email. Please try again later.');
+      console.log('Catcheo el error');
     }
   };
 
@@ -59,7 +62,7 @@ const PasswordRecoveryScreen = () => {
     <View style={styles.container}>
       <View style={styles.topHalf}>
         <Image
-          source={require('../../assets/images/logo.png')}
+          source={require('../../../assets/images/logo.png')}
           style={styles.logo}
         />
       </View>

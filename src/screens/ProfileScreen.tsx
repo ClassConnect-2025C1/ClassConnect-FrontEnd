@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 import { API_URL } from '@env';
+import { useAuth } from '../navigation/AuthContext';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -29,6 +30,7 @@ const ProfileScreen = () => {
   const [userImage, setUserImage] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -37,7 +39,8 @@ const ProfileScreen = () => {
         if (token) {
           const decoded = jwtDecode(token);
           const userId = decoded.user_id || decoded.sub;
-
+          
+          console.log('User ID:', userId);
           const response = await fetch(
             `${API_URL}/api/users/profile/${userId}`,
             {
@@ -122,7 +125,7 @@ const ProfileScreen = () => {
 
     try {
       setIsLoading(true);
-      const token = await AsyncStorage.getItem('token');
+
       if (token) {
         const decoded = jwtDecode(token);
         const userId = decoded.user_id || decoded.sub;

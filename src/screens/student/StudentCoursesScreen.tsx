@@ -13,6 +13,7 @@ import {
 import { API_URL } from '@env';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRoute } from '@react-navigation/native';
+import { useAuth } from '../../navigation/AuthContext';
 
 const getColorForCourse = (id: number) => {
   const cardColors = [
@@ -35,17 +36,17 @@ const CoursesScreen = () => {
   const { userId } = route.params;
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchText, setSearchText] = useState('');
-
   const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(
     new Set(),
   );
+  const { token } = useAuth();
 
   const filteredCourses = courses.filter((course) =>
     course.title.toLowerCase().includes(searchText.toLowerCase()),
   );
+
   const refreshCourses = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
       if (token) {
         const response = await fetch(
           `${API_URL}/api/courses/enrolled/${userId}`,
@@ -63,6 +64,12 @@ const CoursesScreen = () => {
           const json = JSON.parse(text);
           if (Array.isArray(json.data)) {
             setCourses(json.data);
+
+            // Set favorites from backend
+            const favoritesSet = new Set(
+              json.data.filter((course) => course.is_favorite).map((c) => c.id),
+            );
+            setFavoriteCourses(favoritesSet);
           } else {
             console.error('La respuesta no es un array:', json);
             setCourses([]);
@@ -76,20 +83,43 @@ const CoursesScreen = () => {
       console.error('Error al obtener los cursos del usuario:', error);
     }
   };
+
   useEffect(() => {
     refreshCourses();
   }, []);
 
-  const toggleFavorite = (courseId: number) => {
-    setFavoriteCourses((prevFavorites) => {
-      const newFavorites = new Set(prevFavorites);
-      if (newFavorites.has(courseId)) {
-        newFavorites.delete(courseId);
-      } else {
-        newFavorites.add(courseId);
+  const toggleFavorite = async (courseId: number) => {
+    try {
+      if (!token) return;
+
+      const response = await fetch(
+        `${API_URL}/api/courses/${courseId}/favorite/toggle/${userId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        console.error('Error al marcar como favorito');
+        return;
       }
-      return newFavorites;
-    });
+
+      // Toggle local favorite state
+      setFavoriteCourses((prevFavorites) => {
+        const newFavorites = new Set(prevFavorites);
+        if (newFavorites.has(courseId)) {
+          newFavorites.delete(courseId);
+        } else {
+          newFavorites.add(courseId);
+        }
+        return newFavorites;
+      });
+    } catch (error) {
+      console.error('Error al marcar como favorito:', error);
+    }
   };
 
   return (
