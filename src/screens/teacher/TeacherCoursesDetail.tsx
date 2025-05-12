@@ -26,7 +26,7 @@ export default function TeacherCourseDetail({ route }) {
       }
 
       const response = await fetch(
-        `http://192.168.100.208:8002/${course.id}/assignments`,
+        `http://192.168.0.12:8002/${course.id}/assignments`,
         {
           method: 'GET',
           headers: {

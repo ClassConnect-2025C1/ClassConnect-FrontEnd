@@ -54,7 +54,7 @@ const AvailableCoursesScreen = () => {
         }
 
         const approvedRes = await fetch(
-          `http://192.168.100.208:8002/approved/${userId}`,
+          `http://192.168.0.12:8002/approved/${userId}`,
         );
         const approvedJson = await approvedRes.json();
 

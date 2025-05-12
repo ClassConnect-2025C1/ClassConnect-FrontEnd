@@ -37,6 +37,7 @@ const RegisterScreen = () => {
     email: '',
     password: '',
     phone: '',
+    role: ''
   });
 
   const handleRegister = async () => {
