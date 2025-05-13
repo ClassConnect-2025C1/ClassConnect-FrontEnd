@@ -136,7 +136,7 @@ export default function CourseDetail({ route }) {
                 <Text style={styles.itemText}>
                   Due: {new Date(item.deadline).toLocaleDateString()}
                 </Text>
-
+            
                 {Array.isArray(item.files) && item.files.length > 0 && (
                   <View style={{ marginTop: 10 }}>
                     {item.files.map((file, idx) => (
@@ -152,18 +152,18 @@ export default function CourseDetail({ route }) {
                     ))}
                   </View>
                 )}
-
+            
                 <TouchableOpacity
                   style={styles.submitButton}
                   onPress={() =>
-                    navigation.navigate('StudentEditAssigment', {
+                    navigation.navigate('StudentAssignmentScreen', {
                       course,
                       userId,
-                      assignmentId: item.id,
+                      assignment: item,
                     })
                   }
                 >
-                  <Text style={styles.submitButtonText}>Enter Submission</Text>
+                  <Text style={styles.submitButtonText}>Start Assignment</Text>
                 </TouchableOpacity>
               </View>
             )}

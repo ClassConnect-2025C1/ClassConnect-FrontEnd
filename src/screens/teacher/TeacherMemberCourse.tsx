@@ -27,7 +27,7 @@ const MembersScreen = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch(`${API_URL}/${courseId}/members`, {
+        const response = await fetch(`${API_URL}/api/courses/${courseId}/members`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ const MembersScreen = () => {
   const handleApprove = async (userId) => {
     try {
       const res = await fetch(
-        `${API_URL}/approve/${userId}/${courseId}`,
+        `${API_URL}/api/courses/approve/${userId}/${courseId}`,
 
         {
           method: 'POST',

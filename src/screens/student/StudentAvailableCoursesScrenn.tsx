@@ -51,7 +51,7 @@ const AvailableCoursesScreen = () => {
           console.error('Cursos no es JSON válido:', coursesText);
         }
 
-        const approvedRes = await fetch(`http://192.168.0.12:8002/approved/`, {
+        const approvedRes = await fetch(`${API_URL}/approved/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

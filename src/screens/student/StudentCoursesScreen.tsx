@@ -104,7 +104,6 @@ const CoursesScreen = () => {
         return;
       }
 
-      // Toggle local favorite state
       setFavoriteCourses((prevFavorites) => {
         const newFavorites = new Set(prevFavorites);
         if (newFavorites.has(courseId)) {
