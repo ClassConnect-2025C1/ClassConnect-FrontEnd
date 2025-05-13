@@ -97,7 +97,7 @@ const LoginScreen = () => {
         
     
         const decodedToken: any = jwtDecode(data.access_token);
-        const user_id = decodedToken.sub;
+        const user_id = decodedToken.user_id;
 
       
         console.log('El token que seteo es:', data.access_token);

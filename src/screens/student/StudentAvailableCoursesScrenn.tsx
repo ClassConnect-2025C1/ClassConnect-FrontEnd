@@ -33,7 +33,7 @@ const AvailableCoursesScreen = () => {
     try {
       if (token) {
         const coursesRes = await fetch(
-          `${API_URL}/api/courses/available/${userId}`,
+          `${API_URL}/api/courses/available/`,
           {
             method: 'GET',
             headers: {
@@ -55,7 +55,7 @@ const AvailableCoursesScreen = () => {
         }
 
         const approvedRes = await fetch(
-          `http://192.168.0.12:8002/approved/${userId}`,
+          `http://192.168.0.12:8002/approved/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -89,7 +89,7 @@ const AvailableCoursesScreen = () => {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/courses/${courseId}/enroll/${user.userId}`,
+        `${API_URL}/api/courses/${courseId}/enroll`,
         {
           method: 'POST',
           headers: {

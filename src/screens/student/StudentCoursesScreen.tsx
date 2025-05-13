@@ -49,7 +49,7 @@ const CoursesScreen = () => {
     try {
       if (token) {
         const response = await fetch(
-          `${API_URL}/api/courses/enrolled/${userId}`,
+          `${API_URL}/api/courses/enrolled`,
           {
             method: 'GET',
             headers: {
