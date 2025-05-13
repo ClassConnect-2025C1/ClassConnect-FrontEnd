@@ -27,16 +27,13 @@ const MembersScreen = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch(
-          `http://192.168.0.12:8002/${courseId}/members`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
+        const response = await fetch(`${API_URL}/${courseId}/members`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         if (!response.ok) throw new Error('Error al obtener los miembros');
         const data = await response.json();
         setMembers(data.data);
@@ -53,8 +50,8 @@ const MembersScreen = () => {
   const handleApprove = async (userId) => {
     try {
       const res = await fetch(
-        `http://192.168.0.12:8002/approve/${userId}/${courseId}`,
-        
+        `${API_URL}/approve/${userId}/${courseId}`,
+
         {
           method: 'POST',
           headers: {

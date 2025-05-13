@@ -28,9 +28,25 @@ export default function ShowCourseDetail() {
         <Text style={styles.detail}>
           Capacity: {course.capacity ?? 'Not specified'}
         </Text>
-        <Text style={styles.detail}>
-          {course.eligibility_criteria || "Don't have eligibility criteria."}
-        </Text>
+
+        <View style={styles.eligibilityWrapper}>
+          <Text style={styles.detailLabel}>Eligibility Criteria</Text>
+          {Array.isArray(course.eligibilityCriteria) &&
+          course.eligibilityCriteria.length > 0 ? (
+            <View style={styles.eligibilityContainer}>
+              {course.eligibilityCriteria.map((criteria, index) => (
+                <View key={index} style={styles.eligibilityChip}>
+                  <Text style={styles.eligibilityText}>{criteria}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.detail}>
+              {' '}
+              No eligibility criteria available.
+            </Text>
+          )}
+        </View>
       </View>
     </ScrollView>
   );
@@ -82,5 +98,34 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  eligibilityWrapper: {
+    marginTop: 12,
+  },
+
+  detailLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#444',
+    marginBottom: 6,
+  },
+
+  eligibilityContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+
+  eligibilityChip: {
+    backgroundColor: '#E0F7FA',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 15,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+
+  eligibilityText: {
+    fontSize: 12,
+    color: '#00796B',
   },
 });

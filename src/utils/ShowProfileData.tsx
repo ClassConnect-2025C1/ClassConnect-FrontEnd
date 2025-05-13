@@ -14,7 +14,7 @@ import { getUserProfileData } from '../utils/GetUserProfile';
 const ViewProfileScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { userId, token} = route.params || {}; // Recuperar userId desde los parámetros de navegación
+  const { userId, token } = route.params || {}; // Recuperar userId desde los parámetros de navegación
 
   const [profile, setProfile] = useState({
     name: '',
@@ -26,7 +26,7 @@ const ViewProfileScreen = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const data = await getUserProfileData(token ,userId); // Pasar userId si se proporciona
+      const data = await getUserProfileData(token, userId); // Pasar userId si se proporciona
       if (data) {
         setProfile({
           name: data.name || '',

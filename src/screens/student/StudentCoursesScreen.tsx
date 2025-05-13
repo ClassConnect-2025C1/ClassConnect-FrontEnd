@@ -48,15 +48,12 @@ const CoursesScreen = () => {
   const refreshCourses = async () => {
     try {
       if (token) {
-        const response = await fetch(
-          `${API_URL}/api/courses/enrolled`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const response = await fetch(`${API_URL}/api/courses/enrolled`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
 
         const text = await response.text();
 
@@ -93,7 +90,7 @@ const CoursesScreen = () => {
       if (!token) return;
 
       const response = await fetch(
-        `${API_URL}/api/courses/${courseId}/favorite/toggle/${userId}`,
+        `${API_URL}/api/courses/${courseId}/favorite/toggle`,
         {
           method: 'PATCH',
           headers: {

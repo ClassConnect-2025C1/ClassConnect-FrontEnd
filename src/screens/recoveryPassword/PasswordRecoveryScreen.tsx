@@ -10,7 +10,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { API_URL } from '@env';
 
-
 const PasswordRecoveryScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
@@ -38,7 +37,6 @@ const PasswordRecoveryScreen = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-      
         },
         body: JSON.stringify({ userEmail: email }),
       });

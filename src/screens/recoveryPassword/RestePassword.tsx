@@ -20,7 +20,6 @@ const ResetPasswordScreen = () => {
   const route = useRoute();
   const { email } = route.params;
 
-
   const resetPassword = async () => {
     if (newPassword.length < 5) {
       setPasswordError('Password must be at least 5 characters');
