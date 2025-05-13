@@ -62,6 +62,29 @@ export default function TeacherCourseDetail({ route }) {
     fetchAssignments();
   }, []);
 
+  const handleDeleteAssignment = async (assignmentId) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete assignment');
+      }
+
+      setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+    }
+  };
+
   return (
     <View style={styles.mainContainer}>
       <TouchableOpacity
@@ -164,15 +187,32 @@ export default function TeacherCourseDetail({ route }) {
             <View key={index} style={styles.assignmentContainer}>
               <View style={styles.assignmentHeader}>
                 <Text style={styles.assignmentTitle}>{assignment.title}</Text>
-                <Text style={styles.assignmentDate}>
-                  {new Date(assignment.deadline).toLocaleDateString()}
-                </Text>
+
+                <View style={styles.assignmentActions}>
+                  <Text style={styles.assignmentDate}>
+                    {new Date(assignment.deadline).toLocaleDateString()}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteAssignment(assignment.id)}
+                  >
+                    <Text style={styles.deleteIcon}>❌</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
+
               <Text style={styles.assignmentDescription}>
                 {assignment.description}
               </Text>
               <View style={styles.buttonRow}>
-                <TouchableOpacity style={styles.smallButton}>
+                <TouchableOpacity
+                  style={styles.smallButton}
+                  onPress={() =>
+                    navigation.navigate('TeacherEditAssigments', {
+                      course,
+                      assignment,
+                    })
+                  }
+                >
                   <Text style={styles.smallButtonText}>Edit assignment</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -377,5 +417,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+
+  assignmentActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+
+  deleteIcon: {
+    fontSize: 18,
+    color: 'red',
+    marginLeft: 10,
   },
 });

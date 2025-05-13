@@ -80,7 +80,7 @@ export default function CourseDetail({ route }) {
         </Text>
 
         <Text style={styles.detail}>
-          Created by: {course.created_by || 'Unknown'}
+          Created by: {course.createdBy || 'Unknown'}
         </Text>
         <Text style={styles.detail}>
           Capacity: {course.capacity || 'Not specified'}
@@ -136,7 +136,7 @@ export default function CourseDetail({ route }) {
                 <Text style={styles.itemText}>
                   Due: {new Date(item.deadline).toLocaleDateString()}
                 </Text>
-            
+
                 {Array.isArray(item.files) && item.files.length > 0 && (
                   <View style={{ marginTop: 10 }}>
                     {item.files.map((file, idx) => (
@@ -152,7 +152,7 @@ export default function CourseDetail({ route }) {
                     ))}
                   </View>
                 )}
-            
+
                 <TouchableOpacity
                   style={styles.submitButton}
                   onPress={() =>
@@ -160,10 +160,23 @@ export default function CourseDetail({ route }) {
                       course,
                       userId,
                       assignment: item,
+                      onStarted: (startedAt) => {
+                        setAssignments((prevAssignments) =>
+                          prevAssignments.map((a) =>
+                            a.id === item.id
+                              ? { ...a, started_at: startedAt }
+                              : a,
+                          ),
+                        );
+                      },
                     })
                   }
                 >
-                  <Text style={styles.submitButtonText}>Start Assignment</Text>
+                  <Text style={styles.submitButtonText}>
+                    {item.started_at
+                      ? 'Continue Assignment'
+                      : 'Start Assignment'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}

@@ -27,13 +27,16 @@ const MembersScreen = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/courses/${courseId}/members`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+        const response = await fetch(
+          `${API_URL}/api/courses/${courseId}/members`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         if (!response.ok) throw new Error('Error al obtener los miembros');
         const data = await response.json();
         setMembers(data.data);
