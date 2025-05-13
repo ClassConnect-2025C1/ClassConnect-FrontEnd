@@ -32,15 +32,12 @@ const AvailableCoursesScreen = () => {
   const fetchCoursesAndApprovals = async () => {
     try {
       if (token) {
-        const coursesRes = await fetch(
-          `${API_URL}/api/courses/available/${userId}`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const coursesRes = await fetch(`${API_URL}/api/courses/available/`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         const coursesText = await coursesRes.text();
         let availableCourses = [];
         try {
@@ -54,14 +51,11 @@ const AvailableCoursesScreen = () => {
           console.error('Cursos no es JSON válido:', coursesText);
         }
 
-        const approvedRes = await fetch(
-          `http://192.168.0.12:8002/approved/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const approvedRes = await fetch(`${API_URL}/approved/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         const approvedJson = await approvedRes.json();
 
         console.log(approvedJson);
@@ -89,7 +83,7 @@ const AvailableCoursesScreen = () => {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/courses/${courseId}/enroll/${user.userId}`,
+        `${API_URL}/api/courses/${courseId}/enroll`,
         {
           method: 'POST',
           headers: {

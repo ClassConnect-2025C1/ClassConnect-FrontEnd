@@ -15,13 +15,13 @@ import { useNavigation } from '@react-navigation/native';
 import { jwtDecode } from 'jwt-decode';
 import { AcceptOnlyModal } from '../components/Modals';
 import { API_URL } from '@env';
-import { AuthContext } from '../navigation/AuthContext';// Importa el contexto
+import { AuthContext } from '../navigation/AuthContext'; // Importa el contexto
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RegisterErrors from '../Errors/RegisterErrors';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
- const { token, setToken } = useContext(AuthContext); // Obtén el setToken y setIsAuthenticated del contexto
+  const { token, setToken } = useContext(AuthContext); // Obtén el setToken y setIsAuthenticated del contexto
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -39,7 +39,6 @@ const RegisterScreen = () => {
     password: '',
     phone: '',
   });
-
 
   const handleRegister = async () => {
     const newErrors: any = {};

@@ -35,7 +35,7 @@ const UploadFilesScreen = ({ route }) => {
     setNoFilesFound(false);
     try {
       const response = await fetch(
-        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
+        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission`,
         {
           method: 'GET',
           headers: {
@@ -104,7 +104,7 @@ const UploadFilesScreen = ({ route }) => {
       };
 
       const response = await fetch(
-        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
+        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission`,
         {
           method: 'PUT',
           headers: {
@@ -153,7 +153,7 @@ const UploadFilesScreen = ({ route }) => {
       if (!token) throw new Error('No token found');
 
       const response = await fetch(
-        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission/${userId}`,
+        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission`,
         {
           method: 'DELETE',
           headers: {

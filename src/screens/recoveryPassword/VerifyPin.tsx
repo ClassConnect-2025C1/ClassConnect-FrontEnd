@@ -11,7 +11,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { AcceptOnlyModal } from '../../components/Modals';
 import { API_URL } from '@env';
 
-
 const VerifyPinScreen = () => {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +19,6 @@ const VerifyPinScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { email } = route.params;
-
 
   const verifyPin = async () => {
     try {
@@ -31,7 +29,6 @@ const VerifyPinScreen = () => {
         {
           headers: {
             'Content-Type': 'application/json',
-
           },
         },
       );

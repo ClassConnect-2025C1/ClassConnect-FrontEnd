@@ -21,6 +21,7 @@ export default function CourseDetail({ route }) {
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
   console.log('el token de los assigments es:', token);
+  console.log('Datos del curso:', course);
 
   const fetchAssignments = async () => {
     try {
@@ -84,9 +85,18 @@ export default function CourseDetail({ route }) {
         <Text style={styles.detail}>
           Capacity: {course.capacity || 'Not specified'}
         </Text>
-        <Text style={styles.detail}>
-          {course.eligibility_criteria || "Don't have eligibility criteria."}
-        </Text>
+        {Array.isArray(course.eligibilityCriteria) &&
+        course.eligibilityCriteria.length > 0 ? (
+          <View style={styles.eligibilityContainer}>
+            {course.eligibilityCriteria.map((criteria, index) => (
+              <View key={index} style={styles.eligibilityChip}>
+                <Text style={styles.eligibilityText}>{criteria}</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.detail}>No eligibility criteria available.</Text>
+        )}
 
         <View style={styles.tabContainer}>
           <TouchableOpacity
@@ -126,7 +136,7 @@ export default function CourseDetail({ route }) {
                 <Text style={styles.itemText}>
                   Due: {new Date(item.deadline).toLocaleDateString()}
                 </Text>
-
+            
                 {Array.isArray(item.files) && item.files.length > 0 && (
                   <View style={{ marginTop: 10 }}>
                     {item.files.map((file, idx) => (
@@ -142,18 +152,18 @@ export default function CourseDetail({ route }) {
                     ))}
                   </View>
                 )}
-
+            
                 <TouchableOpacity
                   style={styles.submitButton}
                   onPress={() =>
-                    navigation.navigate('StudentEditAssigment', {
+                    navigation.navigate('StudentAssignmentScreen', {
                       course,
                       userId,
-                      assignmentId: item.id,
+                      assignment: item,
                     })
                   }
                 >
-                  <Text style={styles.submitButtonText}>Enter Submission</Text>
+                  <Text style={styles.submitButtonText}>Start Assignment</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -332,5 +342,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  eligibilityContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+  },
+  eligibilityChip: {
+    backgroundColor: '#E0F7FA',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    marginRight: 8,
+    marginTop: 6,
+  },
+  eligibilityText: {
+    fontSize: 12,
+    color: '#00796B',
   },
 });

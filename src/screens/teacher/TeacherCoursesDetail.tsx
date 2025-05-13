@@ -9,7 +9,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AuthContext';
-
+import { API_URL } from '@env';
 export default function TeacherCourseDetail({ route }) {
   const { course } = route.params;
   const navigation = useNavigation();
@@ -27,7 +27,7 @@ export default function TeacherCourseDetail({ route }) {
       }
 
       const response = await fetch(
-        `http://192.168.0.12:8002/${course.id}/assignments`,
+        `${API_URL}/api/courses/${course.id}/assignments`,
         {
           method: 'GET',
           headers: {

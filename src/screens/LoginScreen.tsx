@@ -81,7 +81,7 @@ const LoginScreen = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ email, password }),
       });
@@ -89,17 +89,12 @@ const LoginScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
-
-        
-
         await AsyncStorage.setItem('token', data.access_token);
         setToken(data.access_token);
-        
-    
-        const decodedToken: any = jwtDecode(data.access_token);
-        const user_id = decodedToken.sub;
 
-      
+        const decodedToken: any = jwtDecode(data.access_token);
+        const user_id = decodedToken.user_id;
+
         console.log('El token que seteo es:', data.access_token);
         setToken(data.access_token);
 
@@ -109,7 +104,7 @@ const LoginScreen = () => {
             {
               method: 'GET',
               headers: {
-                'Authorization': `Bearer ${data.access_token}`,
+                Authorization: `Bearer ${data.access_token}`,
               },
             },
           );
