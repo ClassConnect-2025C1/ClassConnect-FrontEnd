@@ -32,9 +32,7 @@ export default function EditCourseScreen({ route }) {
 
 
   const [eligibilityOptions, setEligibilityOptions] = useState([]);
-  const [selectedCriteria, setSelectedCriteria] = useState<string[]>(
-    course.eligibilityCriteria || [],
-  );
+  const [selectedCriteria, setSelectedCriteria] = useState<string[]>(course.eligibilityCriteria || []);
 
   const [errors, setErrors] = useState({
     title: '',
@@ -54,7 +52,7 @@ export default function EditCourseScreen({ route }) {
         const json = await response.json();
         const coursesArray = Array.isArray(json.data) ? json.data : [];
   
-        // Crear un Map para eliminar duplicados por título
+    
         const uniqueCoursesMap = new Map();
   
         for (const course of coursesArray) {
@@ -81,6 +79,8 @@ export default function EditCourseScreen({ route }) {
   }, []);
 
   const handleSaveChanges = async () => {
+
+
  
     const newErrors = validateFields(
       title,
@@ -94,6 +94,7 @@ export default function EditCourseScreen({ route }) {
     if (Object.keys(newErrors).length > 0) {
       return;
     }
+    const filteredCriteria = selectedCriteria.filter((criteria) => criteria.trim() !== '');
 
     try {
       if (!token) throw new Error('No token found');
@@ -109,7 +110,7 @@ export default function EditCourseScreen({ route }) {
         body: JSON.stringify({
           title,
           description,
-          eligibility_criteria: selectedCriteria,
+          eligibility_criteria: filteredCriteria,
           start_date: formattedStartDate,
           end_date: formattedEndDate,
         }),
@@ -287,19 +288,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
+    alignSelf: 'center',        
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  
   bottomButtonContainer: {
     position: 'absolute',
     bottom: 20,
     width: width,
-    alignItems: 'center',
+    alignItems: 'center',        
     justifyContent: 'center',
   },
+  
   backButton: {
     backgroundColor: '#E0E0E0',
     borderRadius: 30,
@@ -310,6 +309,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
+    alignSelf: 'center',
+    marginRight: 23,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   backButtonText: {
     color: '#000000',
