@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const interval = setInterval(() => {
       checkToken();
-    }, 10000);
+    }, 100000);
 
     return () => clearInterval(interval);
   }, []);

@@ -91,8 +91,9 @@ const RegisterScreen = () => {
       if (response.ok) {
         await AsyncStorage.setItem('token', data.access_token);
         const token = data.access_token;
+        console.log('Token:', token);
         const decoded = jwtDecode(token);
-        const userId = decoded.sub;
+        const userId = decoded.user_id;
 
         setToken(data.access_token);
 
@@ -102,7 +103,7 @@ const RegisterScreen = () => {
         setShowModal(true);
       }
     } catch (error) {
-      setModalMessage(error);
+      setModalMessage(error?.message || 'Something went wrong');
       setShowModal(true);
     }
   };

@@ -1,4 +1,3 @@
-// src/screens/TeacherEditAssignments.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -14,8 +13,20 @@ import { useNavigation } from '@react-navigation/native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
 import * as DocumentPicker from 'expo-document-picker';
+import { Linking } from 'react-native';
 
 const { width } = Dimensions.get('window');
+
+const convertToBase64 = async (uri) => {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]); // Elimina el prefijo de base64
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
 
 export default function TeacherEditAssignments({ route }) {
   const { assignment, course } = route.params;
@@ -43,20 +54,35 @@ export default function TeacherEditAssignments({ route }) {
             },
           },
         );
-  
+
         const data = await response.json();
         console.log('GET assignment:', data);
-  
-        // ✅ Setear la descripción real recibida
-        setDescription(data.data.description);
-  
+
+        const assignmentData = data.data;
+        setTitle(assignmentData.title);
+        setDescription(assignmentData.description);
+        setDeadline(assignmentData.deadline.split('T')[0]);
+        setTimeLimit(String(assignmentData.time_limit));
+        setExistingFiles(assignmentData.files || []);
       } catch (error) {
         console.error('Error fetching specific assignment:', error);
       }
     };
-  
+
     fetchAssignment();
   }, []);
+
+  const handleRemoveFile = (fileToRemove) => {
+    setExistingFiles((prev) =>
+      prev.filter((file) => file.id !== fileToRemove.id),
+    );
+    // Marcar el archivo como eliminado en lugar de eliminarlo completamente
+    setNewFiles((prev) =>
+      prev.map((file) =>
+        file.uri === fileToRemove.uri ? { ...file, deleted: true } : file,
+      ),
+    );
+  };
 
   const handleSaveChanges = async () => {
     if (!title || !description || !deadline || !timeLimit) {
@@ -64,22 +90,28 @@ export default function TeacherEditAssignments({ route }) {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('deadline', `${deadline}T00:00:00Z`);
-    formData.append('time_limit', timeLimit);
+    const filesToSend = await Promise.all(
+        newFiles
+          .filter((file) => !file.deleted) // Solo incluir archivos no eliminados
+          .map(async (file) => ({
+            name: file.name,
+            content: await convertToBase64(file.uri), // Asegúrate de esperar a que la conversión termine
+            size: file.size,
+          }))
+      );
 
-    newFiles.forEach((file) => {
-      formData.append('files', {
-        uri: file.uri,
-        name: file.name,
-        type: file.mimeType || 'application/octet-stream',
-      });
-    });
+    const timeLimitInt = parseInt(timeLimit, 10);
+
+    const formData = {
+      title,
+      description,
+      deadline: `${deadline}T00:00:00Z`,
+      time_limit: timeLimitInt,
+      files: filesToSend,
+    };
 
     const existingFileIds = existingFiles.map((f) => f.id);
-    formData.append('existing_file_ids', JSON.stringify(existingFileIds));
+    formData.existing_file_ids = existingFileIds;
 
     try {
       const response = await fetch(
@@ -88,9 +120,9 @@ export default function TeacherEditAssignments({ route }) {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify(formData),
         },
       );
 
@@ -105,7 +137,6 @@ export default function TeacherEditAssignments({ route }) {
       console.error('Network error:', err);
     }
   };
-
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Edit Assignment</Text>
@@ -148,11 +179,24 @@ export default function TeacherEditAssignments({ route }) {
         <View style={styles.fileContainer}>
           {existingFiles.map((file, index) => (
             <View key={index} style={styles.fileItem}>
-              <Text numberOfLines={1} style={styles.fileName}>{file.name}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  Linking.openURL(file.url);
+                }}
+              >
+                <Text
+                  numberOfLines={1}
+                  style={[styles.fileName, { color: 'blue' }]}
+                >
+                  {file.name}
+                </Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.removeFileButton}
                 onPress={() => {
-                  setExistingFiles(prev => prev.filter((_, i) => i !== index));
+                  setExistingFiles((prev) =>
+                    prev.filter((_, i) => i !== index),
+                  );
                 }}
               >
                 <Text style={styles.removeFileText}>✕</Text>
@@ -164,9 +208,11 @@ export default function TeacherEditAssignments({ route }) {
         <TouchableOpacity
           style={styles.uploadButton}
           onPress={async () => {
-            const result = await DocumentPicker.getDocumentAsync({ type: '*/*' });
+            const result = await DocumentPicker.getDocumentAsync({
+              type: '*/*',
+            });
             if (!result.canceled) {
-              setNewFiles(prev => [...prev, result.assets[0]]);
+              setNewFiles((prev) => [...prev, result.assets[0]]);
             }
           }}
         >
@@ -174,7 +220,9 @@ export default function TeacherEditAssignments({ route }) {
         </TouchableOpacity>
 
         {newFiles.map((file, index) => (
-          <Text key={index} style={styles.newFileItem}>{file.name}</Text>
+          <Text key={index} style={styles.newFileItem}>
+            {file.name}
+          </Text>
         ))}
 
         {error && <Text style={styles.errorText}>{error}</Text>}
