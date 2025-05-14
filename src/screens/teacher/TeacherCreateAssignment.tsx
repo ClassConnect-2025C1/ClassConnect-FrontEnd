@@ -61,7 +61,7 @@ const TeacherCreateAssignments = () => {
   };
 
   const handleCreateAssignment = async () => {
-    if (!title || !description || !dueDate || !timeLimit) {
+    if (!title || !description || !dueDate) {
       setModalMessage('All fields must be filled.');
       setShowModal(true);
       return;

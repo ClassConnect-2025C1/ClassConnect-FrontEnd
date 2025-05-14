@@ -1,5 +1,5 @@
 // src/screens/TeacherEditAssignments.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -13,6 +13,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
+import * as DocumentPicker from 'expo-document-picker';
+
 const { width } = Dimensions.get('window');
 
 export default function TeacherEditAssignments({ route }) {
@@ -25,13 +27,59 @@ export default function TeacherEditAssignments({ route }) {
   const [deadline, setDeadline] = useState(assignment.deadline.split('T')[0]);
   const [timeLimit, setTimeLimit] = useState(String(assignment.time_limit));
   const [error, setError] = useState('');
-  console.log('est trae el assigment', assignment);
+  const [existingFiles, setExistingFiles] = useState(assignment.files || []);
+  const [newFiles, setNewFiles] = useState([]);
+
+  useEffect(() => {
+    const fetchAssignment = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/courses/${course.id}/assignment/${assignment.id}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+  
+        const data = await response.json();
+        console.log('GET assignment:', data);
+  
+        // ✅ Setear la descripción real recibida
+        setDescription(data.data.description);
+  
+      } catch (error) {
+        console.error('Error fetching specific assignment:', error);
+      }
+    };
+  
+    fetchAssignment();
+  }, []);
 
   const handleSaveChanges = async () => {
     if (!title || !description || !deadline || !timeLimit) {
       setError('All fields are required');
       return;
     }
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('deadline', `${deadline}T00:00:00Z`);
+    formData.append('time_limit', timeLimit);
+
+    newFiles.forEach((file) => {
+      formData.append('files', {
+        uri: file.uri,
+        name: file.name,
+        type: file.mimeType || 'application/octet-stream',
+      });
+    });
+
+    const existingFileIds = existingFiles.map((f) => f.id);
+    formData.append('existing_file_ids', JSON.stringify(existingFileIds));
 
     try {
       const response = await fetch(
@@ -40,13 +88,9 @@ export default function TeacherEditAssignments({ route }) {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
           },
-          body: JSON.stringify({
-            title,
-            description,
-            deadline: `${deadline}T00:00:00Z`,
-            time_limit: parseInt(timeLimit, 10),
-          }),
+          body: formData,
         },
       );
 
@@ -56,7 +100,6 @@ export default function TeacherEditAssignments({ route }) {
         return;
       }
 
-      const updated = await response.json();
       navigation.goBack();
     } catch (err) {
       console.error('Network error:', err);
@@ -100,6 +143,40 @@ export default function TeacherEditAssignments({ route }) {
           value={timeLimit}
           onChangeText={setTimeLimit}
         />
+
+        <Text style={styles.label}>Current Files</Text>
+        <View style={styles.fileContainer}>
+          {existingFiles.map((file, index) => (
+            <View key={index} style={styles.fileItem}>
+              <Text numberOfLines={1} style={styles.fileName}>{file.name}</Text>
+              <TouchableOpacity
+                style={styles.removeFileButton}
+                onPress={() => {
+                  setExistingFiles(prev => prev.filter((_, i) => i !== index));
+                }}
+              >
+                <Text style={styles.removeFileText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={async () => {
+            const result = await DocumentPicker.getDocumentAsync({ type: '*/*' });
+            if (!result.canceled) {
+              setNewFiles(prev => [...prev, result.assets[0]]);
+            }
+          }}
+        >
+          <Text style={styles.uploadButtonText}>Upload New File</Text>
+        </TouchableOpacity>
+
+        {newFiles.map((file, index) => (
+          <Text key={index} style={styles.newFileItem}>{file.name}</Text>
+        ))}
+
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
@@ -198,5 +275,48 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: 10,
     color: '#333',
+  },
+  fileContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  fileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#d0e8ff',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    margin: 4,
+  },
+  fileName: {
+    maxWidth: 100,
+    marginRight: 8,
+  },
+  removeFileButton: {
+    backgroundColor: '#ff4d4f',
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  removeFileText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  uploadButton: {
+    backgroundColor: '#1976D2',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  uploadButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  newFileItem: {
+    fontSize: 14,
+    marginBottom: 5,
   },
 });

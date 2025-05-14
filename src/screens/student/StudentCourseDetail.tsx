@@ -88,11 +88,15 @@ export default function CourseDetail({ route }) {
         {Array.isArray(course.eligibilityCriteria) &&
         course.eligibilityCriteria.length > 0 ? (
           <View style={styles.eligibilityContainer}>
-            {course.eligibilityCriteria.map((criteria, index) => (
-              <View key={index} style={styles.eligibilityChip}>
-                <Text style={styles.eligibilityText}>{criteria}</Text>
-              </View>
-            ))}
+            <Text style={styles.detail}>Eligibility Criteria:</Text>
+
+            <View style={styles.chipsWrapper}>
+              {course.eligibilityCriteria.map((criteria, index) => (
+                <View key={index} style={styles.eligibilityChip}>
+                  <Text style={styles.eligibilityText}>{criteria}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         ) : (
           <Text style={styles.detail}>No eligibility criteria available.</Text>
@@ -357,20 +361,29 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   eligibilityContainer: {
+    marginVertical: 10,
+  },
+
+  chipsWrapper: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8, // si estás usando React Native 0.71+
+    rowGap: 8,
+    columnGap: 8,
     marginTop: 6,
   },
+
   eligibilityChip: {
-    backgroundColor: '#E0F7FA',
+    backgroundColor: '#e0e0e0',
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    marginRight: 8,
-    marginTop: 6,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 6,
+    marginBottom: 6,
   },
+
   eligibilityText: {
-    fontSize: 12,
-    color: '#00796B',
+    fontSize: 14,
+    color: '#333',
   },
 });

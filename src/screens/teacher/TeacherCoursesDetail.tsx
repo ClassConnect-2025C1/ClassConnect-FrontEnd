@@ -10,6 +10,8 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AuthContext';
 import { API_URL } from '@env';
+import { Feather } from '@expo/vector-icons';
+
 export default function TeacherCourseDetail({ route }) {
   const { course } = route.params;
   const navigation = useNavigation();
@@ -195,7 +197,7 @@ export default function TeacherCourseDetail({ route }) {
                   <TouchableOpacity
                     onPress={() => handleDeleteAssignment(assignment.id)}
                   >
-                    <Text style={styles.deleteIcon}>❌</Text>
+                    <Feather name="x" size={18} color="red" />
                   </TouchableOpacity>
                 </View>
               </View>
