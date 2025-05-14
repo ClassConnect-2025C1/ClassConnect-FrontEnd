@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
 } from 'react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { validateFields } from '../../Errors/ValidationsEditCourse';
@@ -139,12 +140,9 @@ export default function EditCourseScreen({ route }) {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Edit Course</Text>
-
+  
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
-        >
+        <View style={{ flex: 1, paddingHorizontal: 10 }}>
           {/* Title */}
           <TextInput
             style={styles.input}
@@ -153,7 +151,7 @@ export default function EditCourseScreen({ route }) {
             onChangeText={setTitle}
           />
           {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-
+  
           {/* Description */}
           <TextInput
             style={styles.input}
@@ -164,7 +162,7 @@ export default function EditCourseScreen({ route }) {
           {errors.description && (
             <Text style={styles.errorText}>{errors.description}</Text>
           )}
-
+  
           {/* Eligibility Criteria */}
           <Text style={{ marginBottom: 6 }}>Eligibility Criteria</Text>
           <View style={{ maxHeight: 200, marginBottom: 16 }}>
@@ -187,22 +185,17 @@ export default function EditCourseScreen({ route }) {
               submitButtonText="Confirm"
             />
           </View>
-
+  
           {/* Selected Criteria */}
-          {selectedCriteria.filter((criteria) => criteria.trim() !== '')
-            .length > 0 ? (
+          {selectedCriteria.filter((criteria) => criteria.trim() !== '').length > 0 ? (
             <View style={{ marginBottom: 16 }}>
-              <Text style={styles.subHeader}>
-                Selected Eligibility Criteria:
-              </Text>
+              <Text style={styles.subHeader}>Selected Eligibility Criteria:</Text>
               {selectedCriteria
                 .filter((criteria) => criteria.trim() !== '')
                 .map((criteria, index) => (
                   <View key={index} style={styles.criteriaContainer}>
                     <Text style={styles.criteriaText}>{criteria}</Text>
-                    <TouchableOpacity
-                      onPress={() => handleRemoveCriteria(criteria)}
-                    >
+                    <TouchableOpacity onPress={() => handleRemoveCriteria(criteria)}>
                       <Text style={styles.removeText}>X</Text>
                     </TouchableOpacity>
                   </View>
@@ -213,7 +206,7 @@ export default function EditCourseScreen({ route }) {
               This course does not contain eligibility criteria.
             </Text>
           )}
-
+  
           {/* Start Date */}
           <TextInput
             style={styles.input}
@@ -224,7 +217,7 @@ export default function EditCourseScreen({ route }) {
           {errors.startDate && (
             <Text style={styles.errorText}>{errors.startDate}</Text>
           )}
-
+  
           {/* End Date */}
           <TextInput
             style={styles.input}
@@ -232,29 +225,24 @@ export default function EditCourseScreen({ route }) {
             value={endDate}
             onChangeText={setEndDate}
           />
-          {errors.endDate && (
-            <Text style={styles.errorText}>{errors.endDate}</Text>
-          )}
-
+          {errors.endDate && <Text style={styles.errorText}>{errors.endDate}</Text>}
+  
           {/* Save Button */}
           <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
             <Text style={styles.buttonText}>Save Changes</Text>
           </TouchableOpacity>
-        </ScrollView>
-
-        {/* Back Button */}
-        <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>Close</Text>
-          </TouchableOpacity>
+  
+          {/* Back Button */}
+          <View style={styles.bottomButtonContainer}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.backButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-}
+}  
 const styles = StyleSheet.create({
   container: {
     flex: 1,
