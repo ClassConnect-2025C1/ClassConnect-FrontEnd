@@ -40,7 +40,7 @@ const ProfileScreen = () => {
           const decoded = jwtDecode(token);
           const userId = decoded.user_id || decoded.sub;
 
-          console.log('User ID:', userId);
+        
           const response = await fetch(
             `${API_URL}/api/users/profile/${userId}`,
             {

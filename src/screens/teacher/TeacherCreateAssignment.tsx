@@ -47,7 +47,7 @@ const TeacherCreateAssignments = () => {
 
         setFiles((prevFiles) => [...prevFiles, selectedFile]);
 
-        console.log('File selected:', selectedFile);
+ 
       } else {
         console.log('User cancelled file picker');
       }
@@ -136,7 +136,7 @@ const TeacherCreateAssignments = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Assignment created successfully:', data);
+     
       }
 
       setTimeout(() => {

@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -27,6 +29,7 @@ export default function EditCourseScreen({ route }) {
   const [endDate, setEndDate] = useState(course.endDate);
   const { token } = useAuth();
 
+
   const [eligibilityOptions, setEligibilityOptions] = useState([]);
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>(
     course.eligibilityCriteria || [],
@@ -35,7 +38,6 @@ export default function EditCourseScreen({ route }) {
   const [errors, setErrors] = useState({
     title: '',
     description: '',
-    eligibilityCriteria: '',
     startDate: '',
     endDate: '',
   });
@@ -46,27 +48,39 @@ export default function EditCourseScreen({ route }) {
     const fetchEligibilityOptions = async () => {
       try {
         const response = await fetch(`${API_URL}/api/courses/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         const json = await response.json();
         const coursesArray = Array.isArray(json.data) ? json.data : [];
-
-        const options = coursesArray.map((course: any) => ({
-          id: course.title,
-          name: course.title,
-        }));
+  
+        // Crear un Map para eliminar duplicados por título
+        const uniqueCoursesMap = new Map();
+  
+        for (const course of coursesArray) {
+          if (!uniqueCoursesMap.has(course.title)) {
+            uniqueCoursesMap.set(course.title, course);
+          }
+        }
+  
+     
+        const options = Array.from(uniqueCoursesMap.values())
+          .filter((c) => c.title !== course.title) 
+          .map((course: any) => ({
+            id: course.title, 
+            name: course.title,
+          }));
+  
         setEligibilityOptions(options);
       } catch (error) {
         console.error('Error fetching eligibility options:', error);
       }
     };
-
+  
     fetchEligibilityOptions();
   }, []);
 
   const handleSaveChanges = async () => {
+ 
     const newErrors = validateFields(
       title,
       description,
@@ -75,6 +89,7 @@ export default function EditCourseScreen({ route }) {
       endDate,
     );
     setErrors(newErrors);
+    console.log('Errors:', newErrors);
     if (Object.keys(newErrors).length > 0) {
       return;
     }
@@ -105,94 +120,141 @@ export default function EditCourseScreen({ route }) {
         return;
       }
 
-      const updatedCourse = await response.json();
+      let updatedCourse = null;
+      const contentLength = response.headers.get('content-length');
+
+      if (contentLength && parseInt(contentLength) > 0) {
+        updatedCourse = await response.json();
+      }
+
       navigation.navigate('TeacherCourses', { updatedCourse });
     } catch (error) {
       console.error('Network error:', error);
     }
   };
 
+  const handleRemoveCriteria = (criteria: string) => {
+    setSelectedCriteria((prev) => prev.filter((item) => item !== criteria));
+  };
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Edit Course</Text>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-        />
-        {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-
-        <TextInput
-          style={styles.input}
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-        />
-        {errors.description && (
-          <Text style={styles.errorText}>{errors.description}</Text>
-        )}
-
-        <Text style={{ marginBottom: 6 }}>Eligibility Criteria</Text>
-        <MultiSelect
-          items={eligibilityOptions}
-          uniqueKey="id"
-          onSelectedItemsChange={setSelectedCriteria}
-          selectedItems={selectedCriteria}
-          selectText="Select criteria"
-          searchInputPlaceholderText="Search criteria..."
-          tagRemoveIconColor="#333"
-          tagBorderColor="#333"
-          tagTextColor="#333"
-          selectedItemTextColor="#333"
-          selectedItemIconColor="#333"
-          itemTextColor="#000"
-          displayKey="name"
-          searchInputStyle={{ color: '#333' }}
-          submitButtonColor="#333"
-          submitButtonText="Confirm"
-          styleMainWrapper={{ marginBottom: 16 }}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Start Date (YYYY-MM-DD)"
-          value={startDate}
-          onChangeText={setStartDate}
-        />
-        {errors.startDate && (
-          <Text style={styles.errorText}>{errors.startDate}</Text>
-        )}
-
-        <TextInput
-          style={styles.input}
-          placeholder="End Date (YYYY-MM-DD)"
-          value={endDate}
-          onChangeText={setEndDate}
-        />
-        {errors.endDate && (
-          <Text style={styles.errorText}>{errors.endDate}</Text>
-        )}
-
-        <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
-          <Text style={styles.buttonText}>Save Changes</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.backButtonText}>Close</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Title */}
+          <TextInput
+            style={styles.input}
+            placeholder="Title"
+            value={title}
+            onChangeText={setTitle}
+          />
+          {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+
+          {/* Description */}
+          <TextInput
+            style={styles.input}
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+          />
+          {errors.description && (
+            <Text style={styles.errorText}>{errors.description}</Text>
+          )}
+
+          {/* Eligibility Criteria */}
+          <Text style={{ marginBottom: 6 }}>Eligibility Criteria</Text>
+          <View style={{ maxHeight: 200, marginBottom: 16 }}>
+            <MultiSelect
+              items={eligibilityOptions}
+              uniqueKey="id"
+              onSelectedItemsChange={setSelectedCriteria}
+              selectedItems={selectedCriteria}
+              selectText="Select criteria"
+              searchInputPlaceholderText="Search criteria..."
+              tagRemoveIconColor="#333"
+              tagBorderColor="#333"
+              tagTextColor="#333"
+              selectedItemTextColor="#333"
+              selectedItemIconColor="#333"
+              itemTextColor="#000"
+              displayKey="name"
+              searchInputStyle={{ color: '#333' }}
+              submitButtonColor="#333"
+              submitButtonText="Confirm"
+            />
+          </View>
+
+          {/* Selected Criteria */}
+          {selectedCriteria.filter((criteria) => criteria.trim() !== '')
+            .length > 0 ? (
+            <View style={{ marginBottom: 16 }}>
+              <Text style={styles.subHeader}>
+                Selected Eligibility Criteria:
+              </Text>
+              {selectedCriteria
+                .filter((criteria) => criteria.trim() !== '')
+                .map((criteria, index) => (
+                  <View key={index} style={styles.criteriaContainer}>
+                    <Text style={styles.criteriaText}>{criteria}</Text>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveCriteria(criteria)}
+                    >
+                      <Text style={styles.removeText}>X</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+            </View>
+          ) : (
+            <Text style={styles.noCriteriaText}>
+              This course does not contain eligibility criteria.
+            </Text>
+          )}
+
+          {/* Start Date */}
+          <TextInput
+            style={styles.input}
+            placeholder="Start Date (YYYY-MM-DD)"
+            value={startDate}
+            onChangeText={setStartDate}
+          />
+          {errors.startDate && (
+            <Text style={styles.errorText}>{errors.startDate}</Text>
+          )}
+
+          {/* End Date */}
+          <TextInput
+            style={styles.input}
+            placeholder="End Date (YYYY-MM-DD)"
+            value={endDate}
+            onChangeText={setEndDate}
+          />
+          {errors.endDate && (
+            <Text style={styles.errorText}>{errors.endDate}</Text>
+          )}
+
+          {/* Save Button */}
+          <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
+            <Text style={styles.buttonText}>Save Changes</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* Back Button */}
+        <View style={styles.bottomButtonContainer}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -265,5 +327,45 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  subHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  criteriaText: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 8,
+  },
+  criteriaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2', // Fondo suave para cada criterio
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    justifyContent: 'space-between',
+  },
+
+  removeButton: {
+    backgroundColor: '#E74C3C', // Rojo para la cruz
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  noCriteriaText: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 16,
   },
 });

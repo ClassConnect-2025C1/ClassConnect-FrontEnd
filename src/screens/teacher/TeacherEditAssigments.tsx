@@ -40,6 +40,7 @@ export default function TeacherEditAssignments({ route }) {
   const [error, setError] = useState('');
   const [existingFiles, setExistingFiles] = useState(assignment.files || []);
   const [newFiles, setNewFiles] = useState([]);
+  const [deletedExistingFileIds, setDeletedExistingFileIds] = useState([]);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -56,7 +57,7 @@ export default function TeacherEditAssignments({ route }) {
         );
 
         const data = await response.json();
-        console.log('GET assignment:', data);
+
 
         const assignmentData = data.data;
         setTitle(assignmentData.title);
@@ -73,15 +74,8 @@ export default function TeacherEditAssignments({ route }) {
   }, []);
 
   const handleRemoveFile = (fileToRemove) => {
-    setExistingFiles((prev) =>
-      prev.filter((file) => file.id !== fileToRemove.id),
-    );
-    // Marcar el archivo como eliminado en lugar de eliminarlo completamente
-    setNewFiles((prev) =>
-      prev.map((file) =>
-        file.uri === fileToRemove.uri ? { ...file, deleted: true } : file,
-      ),
-    );
+    setExistingFiles((prev) => prev.filter((file) => file.id !== fileToRemove.id));
+    setDeletedExistingFileIds((prev) => [...prev, fileToRemove.id]);
   };
 
   const handleSaveChanges = async () => {
@@ -91,14 +85,16 @@ export default function TeacherEditAssignments({ route }) {
     }
 
     const filesToSend = await Promise.all(
-        newFiles
-          .filter((file) => !file.deleted) // Solo incluir archivos no eliminados
-          .map(async (file) => ({
-            name: file.name,
-            content: await convertToBase64(file.uri), // Asegúrate de esperar a que la conversión termine
-            size: file.size,
-          }))
-      );
+      newFiles
+        .filter((file) => !file.deleted) // Solo incluir archivos no eliminados
+        .map(async (file) => ({
+          name: file.name,
+          content: await convertToBase64(file.uri), // Asegúrate de esperar a que la conversión termine
+          size: file.size,
+        })),
+    );
+
+
 
     const timeLimitInt = parseInt(timeLimit, 10);
 
@@ -109,9 +105,6 @@ export default function TeacherEditAssignments({ route }) {
       time_limit: timeLimitInt,
       files: filesToSend,
     };
-
-    const existingFileIds = existingFiles.map((f) => f.id);
-    formData.existing_file_ids = existingFileIds;
 
     try {
       const response = await fetch(
@@ -193,11 +186,7 @@ export default function TeacherEditAssignments({ route }) {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.removeFileButton}
-                onPress={() => {
-                  setExistingFiles((prev) =>
-                    prev.filter((_, i) => i !== index),
-                  );
-                }}
+                onPress={() => handleRemoveFile(file)}
               >
                 <Text style={styles.removeFileText}>✕</Text>
               </TouchableOpacity>
