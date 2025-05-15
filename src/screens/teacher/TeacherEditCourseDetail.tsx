@@ -30,9 +30,10 @@ export default function EditCourseScreen({ route }) {
   const [endDate, setEndDate] = useState(course.endDate);
   const { token } = useAuth();
 
-
   const [eligibilityOptions, setEligibilityOptions] = useState([]);
-  const [selectedCriteria, setSelectedCriteria] = useState<string[]>(course.eligibilityCriteria || []);
+  const [selectedCriteria, setSelectedCriteria] = useState<string[]>(
+    course.eligibilityCriteria || [],
+  );
 
   const [errors, setErrors] = useState({
     title: '',
@@ -51,37 +52,32 @@ export default function EditCourseScreen({ route }) {
         });
         const json = await response.json();
         const coursesArray = Array.isArray(json.data) ? json.data : [];
-  
-    
+
         const uniqueCoursesMap = new Map();
-  
+
         for (const course of coursesArray) {
           if (!uniqueCoursesMap.has(course.title)) {
             uniqueCoursesMap.set(course.title, course);
           }
         }
-  
-     
+
         const options = Array.from(uniqueCoursesMap.values())
-          .filter((c) => c.title !== course.title) 
+          .filter((c) => c.title !== course.title)
           .map((course: any) => ({
-            id: course.title, 
+            id: course.title,
             name: course.title,
           }));
-  
+
         setEligibilityOptions(options);
       } catch (error) {
         console.error('Error fetching eligibility options:', error);
       }
     };
-  
+
     fetchEligibilityOptions();
   }, []);
 
   const handleSaveChanges = async () => {
-
-
- 
     const newErrors = validateFields(
       title,
       description,
@@ -94,7 +90,9 @@ export default function EditCourseScreen({ route }) {
     if (Object.keys(newErrors).length > 0) {
       return;
     }
-    const filteredCriteria = selectedCriteria.filter((criteria) => criteria.trim() !== '');
+    const filteredCriteria = selectedCriteria.filter(
+      (criteria) => criteria.trim() !== '',
+    );
 
     try {
       if (!token) throw new Error('No token found');
@@ -141,7 +139,7 @@ export default function EditCourseScreen({ route }) {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Edit Course</Text>
-  
+
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ flex: 1, paddingHorizontal: 10 }}>
           {/* Title */}
@@ -152,7 +150,7 @@ export default function EditCourseScreen({ route }) {
             onChangeText={setTitle}
           />
           {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-  
+
           {/* Description */}
           <TextInput
             style={styles.input}
@@ -163,7 +161,7 @@ export default function EditCourseScreen({ route }) {
           {errors.description && (
             <Text style={styles.errorText}>{errors.description}</Text>
           )}
-  
+
           {/* Eligibility Criteria */}
           <Text style={{ marginBottom: 6 }}>Eligibility Criteria</Text>
           <View style={{ maxHeight: 200, marginBottom: 16 }}>
@@ -186,14 +184,15 @@ export default function EditCourseScreen({ route }) {
               submitButtonText="Confirm"
             />
           </View>
-  
+
           {/* Selected Criteria */}
-          {selectedCriteria.filter((criteria) => criteria.trim() !== '').length === 0 && (
-  <Text style={styles.noCriteriaText}>
-    This course does not contain eligibility criteria.
-  </Text>
-)}
-  
+          {selectedCriteria.filter((criteria) => criteria.trim() !== '')
+            .length === 0 && (
+            <Text style={styles.noCriteriaText}>
+              This course does not contain eligibility criteria.
+            </Text>
+          )}
+
           {/* Start Date */}
           <TextInput
             style={styles.input}
@@ -204,7 +203,7 @@ export default function EditCourseScreen({ route }) {
           {errors.startDate && (
             <Text style={styles.errorText}>{errors.startDate}</Text>
           )}
-  
+
           {/* End Date */}
           <TextInput
             style={styles.input}
@@ -212,16 +211,21 @@ export default function EditCourseScreen({ route }) {
             value={endDate}
             onChangeText={setEndDate}
           />
-          {errors.endDate && <Text style={styles.errorText}>{errors.endDate}</Text>}
-  
+          {errors.endDate && (
+            <Text style={styles.errorText}>{errors.endDate}</Text>
+          )}
+
           {/* Save Button */}
           <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
             <Text style={styles.buttonText}>Save Changes</Text>
           </TouchableOpacity>
-  
+
           {/* Back Button */}
           <View style={styles.bottomButtonContainer}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
               <Text style={styles.backButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -229,7 +233,7 @@ export default function EditCourseScreen({ route }) {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-}  
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -274,17 +278,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
-    alignSelf: 'center',        
+    alignSelf: 'center',
   },
-  
+
   bottomButtonContainer: {
     position: 'absolute',
     bottom: 20,
     width: width,
-    alignItems: 'center',        
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   backButton: {
     backgroundColor: '#E0E0E0',
     borderRadius: 30,

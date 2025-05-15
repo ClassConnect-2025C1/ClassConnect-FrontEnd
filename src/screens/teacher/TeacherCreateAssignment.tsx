@@ -46,8 +46,6 @@ const TeacherCreateAssignments = () => {
         const selectedFile = result.assets[0]; // solo uno porque multiple: false
 
         setFiles((prevFiles) => [...prevFiles, selectedFile]);
-
- 
       } else {
         console.log('User cancelled file picker');
       }
@@ -136,7 +134,6 @@ const TeacherCreateAssignments = () => {
 
       if (response.ok) {
         const data = await response.json();
-     
       }
 
       setTimeout(() => {

@@ -107,7 +107,7 @@ const AvailableCoursesScreen = () => {
         } else {
           const errorText = await response.text();
           console.error('Error:', errorText);
-          alert('Enrollment failed'); 
+          alert('Enrollment failed');
           return;
         }
       }
@@ -115,7 +115,7 @@ const AvailableCoursesScreen = () => {
       if (onEnroll) onEnroll();
       navigation.goBack();
     } catch (error) {
-      console.error(error);     
+      console.error(error);
     }
   };
 
@@ -151,7 +151,6 @@ const AvailableCoursesScreen = () => {
   }
 
   return (
-    
     <View style={styles.container}>
       <Text style={styles.title}>Available Courses</Text>
       <View style={styles.searchContainer}>
@@ -164,13 +163,12 @@ const AvailableCoursesScreen = () => {
         />
       </View>
 
-            <AcceptOnlyModal
-              visible={showModal}
-              message="Yo already enrolled in this course!"
-              onAccept={() => setShowModal(false)}
-              onClose={() => setShowModal(false)}
-            />
-
+      <AcceptOnlyModal
+        visible={showModal}
+        message="Yo already enrolled in this course!"
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
 
       <ScrollView contentContainerStyle={styles.courseList}>
         {filteredCourses.map((course) => (

@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const checkToken = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
- 
+
       if (!storedToken) {
         setIsAuthenticated(false);
         setToken(null);

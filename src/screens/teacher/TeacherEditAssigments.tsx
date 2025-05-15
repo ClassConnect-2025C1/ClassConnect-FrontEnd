@@ -58,7 +58,6 @@ export default function TeacherEditAssignments({ route }) {
 
         const data = await response.json();
 
-
         const assignmentData = data.data;
         setTitle(assignmentData.title);
         setDescription(assignmentData.description);
@@ -74,7 +73,9 @@ export default function TeacherEditAssignments({ route }) {
   }, []);
 
   const handleRemoveFile = (fileToRemove) => {
-    setExistingFiles((prev) => prev.filter((file) => file.id !== fileToRemove.id));
+    setExistingFiles((prev) =>
+      prev.filter((file) => file.id !== fileToRemove.id),
+    );
     setDeletedExistingFileIds((prev) => [...prev, fileToRemove.id]);
   };
 
@@ -93,8 +94,6 @@ export default function TeacherEditAssignments({ route }) {
           size: file.size,
         })),
     );
-
-
 
     const timeLimitInt = parseInt(timeLimit, 10);
 

@@ -14,6 +14,7 @@ import { API_URL } from '@env';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRoute } from '@react-navigation/native';
 import { useAuth } from '../../navigation/AuthContext';
+import { AcceptOnlyModal } from '@/components/Modals';
 
 const getColorForCourse = (id: number) => {
   const cardColors = [
@@ -40,6 +41,8 @@ const CoursesScreen = () => {
     new Set(),
   );
   const { token } = useAuth();
+  const [showAddFavoriteCourse, setAddFavoriteCourse] = useState(false);
+  const [showDeleteFavoriteCourse, setDeleteFavoriteCourse] = useState(false);
 
   const filteredCourses = courses.filter((course) =>
     course.title.toLowerCase().includes(searchText.toLowerCase()),
@@ -107,8 +110,10 @@ const CoursesScreen = () => {
       setFavoriteCourses((prevFavorites) => {
         const newFavorites = new Set(prevFavorites);
         if (newFavorites.has(courseId)) {
+          setDeleteFavoriteCourse(true);
           newFavorites.delete(courseId);
         } else {
+          setAddFavoriteCourse(true);
           newFavorites.add(courseId);
         }
         return newFavorites;
@@ -142,6 +147,20 @@ const CoursesScreen = () => {
           onChangeText={setSearchText}
         />
       </View>
+
+      <AcceptOnlyModal
+        visible={showAddFavoriteCourse}
+        message="The course has been added to your favorites."
+        onAccept={() => setAddFavoriteCourse(false)}
+        onClose={() => setAddFavoriteCourse(false)}
+      />
+
+      <AcceptOnlyModal
+        visible={showDeleteFavoriteCourse}
+        message="The course has been removed from your favorites."
+        onAccept={() => setDeleteFavoriteCourse(false)}
+        onClose={() => setDeleteFavoriteCourse(false)}
+      />
 
       <ScrollView contentContainerStyle={styles.courseList}>
         {[...filteredCourses]

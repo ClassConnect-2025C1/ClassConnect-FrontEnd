@@ -44,7 +44,6 @@ export default function TeacherCourseDetail({ route }) {
       }
 
       const data = await response.json();
-   
 
       if (data && Array.isArray(data.data)) {
         setAssignments(data.data);
