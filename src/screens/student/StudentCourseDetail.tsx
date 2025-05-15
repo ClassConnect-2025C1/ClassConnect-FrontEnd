@@ -169,7 +169,7 @@ export default function CourseDetail({ route }) {
               value={searchQuery}
               onChangeText={(text) => {
                 setSearchQuery(text);
-                setCurrentPage(1); // Reinicia a la primera página al buscar
+                setCurrentPage(1);
               }}
             />
             {paginatedAssignments.map((item, index) => (

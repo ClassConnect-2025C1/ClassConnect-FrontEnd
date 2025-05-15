@@ -193,28 +193,24 @@ const FeedbackScreen = () => {
       <Text style={styles.sectionHeader}>Feedbacks</Text>
       <View style={styles.feedbackList}>
         {paginatedFeedbacks.map((item) => (
-          
           <View key={item.id.toString()} style={styles.feedbackItem}>
             <View style={styles.feedbackHeader}>
-
               <Text style={styles.feedbackTitle}>{item.summary}</Text>
-              
+
               <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
             </View>
-            
+
             <Text style={styles.feedbackContent}>{item.comment}</Text>
-            <Text style={[styles.dateText, { marginTop: 10}]}>
-                {new Date(item.created_at)
-                  .toLocaleDateString('es-US', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                  })
-                  .replace(/(\d+)\/(\d+)\/(\d+)/, '$3/$1/$2')}
-  
-              </Text>
+            <Text style={[styles.dateText, { marginTop: 10 }]}>
+              {new Date(item.created_at)
+                .toLocaleDateString('es-US', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                })
+                .replace(/(\d+)\/(\d+)\/(\d+)/, '$3/$1/$2')}
+            </Text>
           </View>
-          
         ))}
       </View>
 
