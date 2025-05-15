@@ -3,15 +3,16 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
+import { Picker } from '@react-native-picker/picker';
 
 const { width } = Dimensions.get('window');
 
@@ -20,14 +21,13 @@ const FeedbackScreen = () => {
   const route = useRoute();
   const { course } = route.params;
   const courseId = course.id;
+  const [selectedRating, setSelectedRating] = useState('Any');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
-  const [selectedFilter, setSelectedFilter] = useState('Any');
-  const [fromDate] = useState('25/02/2025');
-  const [toDate] = useState('30/02/2025');
   const [feedbacks, setFeedbacks] = useState([]);
   const { token } = useAuth();
 
-  // Paginación
   const ITEMS_PER_PAGE = 3;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -60,13 +60,36 @@ const FeedbackScreen = () => {
     fetchFeedbacks();
   }, [courseId, token]);
 
-  const totalPages = Math.ceil((feedbacks?.data?.length || 0) / ITEMS_PER_PAGE);
+ 
+  const filteredFeedbacks = (feedbacks?.data || []).filter((f) => {
+ 
+    if (selectedRating !== 'Any' && f.rating !== parseInt(selectedRating)) {
+      return false;
+    }
 
-  const paginatedFeedbacks =
-    feedbacks?.data?.slice(
-      (currentPage - 1) * ITEMS_PER_PAGE,
-      currentPage * ITEMS_PER_PAGE,
-    ) || [];
+    const createdAt = new Date(f.created_at);
+
+ 
+    if (fromDate) {
+      const from = new Date(fromDate);
+      if (isNaN(from.getTime())) return false; 
+      if (createdAt < from) return false;
+    }
+
+    if (toDate) {
+      const to = new Date(toDate);
+      if (isNaN(to.getTime())) return false;
+      if (createdAt > to) return false;
+    }
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredFeedbacks.length / ITEMS_PER_PAGE);
+
+  const paginatedFeedbacks = filteredFeedbacks.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -78,6 +101,7 @@ const FeedbackScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header y back button */}
       <View
         style={{
           flexDirection: 'row',
@@ -93,7 +117,7 @@ const FeedbackScreen = () => {
             paddingHorizontal: 12,
             backgroundColor: '#F0F0F0',
             borderRadius: 8,
-            marginLeft: -10,
+            marginLeft: -1,
             marginTop: -11,
           }}
         >
@@ -112,13 +136,62 @@ const FeedbackScreen = () => {
           Course Feedbacks
         </Text>
       </View>
-  
-      <View style={styles.filterContainer}>{/* filtros... */}</View>
-  
+
+      {/* Filters */}
+      <View style={styles.filterContainer}>
+  {/* Rating */}
+  <View style={styles.ratingCompactBox}>
+    <Text style={styles.ratingLabel}>Rating:</Text>
+    <Picker
+      selectedValue={selectedRating}
+      style={styles.ratingCompactPicker}
+      onValueChange={(itemValue) => {
+        setSelectedRating(itemValue);
+        setCurrentPage(1);
+      }}
+      dropdownIconColor="#2c3e50"
+    >
+      <Picker.Item label="Any" value="Any" />
+      <Picker.Item label="5" value="5" />
+      <Picker.Item label="4" value="4" />
+      <Picker.Item label="3" value="3" />
+      <Picker.Item label="2" value="2" />
+      <Picker.Item label="1" value="1" />
+    </Picker>
+  </View>
+
+  {/* Fecha desde / hasta - inputs en fila compacta al lado del rating */}
+  <View style={styles.dateFiltersContainer}>
+    <View style={styles.singleDateFilter}>
+      <Text style={styles.dateLabel}>From:</Text>
+      <TextInput
+        style={styles.dateInput}
+        placeholder="YYYY-MM-DD"
+        value={fromDate}
+        onChangeText={(text) => {
+          setFromDate(text);
+          setCurrentPage(1);
+        }}
+      />
+    </View>
+
+    <View style={styles.singleDateFilter}>
+      <Text style={styles.dateLabel}>To:</Text>
+      <TextInput
+        style={styles.dateInput}
+        placeholder="YYYY-MM-DD"
+        value={toDate}
+        onChangeText={(text) => {
+          setToDate(text);
+          setCurrentPage(1);
+        }}
+      />
+    </View>
+  </View>
+</View>
+
       <View style={styles.divider} />
-  
-      {/* Cambiamos FlatList por View + map para quitar scroll */}
-  
+
       <Text style={styles.sectionHeader}>Feedbacks</Text>
       <View style={styles.feedbackList}>
         {paginatedFeedbacks.map((item) => (
@@ -131,10 +204,8 @@ const FeedbackScreen = () => {
           </View>
         ))}
       </View>
-  
-      {/* Contenedor vertical para botón Generate AI summary y paginación */}
+
       <View style={{ marginTop: 11, marginBottom: 20, alignItems: 'center' }}>
-        {/* Botón Generate AI summary */}
         <TouchableOpacity
           style={[styles.generateButton, { marginBottom: 15 }]}
           onPress={() => navigation.goBack()}
@@ -147,8 +218,7 @@ const FeedbackScreen = () => {
           />
           <Text style={styles.generateButtonText}>Generate AI summary</Text>
         </TouchableOpacity>
-  
-        {/* Controles de paginación */}
+
         <View
           style={{
             flexDirection: 'row',
@@ -167,7 +237,7 @@ const FeedbackScreen = () => {
           >
             <Text style={styles.backButtonText}>Prev</Text>
           </TouchableOpacity>
-  
+
           <Text
             style={[
               styles.backButtonText,
@@ -176,7 +246,7 @@ const FeedbackScreen = () => {
           >
             Page {currentPage} of {totalPages || 1}
           </Text>
-  
+
           <TouchableOpacity
             style={[
               styles.backButton,
@@ -191,8 +261,8 @@ const FeedbackScreen = () => {
       </View>
     </SafeAreaView>
   );
-
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -207,11 +277,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     color: '#2c3e50',
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
   },
   dateFilter: {
     flex: 1,
@@ -357,6 +422,92 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  ratingLabel: {
+    fontSize: 13,
+    color: '#2c3e50',
+    marginRight: 6,
+  },
+  ratingCompactPicker: {
+    height: 30,
+    width: 70,
+  },
+  dateFilterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    marginHorizontal: 5,
+  },
+  dateButton: {
+    flex: 1,
+    paddingVertical: 10,
+
+  },
+  disabledButton: {
+    opacity: 0.5,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  dateButtonText: {
+    color: '#2c3e50',
+    fontSize: 14,
+  },
+
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',  
+    alignItems: 'center',
+    gap: 12, 
+    marginBottom: 20,
+  },
+  
+  ratingCompactBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: '#fff',
+    width: 120, 
+    minWidth: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  
+  dateFiltersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginLeft: 12,
+  },
+  
+  singleDateFilter: {
+    flexDirection: 'column',
+    width: 100,
+  
+    marginTop: -15,
+  },
+  
+  dateLabel: {
+    fontSize: 13,
+    color: '#2c3e50',
+    marginBottom: 2,
+  },
+  
+  dateInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    fontSize: 14,
+    backgroundColor: '#fff',
+  },
+
 });
 
 export default FeedbackScreen;
