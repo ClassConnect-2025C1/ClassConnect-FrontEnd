@@ -26,7 +26,7 @@ const TeacherCreateNewCourseScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [courseCreated, setCourseCreated] = useState(false);
+  const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -66,6 +66,7 @@ const TeacherCreateNewCourseScreen = () => {
       setShowModal(true);
       return;
     }
+    setIsLoading(true);
 
     const capacityNumber = parseInt(capacity, 10);
     if (isNaN(capacityNumber) || capacityNumber <= 0) {
@@ -95,19 +96,29 @@ const TeacherCreateNewCourseScreen = () => {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
-        //setIsLoading(false);
+
         setModalMessage('Failed to create course. Please try again.');
         setShowModal(true);
         return;
       }
 
       const data = await response.json();
-      //setCourseCreated(true);
-      //setIsLoading(false);
+     
+      setIsLoading(false);
 
-      navigation.navigate('TeacherCourses', { newCourse: data });
+      setTimeout(() => {
+        setChangueConfirmed(true);
+
+        setTimeout(() => {
+          setIsLoading(false);
+          setChangueConfirmed(false);
+          navigation.navigate('TeacherCourses', { newCourse: data });
+        }, 1500);
+      }, 1000);
+
+     
     } catch (error) {
-      //setIsLoading(false);
+      setIsLoading(false);
       setModalMessage('An unexpected error occurred.');
       setShowModal(true);
     }
@@ -116,12 +127,12 @@ const TeacherCreateNewCourseScreen = () => {
   return (
     <View style={styles.container}>
       {isLoading ? (
-        <StatusOverlay
-          loading={!courseCreated}
-          success={courseCreated}
-          loadingMsg="Creating course..."
-          successMsg="Course created successfully!"
-        />
+            <StatusOverlay
+            loading={!saveChangueConfirmed}
+            success={saveChangueConfirmed}
+            loadingMsg="Changing course..."
+            successMsg="Course changed successfully!"
+          />
       ) : (
         <>
           <Text style={styles.title}>Create New Course</Text>
