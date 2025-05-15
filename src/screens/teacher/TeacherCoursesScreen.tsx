@@ -42,7 +42,10 @@ const CoursesScreen = ({ route }) => {
   const itemsPerPage = 5;
 
   const filteredCourses = courses.filter((course) =>
-    course.title?.toLowerCase().includes(searchText.toLowerCase()),
+    course.title.toLowerCase().includes(searchText.toLowerCase()) ||
+    course.createdBy.toLowerCase().includes(searchText.toLowerCase()) ||
+    course.startDate.toLowerCase().includes(searchText.toLowerCase()),
+
   );
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 

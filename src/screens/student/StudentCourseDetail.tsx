@@ -83,6 +83,12 @@ export default function CourseDetail({ route }) {
         <Text style={styles.detail}>
           Capacity: {course.capacity || 'Not specified'}
         </Text>
+        <Text style={styles.detail}>
+          Start date: {course.startDate || 'Not specified'}
+        </Text>
+        <Text style={styles.detail}>
+          End date: {course.endDate || 'Not specified'}
+        </Text>
         {Array.isArray(course.eligibilityCriteria) &&
         course.eligibilityCriteria.length > 0 ? (
           <View style={styles.eligibilityContainer}>
