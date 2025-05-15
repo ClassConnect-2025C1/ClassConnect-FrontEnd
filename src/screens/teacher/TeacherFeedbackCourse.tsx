@@ -26,16 +26,21 @@ const FeedbackScreen = () => {
   const [toDate] = useState('30/02/2025');
   const [feedbacks, setFeedbacks] = useState([]);
   const { token } = useAuth();
+
+  // Paginación
+  const ITEMS_PER_PAGE = 3;
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
         const response = await fetch(
           `${API_URL}/api/courses/${courseId}/feedbacks`,
           {
-            method: 'GET', // Especificamos el método como 'GET' aunque sea implícito en este caso
+            method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`, // Agregar el token en los headers
+              Authorization: `Bearer ${token}`,
             },
           },
         );
@@ -44,8 +49,8 @@ const FeedbackScreen = () => {
           throw new Error('Failed to fetch feedbacks');
         }
         const data = await response.json();
-        console.log(data);
         setFeedbacks(data);
+        setCurrentPage(1);
       } catch (error) {
         console.error(error);
         alert('Failed to load feedbacks.');
@@ -54,75 +59,118 @@ const FeedbackScreen = () => {
 
     fetchFeedbacks();
   }, [courseId, token]);
+
+  const totalPages = Math.ceil((feedbacks?.data?.length || 0) / ITEMS_PER_PAGE);
+
+  const paginatedFeedbacks =
+    feedbacks?.data?.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE,
+    ) || [];
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Course Feedbacks</Text>
-
-      <View style={styles.filterContainer}>
-        <View style={styles.dateFilter}>
-          <Text style={styles.filterLabel}>From</Text>
-          <View style={styles.dateBox}>
-            <Text style={styles.dateText}>{fromDate}</Text>
-          </View>
-        </View>
-
-        <View style={styles.dateFilter}>
-          <Text style={styles.filterLabel}>To</Text>
-          <View style={styles.dateBox}>
-            <Text style={styles.dateText}>{toDate}</Text>
-          </View>
-        </View>
-
-        <View style={styles.ratingFilter}>
-          <Text style={styles.filterLabel}>Rating</Text>
-          <View style={styles.ratingBox}>
-            <Text style={styles.ratingText}>{selectedFilter}</Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color="black" />
-          </View>
-        </View>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 20,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            backgroundColor: '#F0F0F0', 
+            borderRadius: 8,
+            marginLeft: -10,
+            marginTop: -11,
+          }}
+        >
+          <Text
+            style={[styles.backButtonText, { fontSize: 16, color: '#2c3e50' }]}
+          >
+            Back
+          </Text>
+        </TouchableOpacity>
+        <Text
+          style={[
+            styles.header,
+            { flex: 1, textAlign: 'center', marginLeft: -40 },
+          ]}
+        >
+          Course Feedbacks
+        </Text>
       </View>
+
+      <View style={styles.filterContainer}>{/* filtros... */}</View>
 
       <View style={styles.divider} />
 
-      <FlatList
-        data={feedbacks.data}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.feedbackItem}>
+      {/* Cambiamos FlatList por View + map para quitar scroll */}
+      <Text style={styles.sectionHeader}>Feedbacks</Text>
+      <View style={styles.feedbackList}>
+        {paginatedFeedbacks.map((item) => (
+          <View key={item.id.toString()} style={styles.feedbackItem}>
             <View style={styles.feedbackHeader}>
               <Text style={styles.feedbackTitle}>{item.summary}</Text>
               <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
             </View>
             <Text style={styles.feedbackContent}>{item.comment}</Text>
           </View>
-        )}
-        ListHeaderComponent={
-          <Text style={styles.sectionHeader}>Feedbacks</Text>
-        }
-        style={styles.feedbackList}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+        ))}
+      </View>
 
-      <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
+      {/* Contenedor para paginación */}
+      <View style={{ marginTop: 11 }}>
+        <View
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'row',
+          }}
         >
-          <Text style={styles.backButtonText}>Close</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.backButton,
+              currentPage === 1 && styles.disabledButton,
+            ]}
+            onPress={handlePrevPage}
+            disabled={currentPage === 1}
+          >
+            <Text style={styles.backButtonText}>Prev</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.generateButton}
-          onPress={() => navigation.goBack()} // Aquí en el futuro podrías usar otra lógica
-        >
-          <MaterialIcons
-            name="star"
-            size={20}
-            color="#5B6799"
-            style={{ marginRight: 6 }}
-          />
-          <Text style={styles.generateButtonText}>Generate AI summary</Text>
-        </TouchableOpacity>
+          <Text
+            style={[
+              styles.backButtonText,
+              { alignSelf: 'center', marginHorizontal: 10 },
+            ]}
+          >
+            Page {currentPage} of {totalPages || 1}
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.backButton,
+              currentPage === totalPages && styles.disabledButton,
+            ]}
+            onPress={handleNextPage}
+            disabled={currentPage === totalPages}
+          >
+            <Text style={styles.backButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
