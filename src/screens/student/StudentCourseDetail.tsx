@@ -29,18 +29,15 @@ export default function CourseDetail({ route }) {
       ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
 
-
     const deadlineMatch = assignment.deadline
       ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
-   
+
     const statusMatch = assignment.status
       ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
- 
 
-
-    return titleMatch || deadlineMatch || statusMatch ;
+    return titleMatch || deadlineMatch || statusMatch;
   });
 
   const ITEMS_PER_PAGE = 2;
