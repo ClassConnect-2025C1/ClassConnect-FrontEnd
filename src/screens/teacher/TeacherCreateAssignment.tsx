@@ -46,8 +46,6 @@ const TeacherCreateAssignments = () => {
         const selectedFile = result.assets[0]; // solo uno porque multiple: false
 
         setFiles((prevFiles) => [...prevFiles, selectedFile]);
-
-        console.log('File selected:', selectedFile);
       } else {
         console.log('User cancelled file picker');
       }
@@ -61,7 +59,7 @@ const TeacherCreateAssignments = () => {
   };
 
   const handleCreateAssignment = async () => {
-    if (!title || !description || !dueDate || !timeLimit) {
+    if (!title || !description || !dueDate) {
       setModalMessage('All fields must be filled.');
       setShowModal(true);
       return;
@@ -136,7 +134,6 @@ const TeacherCreateAssignments = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Assignment created successfully:', data);
       }
 
       setTimeout(() => {

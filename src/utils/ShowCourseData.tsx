@@ -28,6 +28,12 @@ export default function ShowCourseDetail() {
         <Text style={styles.detail}>
           Capacity: {course.capacity ?? 'Not specified'}
         </Text>
+        <Text style={styles.detail}>
+          Start date: {course.startDate ?? 'Not specified'}
+        </Text>
+        <Text style={styles.detail}>
+          End date: {course.endDate ?? 'Not specified'}
+        </Text>
 
         <View style={styles.eligibilityWrapper}>
           <Text style={styles.detailLabel}>Eligibility Criteria</Text>

@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const checkToken = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
-      console.log('Token desde AsyncStorage:', storedToken);
 
       if (!storedToken) {
         setIsAuthenticated(false);
@@ -79,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const interval = setInterval(() => {
       checkToken();
-    }, 10000);
+    }, 100000);
 
     return () => clearInterval(interval);
   }, []);

@@ -12,6 +12,7 @@ import { getUserProfileData } from '../../utils/GetUserProfile';
 import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AuthContext';
+import { AcceptOnlyModal } from '@/components/Modals';
 
 const AvailableCoursesScreen = () => {
   const navigation = useNavigation();
@@ -24,6 +25,18 @@ const AvailableCoursesScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [courseSearchText, setCourseSearchText] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.title.toLowerCase().includes(courseSearchText.toLowerCase()) ||
+      course.createdBy.toLowerCase().includes(courseSearchText.toLowerCase()) ||
+      course.startDate.toLowerCase().includes(courseSearchText.toLowerCase()),
+  );
+
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 
   useEffect(() => {
     fetchCoursesAndApprovals();
@@ -51,7 +64,7 @@ const AvailableCoursesScreen = () => {
           console.error('Cursos no es JSON válido:', coursesText);
         }
 
-        const approvedRes = await fetch(`${API_URL}/approved/`, {
+        const approvedRes = await fetch(`${API_URL}/api/courses/approved`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -69,9 +82,6 @@ const AvailableCoursesScreen = () => {
       setLoading(false);
     }
   };
-  const filteredCourses = courses.filter((course) => {
-    return course.title.toLowerCase().includes(courseSearchText.toLowerCase());
-  });
 
   const enrollInCourse = async (courseId) => {
     const user = await getUserProfileData(token);
@@ -99,14 +109,21 @@ const AvailableCoursesScreen = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Enrollment failed');
+        if (response.status === 409) {
+          setShowModal(true);
+          return;
+        } else {
+          const errorText = await response.text();
+          console.error('Error:', errorText);
+          alert('Enrollment failed');
+          return;
+        }
       }
 
       if (onEnroll) onEnroll();
       navigation.goBack();
     } catch (error) {
       console.error(error);
-      alert('Failed to enroll in course.');
     }
   };
 
@@ -154,33 +171,72 @@ const AvailableCoursesScreen = () => {
         />
       </View>
 
+      <AcceptOnlyModal
+        visible={showModal}
+        message="Yo already enrolled in this course!"
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
+
       <ScrollView contentContainerStyle={styles.courseList}>
-        {filteredCourses.map((course) => (
-          <View key={course.id} style={styles.courseCard}>
-            <Text style={styles.courseText}>{course.title}</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {isEligible(course) && (
+        {filteredCourses
+          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+          .map((course) => (
+            <View key={course.id} style={styles.courseCard}>
+              <Text style={styles.courseText}>{course.title}</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {isEligible(course) && (
+                  <TouchableOpacity
+                    style={styles.enrollButton}
+                    onPress={() => enrollInCourse(course.id)}
+                  >
+                    <Text style={styles.enrollButtonText}>Enroll</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
-                  style={styles.enrollButton}
-                  onPress={() => enrollInCourse(course.id)}
+                  style={[styles.enrollButton, { backgroundColor: '#4CAF50' }]}
+                  onPress={() =>
+                    navigation.navigate('ShowCourseData', { course })
+                  }
                 >
-                  <Text style={styles.enrollButtonText}>Enroll</Text>
+                  <Text style={[styles.enrollButtonText, { color: '#fff' }]}>
+                    Details
+                  </Text>
                 </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[styles.enrollButton, { backgroundColor: '#4CAF50' }]}
-                onPress={() =>
-                  navigation.navigate('ShowCourseData', { course })
-                }
-              >
-                <Text style={[styles.enrollButtonText, { color: '#fff' }]}>
-                  Details
-                </Text>
-              </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
+          ))}
       </ScrollView>
+
+      <View style={styles.paginationContainer}>
+        <TouchableOpacity
+          style={[
+            styles.pageButton,
+            currentPage === 1 && { backgroundColor: '#ccc' },
+          ]}
+          onPress={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <Text style={styles.pageButtonText}>{'← Prev'}</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.pageNumber}>
+          Page {currentPage} of {totalPages}
+        </Text>
+
+        <TouchableOpacity
+          style={[
+            styles.pageButton,
+            currentPage === totalPages && { backgroundColor: '#ccc' },
+          ]}
+          onPress={() =>
+            currentPage < totalPages && setCurrentPage(currentPage + 1)
+          }
+          disabled={currentPage === totalPages}
+        >
+          <Text style={styles.pageButtonText}>{'Next →'}</Text>
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity
         style={styles.doneButton}
@@ -249,6 +305,28 @@ const styles = StyleSheet.create({
   },
   doneButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+    gap: 12,
+  },
+  pageButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#007bff',
+    borderRadius: 6,
+  },
+  pageButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  pageNumber: {
     fontSize: 16,
     fontWeight: 'bold',
   },

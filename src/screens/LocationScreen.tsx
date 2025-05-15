@@ -32,7 +32,7 @@ const LocationScreen = () => {
   };
 
   const handleCancel = () => {
-    navigation.navigate('Login');
+    navigation.navigate('PinScreen', { userId, phone });
   };
 
   useEffect(() => {}, []);
@@ -87,9 +87,7 @@ const LocationScreen = () => {
         `${API_URL}/api/users/profile/${userId}/location`,
         { location: country },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: {},
         },
       );
       if (response.status === 200) {

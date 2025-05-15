@@ -8,7 +8,10 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
 } from 'react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { validateFields } from '../../Errors/ValidationsEditCourse';
@@ -35,7 +38,6 @@ export default function EditCourseScreen({ route }) {
   const [errors, setErrors] = useState({
     title: '',
     description: '',
-    eligibilityCriteria: '',
     startDate: '',
     endDate: '',
   });
@@ -46,17 +48,26 @@ export default function EditCourseScreen({ route }) {
     const fetchEligibilityOptions = async () => {
       try {
         const response = await fetch(`${API_URL}/api/courses/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         const json = await response.json();
         const coursesArray = Array.isArray(json.data) ? json.data : [];
 
-        const options = coursesArray.map((course: any) => ({
-          id: course.title,
-          name: course.title,
-        }));
+        const uniqueCoursesMap = new Map();
+
+        for (const course of coursesArray) {
+          if (!uniqueCoursesMap.has(course.title)) {
+            uniqueCoursesMap.set(course.title, course);
+          }
+        }
+
+        const options = Array.from(uniqueCoursesMap.values())
+          .filter((c) => c.title !== course.title)
+          .map((course: any) => ({
+            id: course.title,
+            name: course.title,
+          }));
+
         setEligibilityOptions(options);
       } catch (error) {
         console.error('Error fetching eligibility options:', error);
@@ -75,9 +86,13 @@ export default function EditCourseScreen({ route }) {
       endDate,
     );
     setErrors(newErrors);
+    console.log('Errors:', newErrors);
     if (Object.keys(newErrors).length > 0) {
       return;
     }
+    const filteredCriteria = selectedCriteria.filter(
+      (criteria) => criteria.trim() !== '',
+    );
 
     try {
       if (!token) throw new Error('No token found');
@@ -93,7 +108,7 @@ export default function EditCourseScreen({ route }) {
         body: JSON.stringify({
           title,
           description,
-          eligibility_criteria: selectedCriteria,
+          eligibility_criteria: filteredCriteria,
           start_date: formattedStartDate,
           end_date: formattedEndDate,
         }),
@@ -105,94 +120,120 @@ export default function EditCourseScreen({ route }) {
         return;
       }
 
-      const updatedCourse = await response.json();
+      let updatedCourse = null;
+      const contentLength = response.headers.get('content-length');
+
+      if (contentLength && parseInt(contentLength) > 0) {
+        updatedCourse = await response.json();
+      }
+
       navigation.navigate('TeacherCourses', { updatedCourse });
     } catch (error) {
       console.error('Network error:', error);
     }
   };
 
+  const handleRemoveCriteria = (criteria: string) => {
+    setSelectedCriteria((prev) => prev.filter((item) => item !== criteria));
+  };
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Edit Course</Text>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-        />
-        {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <View style={{ flex: 1, paddingHorizontal: 10 }}>
+          {/* Title */}
+          <TextInput
+            style={styles.input}
+            placeholder="Title"
+            value={title}
+            onChangeText={setTitle}
+          />
+          {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-        />
-        {errors.description && (
-          <Text style={styles.errorText}>{errors.description}</Text>
-        )}
+          {/* Description */}
+          <TextInput
+            style={styles.input}
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+          />
+          {errors.description && (
+            <Text style={styles.errorText}>{errors.description}</Text>
+          )}
 
-        <Text style={{ marginBottom: 6 }}>Eligibility Criteria</Text>
-        <MultiSelect
-          items={eligibilityOptions}
-          uniqueKey="id"
-          onSelectedItemsChange={setSelectedCriteria}
-          selectedItems={selectedCriteria}
-          selectText="Select criteria"
-          searchInputPlaceholderText="Search criteria..."
-          tagRemoveIconColor="#333"
-          tagBorderColor="#333"
-          tagTextColor="#333"
-          selectedItemTextColor="#333"
-          selectedItemIconColor="#333"
-          itemTextColor="#000"
-          displayKey="name"
-          searchInputStyle={{ color: '#333' }}
-          submitButtonColor="#333"
-          submitButtonText="Confirm"
-          styleMainWrapper={{ marginBottom: 16 }}
-        />
+          {/* Eligibility Criteria */}
+          <Text style={{ marginBottom: 6 }}>Eligibility Criteria</Text>
+          <View style={{ maxHeight: 200, marginBottom: 16 }}>
+            <MultiSelect
+              items={eligibilityOptions}
+              uniqueKey="id"
+              onSelectedItemsChange={setSelectedCriteria}
+              selectedItems={selectedCriteria}
+              selectText="Select criteria"
+              searchInputPlaceholderText="Search criteria..."
+              tagRemoveIconColor="#333"
+              tagBorderColor="#333"
+              tagTextColor="#333"
+              selectedItemTextColor="#333"
+              selectedItemIconColor="#333"
+              itemTextColor="#000"
+              displayKey="name"
+              searchInputStyle={{ color: '#333' }}
+              submitButtonColor="#333"
+              submitButtonText="Confirm"
+            />
+          </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Start Date (YYYY-MM-DD)"
-          value={startDate}
-          onChangeText={setStartDate}
-        />
-        {errors.startDate && (
-          <Text style={styles.errorText}>{errors.startDate}</Text>
-        )}
+          {/* Selected Criteria */}
+          {selectedCriteria.filter((criteria) => criteria.trim() !== '')
+            .length === 0 && (
+            <Text style={styles.noCriteriaText}>
+              This course does not contain eligibility criteria.
+            </Text>
+          )}
 
-        <TextInput
-          style={styles.input}
-          placeholder="End Date (YYYY-MM-DD)"
-          value={endDate}
-          onChangeText={setEndDate}
-        />
-        {errors.endDate && (
-          <Text style={styles.errorText}>{errors.endDate}</Text>
-        )}
+          {/* Start Date */}
+          <TextInput
+            style={styles.input}
+            placeholder="Start Date (YYYY-MM-DD)"
+            value={startDate}
+            onChangeText={setStartDate}
+          />
+          {errors.startDate && (
+            <Text style={styles.errorText}>{errors.startDate}</Text>
+          )}
 
-        <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
-          <Text style={styles.buttonText}>Save Changes</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* End Date */}
+          <TextInput
+            style={styles.input}
+            placeholder="End Date (YYYY-MM-DD)"
+            value={endDate}
+            onChangeText={setEndDate}
+          />
+          {errors.endDate && (
+            <Text style={styles.errorText}>{errors.endDate}</Text>
+          )}
 
-      <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>Close</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Save Button */}
+          <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
+            <Text style={styles.buttonText}>Save Changes</Text>
+          </TouchableOpacity>
+
+          {/* Back Button */}
+          <View style={styles.bottomButtonContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.backButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -237,12 +278,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
+    alignSelf: 'center',
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+
   bottomButtonContainer: {
     position: 'absolute',
     bottom: 20,
@@ -250,6 +288,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   backButton: {
     backgroundColor: '#E0E0E0',
     borderRadius: 30,
@@ -260,10 +299,57 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
+    alignSelf: 'center',
+    marginRight: 23,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   backButtonText: {
     color: '#000000',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  subHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  criteriaText: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 8,
+  },
+  criteriaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2', // Fondo suave para cada criterio
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    justifyContent: 'space-between',
+  },
+
+  removeButton: {
+    backgroundColor: '#E74C3C', // Rojo para la cruz
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  noCriteriaText: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 16,
   },
 });

@@ -25,6 +25,8 @@ import TeacherEditCourseDetail from '../screens/teacher/TeacherEditCourseDetail'
 import TeacherCreateAssignments from '@/screens/teacher/TeacherCreateAssignment';
 import TeacherFeedbackCourse from '@/screens/teacher/TeacherFeedbackCourse';
 import TeacherMembersCourse from '@/screens/teacher/TeacherMemberCourse';
+import TeacherEditAssigments from '@/screens/teacher/TeacherEditAssigments';
+
 import StudentsSubmissions from '../screens/teacher/StudentsSubmissions';
 import ShowCourseData from '../utils/ShowCourseData';
 
@@ -95,6 +97,10 @@ const AuthStack = () => (
       component={TeacherMembersCourse}
     />
     <Stack.Screen name="StudentsSubmissions" component={StudentsSubmissions} />
+    <Stack.Screen
+      name="TeacherEditAssigments"
+      component={TeacherEditAssigments}
+    />
   </Stack.Navigator>
 );
 

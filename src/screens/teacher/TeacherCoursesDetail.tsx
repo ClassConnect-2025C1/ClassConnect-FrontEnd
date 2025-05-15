@@ -5,11 +5,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AuthContext';
 import { API_URL } from '@env';
+import { Feather } from '@expo/vector-icons';
+
 export default function TeacherCourseDetail({ route }) {
   const { course } = route.params;
   const navigation = useNavigation();
@@ -19,6 +22,34 @@ export default function TeacherCourseDetail({ route }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredAssignments = assignments.filter((assignment) => {
+    console.log('Assignment:', assignment.status);
+    const titleMatch = assignment.title
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    const deadlineMatch = assignment.deadline
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    const statusMatch = assignment.status
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    return titleMatch || deadlineMatch || statusMatch;
+  });
+
+  const ITEMS_PER_PAGE = 2;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredAssignments.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedAssignments = filteredAssignments.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
 
   const fetchAssignments = async () => {
     try {
@@ -42,7 +73,6 @@ export default function TeacherCourseDetail({ route }) {
       }
 
       const data = await response.json();
-      console.log('Assignments data:', data);
 
       if (data && Array.isArray(data.data)) {
         setAssignments(data.data);
@@ -62,6 +92,29 @@ export default function TeacherCourseDetail({ route }) {
     fetchAssignments();
   }, []);
 
+  const handleDeleteAssignment = async (assignmentId) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete assignment');
+      }
+
+      setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+    }
+  };
+
   return (
     <View style={styles.mainContainer}>
       <TouchableOpacity
@@ -77,102 +130,86 @@ export default function TeacherCourseDetail({ route }) {
           {course.description || 'No description available'}
         </Text>
 
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              setActiveTab('Edit Course');
-              navigation.navigate('TeacherEditCourseDetail', { course });
-            }}
-          >
-            <Text
-              style={[
-                styles.tabTextLink,
-                activeTab === 'Edit Course' && styles.activeTabText,
-              ]}
-            >
-              Edit Course
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              setActiveTab('Feedbacks');
-              navigation.navigate('TeacherFeedbackCourse', { course });
-            }}
-          >
-            <Text
-              style={[
-                styles.tabTextLink,
-                activeTab === 'Feedbacks' && styles.activeTabText,
-              ]}
-            >
-              Feedbacks
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              setActiveTab('Members');
-              navigation.navigate('TeacherMembersCourse', { course });
-            }}
-          >
-            <Text
-              style={[
-                styles.tabTextLink,
-                activeTab === 'Members' && styles.activeTabText,
-              ]}
-            >
-              Members
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <View style={styles.tabContainer}>{/* ... tus tabs ... */}</View>
       </View>
 
       <View style={styles.sectionContainer}>
         <View style={styles.subTabContainer}>
-          <TouchableOpacity onPress={() => setActiveSubTab('Assignments')}>
-            <Text
-              style={[
-                styles.subTabText,
-                activeSubTab === 'Assignments' && styles.activeSubTabText,
-              ]}
+          {['Assignments', 'Resources', 'Feedback', 'Members'].map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => {
+                setActiveSubTab(tab);
+                if (tab === 'Feedback') {
+                  navigation.navigate('TeacherFeedbackCourse', { course });
+                } else if (tab === 'Members') {
+                  navigation.navigate('TeacherMembersCourse', { course });
+                }
+              }}
             >
-              Assignments
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setActiveSubTab('Resources')}>
-            <Text
-              style={[
-                styles.subTabText,
-                activeSubTab === 'Resources' && styles.activeSubTabText,
-              ]}
-            >
-              Resources
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.subTabText,
+                  activeSubTab === tab && styles.activeSubTabText,
+                ]}
+              >
+                {tab}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
         <View style={styles.separator} />
       </View>
 
-      <ScrollView style={styles.contentContainer}>
+      {activeSubTab === 'Assignments' && (
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search assignments..."
+            value={searchQuery}
+            onChangeText={(text) => {
+              setSearchQuery(text);
+              setCurrentPage(1);
+            }}
+          />
+        </View>
+      )}
+
+      <View style={styles.contentContainer}>
         {loading ? (
           <Text>Loading assignments...</Text>
-        ) : (
-          activeSubTab === 'Assignments' &&
-          assignments.map((assignment, index) => (
+        ) : activeSubTab === 'Assignments' ? (
+          paginatedAssignments.map((assignment, index) => (
             <View key={index} style={styles.assignmentContainer}>
               <View style={styles.assignmentHeader}>
                 <Text style={styles.assignmentTitle}>{assignment.title}</Text>
-                <Text style={styles.assignmentDate}>
-                  {new Date(assignment.deadline).toLocaleDateString()}
-                </Text>
+
+                <View style={styles.assignmentActions}>
+                  <Text style={styles.assignmentDate}>
+                    {new Date(assignment.deadline).toLocaleDateString()}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteAssignment(assignment.id)}
+                  >
+                    <Feather name="x" size={18} color="red" />
+                  </TouchableOpacity>
+                </View>
               </View>
+
               <Text style={styles.assignmentDescription}>
                 {assignment.description}
               </Text>
+
               <View style={styles.buttonRow}>
-                <TouchableOpacity style={styles.smallButton}>
+                <TouchableOpacity
+                  style={styles.smallButton}
+                  onPress={() =>
+                    navigation.navigate('TeacherEditAssigments', {
+                      course,
+                      assignment,
+                    })
+                  }
+                >
                   <Text style={styles.smallButtonText}>Edit assignment</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -189,34 +226,92 @@ export default function TeacherCourseDetail({ route }) {
               </View>
             </View>
           ))
+        ) : (
+          activeSubTab === 'Resources' && (
+            <View style={styles.assignmentContainer}>
+              <Text style={styles.assignmentTitle}>Course Resources</Text>
+              <Text style={styles.assignmentDescription}>
+                Here you will find resources such as slides, books, and other
+                materials related to this course.
+              </Text>
+            </View>
+          )
         )}
 
-        {activeSubTab === 'Resources' && (
+        {activeSubTab === 'Feedback' && (
           <View style={styles.assignmentContainer}>
-            <Text style={styles.assignmentTitle}>Course Resources</Text>
+            <Text style={styles.assignmentTitle}>Feedback</Text>
             <Text style={styles.assignmentDescription}>
-              Here you will find resources such as slides, books, and other
-              materials related to this course.
+              View and manage feedback left by students or teachers here.
             </Text>
           </View>
         )}
-      </ScrollView>
 
-      <TouchableOpacity
-        style={[
-          styles.smallButton,
-          { alignSelf: 'flex-end', marginBottom: 40 },
-        ]}
-        onPress={() =>
-          navigation.navigate('TeacherCreateAssignments', { course })
-        }
-      >
-        <Text style={styles.smallButtonText}>Create assignment</Text>
-      </TouchableOpacity>
+        {activeSubTab === 'Members' && (
+          <View style={styles.assignmentContainer}>
+            <Text style={styles.assignmentTitle}>Members</Text>
+            <Text style={styles.assignmentDescription}>
+              View and manage members of this course here.
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Botones paginación */}
+      {activeSubTab === 'Assignments' && (
+        <View style={styles.paginationContainer}>
+          <TouchableOpacity
+            disabled={currentPage === 1}
+            onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            style={[
+              styles.pageButton,
+              currentPage === 1 && styles.disabledButton,
+            ]}
+          >
+            <Text style={styles.pageButtonText}>Prev</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.pageInfo}>
+            Page {currentPage} of {totalPages}
+          </Text>
+
+          <TouchableOpacity
+            disabled={currentPage === totalPages}
+            onPress={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            style={[
+              styles.pageButton,
+              currentPage === totalPages && styles.disabledButton,
+            ]}
+          >
+            <Text style={styles.pageButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <View style={styles.bottomButtonsContainer}>
+        <TouchableOpacity
+          style={styles.createAssignmentButton}
+          onPress={() =>
+            navigation.navigate('TeacherCreateAssignments', { course })
+          }
+        >
+          <Text style={styles.createAssignmentButtonText}>
+            Create assignment
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.editCourseButton}
+          onPress={() => navigation.navigate('EditCourseScreen', { course })}
+        >
+          <Text style={styles.createAssignmentButtonText}>Edit course</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
@@ -229,7 +324,7 @@ const styles = StyleSheet.create({
     top: 30,
     left: 10,
     backgroundColor: '#E0E0E0',
-    borderRadius: 20,
+    borderRadius: 25, // más redondeado
     paddingVertical: 8,
     paddingHorizontal: 15,
     zIndex: 10,
@@ -272,7 +367,7 @@ const styles = StyleSheet.create({
   tabButton: {
     paddingVertical: 8,
     paddingHorizontal: 15,
-    borderRadius: 20,
+    borderRadius: 25, // más redondeado
     backgroundColor: '#D3D3D3',
   },
   activeTab: {
@@ -288,23 +383,26 @@ const styles = StyleSheet.create({
   subTabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 30,
+    gap: 27, // 10% menos que 30
     marginBottom: 0,
   },
   subTabText: {
-    fontSize: 16,
+    fontSize: 14.5, 
     color: '#555',
+    paddingHorizontal: 1,
+  },
+  activeSubTabText: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+    fontSize: 14.5, // también reducir aquí para que sea consistente
   },
   separator: {
     height: 1,
     backgroundColor: '#D3D3D3',
     marginVertical: 10,
   },
-  activeSubTabText: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
-  },
+ 
   contentContainer: {
     paddingBottom: 20,
   },
@@ -341,7 +439,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3D3D3',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 5,
+    borderRadius: 12, // más redondeado
   },
   smallButtonText: {
     color: '#fff',
@@ -359,23 +457,80 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textDecorationLine: 'underline',
   },
-  createAssignmentButton: {
+  bottomButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 10,
+  },
+
+  editCourseButton: {
     backgroundColor: '#B0B0B0',
     paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 25,
-    marginBottom: 40,
-    alignSelf: 'flex-end',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
+
+  createAssignmentButton: {
+    backgroundColor: '#A0A0A0',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+
   createAssignmentButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
     textAlign: 'center',
+  },
+
+  assignmentActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  deleteIcon: {
+    fontSize: 18,
+    color: 'red',
+    marginLeft: 10,
+  },
+  searchContainer: {
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center', // centra todo
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginVertical: 10,
+    gap: 30, // espacio entre botones y texto
+  },
+  pageButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#007AFF',
+    borderRadius: 15, // más redondeado
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  pageButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  pageInfo: {
+    fontSize: 16,
+    color: '#333',
   },
 });

@@ -22,11 +22,6 @@ export const validateFields = (
     newErrors.description = 'Description must be at least 3 characters';
   }
 
-  if (eligibilityCriteria.length < 3) {
-    newErrors.eligibilityCriteria =
-      'Eligibility criteria must be at least 3 characters';
-  }
-
   if (!isValidDate(startDate)) {
     newErrors.startDate = 'Start date must be valid (YYYY-MM-DD)';
   } else {

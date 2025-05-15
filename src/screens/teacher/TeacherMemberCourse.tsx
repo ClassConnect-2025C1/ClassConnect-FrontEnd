@@ -27,13 +27,16 @@ const MembersScreen = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/courses/${courseId}/members`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+        const response = await fetch(
+          `${API_URL}/api/courses/${courseId}/members`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         if (!response.ok) throw new Error('Error al obtener los miembros');
         const data = await response.json();
         setMembers(data.data);
@@ -60,8 +63,9 @@ const MembersScreen = () => {
           },
         },
       );
-      if (!res.ok) throw new Error('Aprobación fallida');
 
+      if (!res.ok) throw new Error('Aprobación fallida');
+      console.log('Aprobando usuario:', userId);
       setApprovedMembers((prev) => [...prev, userId]);
     } catch (error) {
       console.error('Error al aprobar:', error);
