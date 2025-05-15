@@ -91,7 +91,7 @@ const FeedbackScreen = () => {
           style={{
             paddingVertical: 6,
             paddingHorizontal: 12,
-            backgroundColor: '#F0F0F0', 
+            backgroundColor: '#F0F0F0',
             borderRadius: 8,
             marginLeft: -10,
             marginTop: -11,
@@ -112,12 +112,13 @@ const FeedbackScreen = () => {
           Course Feedbacks
         </Text>
       </View>
-
+  
       <View style={styles.filterContainer}>{/* filtros... */}</View>
-
+  
       <View style={styles.divider} />
-
+  
       {/* Cambiamos FlatList por View + map para quitar scroll */}
+  
       <Text style={styles.sectionHeader}>Feedbacks</Text>
       <View style={styles.feedbackList}>
         {paginatedFeedbacks.map((item) => (
@@ -130,14 +131,30 @@ const FeedbackScreen = () => {
           </View>
         ))}
       </View>
-
-      {/* Contenedor para paginación */}
-      <View style={{ marginTop: 11 }}>
+  
+      {/* Contenedor vertical para botón Generate AI summary y paginación */}
+      <View style={{ marginTop: 11, marginBottom: 20, alignItems: 'center' }}>
+        {/* Botón Generate AI summary */}
+        <TouchableOpacity
+          style={[styles.generateButton, { marginBottom: 15 }]}
+          onPress={() => navigation.goBack()}
+        >
+          <MaterialIcons
+            name="star"
+            size={20}
+            color="#5B6799"
+            style={{ marginRight: 6 }}
+          />
+          <Text style={styles.generateButtonText}>Generate AI summary</Text>
+        </TouchableOpacity>
+  
+        {/* Controles de paginación */}
         <View
           style={{
+            flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            flexDirection: 'row',
+            width: '100%',
           }}
         >
           <TouchableOpacity
@@ -150,16 +167,16 @@ const FeedbackScreen = () => {
           >
             <Text style={styles.backButtonText}>Prev</Text>
           </TouchableOpacity>
-
+  
           <Text
             style={[
               styles.backButtonText,
-              { alignSelf: 'center', marginHorizontal: 10 },
+              { marginHorizontal: 15, fontWeight: 'bold' },
             ]}
           >
             Page {currentPage} of {totalPages || 1}
           </Text>
-
+  
           <TouchableOpacity
             style={[
               styles.backButton,
@@ -174,6 +191,7 @@ const FeedbackScreen = () => {
       </View>
     </SafeAreaView>
   );
+
 };
 
 const styles = StyleSheet.create({
