@@ -13,6 +13,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
 import { Picker } from '@react-native-picker/picker';
+import { DateTimePickerAndroid } from '../../../node_modules/@react-native-community/datetimepicker/src/DateTimePickerAndroid.android';
 
 const { width } = Dimensions.get('window');
 
@@ -60,19 +61,16 @@ const FeedbackScreen = () => {
     fetchFeedbacks();
   }, [courseId, token]);
 
- 
   const filteredFeedbacks = (feedbacks?.data || []).filter((f) => {
- 
     if (selectedRating !== 'Any' && f.rating !== parseInt(selectedRating)) {
       return false;
     }
 
     const createdAt = new Date(f.created_at);
 
- 
     if (fromDate) {
       const from = new Date(fromDate);
-      if (isNaN(from.getTime())) return false; 
+      if (isNaN(from.getTime())) return false;
       if (createdAt < from) return false;
     }
 
@@ -88,7 +86,7 @@ const FeedbackScreen = () => {
 
   const paginatedFeedbacks = filteredFeedbacks.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const handleNextPage = () => {
@@ -139,69 +137,84 @@ const FeedbackScreen = () => {
 
       {/* Filters */}
       <View style={styles.filterContainer}>
-  {/* Rating */}
-  <View style={styles.ratingCompactBox}>
-    <Text style={styles.ratingLabel}>Rating:</Text>
-    <Picker
-      selectedValue={selectedRating}
-      style={styles.ratingCompactPicker}
-      onValueChange={(itemValue) => {
-        setSelectedRating(itemValue);
-        setCurrentPage(1);
-      }}
-      dropdownIconColor="#2c3e50"
-    >
-      <Picker.Item label="Any" value="Any" />
-      <Picker.Item label="5" value="5" />
-      <Picker.Item label="4" value="4" />
-      <Picker.Item label="3" value="3" />
-      <Picker.Item label="2" value="2" />
-      <Picker.Item label="1" value="1" />
-    </Picker>
-  </View>
+        {/* Rating */}
+        <View style={styles.ratingCompactBox}>
+          <Text style={styles.ratingLabel}>Rating:</Text>
+          <Picker
+            selectedValue={selectedRating}
+            style={styles.ratingCompactPicker}
+            onValueChange={(itemValue) => {
+              setSelectedRating(itemValue);
+              setCurrentPage(1);
+            }}
+            dropdownIconColor="#2c3e50"
+          >
+            <Picker.Item label="Any" value="Any" />
+            <Picker.Item label="5" value="5" />
+            <Picker.Item label="4" value="4" />
+            <Picker.Item label="3" value="3" />
+            <Picker.Item label="2" value="2" />
+            <Picker.Item label="1" value="1" />
+          </Picker>
+        </View>
 
-  {/* Fecha desde / hasta - inputs en fila compacta al lado del rating */}
-  <View style={styles.dateFiltersContainer}>
-    <View style={styles.singleDateFilter}>
-      <Text style={styles.dateLabel}>From:</Text>
-      <TextInput
-        style={styles.dateInput}
-        placeholder="YYYY-MM-DD"
-        value={fromDate}
-        onChangeText={(text) => {
-          setFromDate(text);
-          setCurrentPage(1);
-        }}
-      />
-    </View>
+        {/* Fecha desde / hasta - inputs en fila compacta al lado del rating */}
+        <View style={styles.dateFiltersContainer}>
+          <View style={styles.singleDateFilter}>
+            <Text style={styles.dateLabel}>From:</Text>
+            <TextInput
+              style={styles.dateInput}
+              placeholder="YYYY-MM-DD"
+              value={fromDate}
+              onChangeText={(text) => {
+                setFromDate(text);
+                setCurrentPage(1);
+              }}
+            />
+          </View>
 
-    <View style={styles.singleDateFilter}>
-      <Text style={styles.dateLabel}>To:</Text>
-      <TextInput
-        style={styles.dateInput}
-        placeholder="YYYY-MM-DD"
-        value={toDate}
-        onChangeText={(text) => {
-          setToDate(text);
-          setCurrentPage(1);
-        }}
-      />
-    </View>
-  </View>
-</View>
+          <View style={styles.singleDateFilter}>
+            <Text style={styles.dateLabel}>To:</Text>
+            <TextInput
+              style={styles.dateInput}
+              placeholder="YYYY-MM-DD"
+              value={toDate}
+              onChangeText={(text) => {
+                setToDate(text);
+                setCurrentPage(1);
+              }}
+            />
+          </View>
+        </View>
+      </View>
 
       <View style={styles.divider} />
 
       <Text style={styles.sectionHeader}>Feedbacks</Text>
       <View style={styles.feedbackList}>
         {paginatedFeedbacks.map((item) => (
+          
           <View key={item.id.toString()} style={styles.feedbackItem}>
             <View style={styles.feedbackHeader}>
+
               <Text style={styles.feedbackTitle}>{item.summary}</Text>
+              
               <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
             </View>
+            
             <Text style={styles.feedbackContent}>{item.comment}</Text>
+            <Text style={[styles.dateText, { marginTop: 10}]}>
+                {new Date(item.created_at)
+                  .toLocaleDateString('es-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                  })
+                  .replace(/(\d+)\/(\d+)\/(\d+)/, '$3/$1/$2')}
+  
+              </Text>
           </View>
+          
         ))}
       </View>
 
@@ -262,7 +275,6 @@ const FeedbackScreen = () => {
     </SafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -440,7 +452,6 @@ const styles = StyleSheet.create({
   dateButton: {
     flex: 1,
     paddingVertical: 10,
-
   },
   disabledButton: {
     opacity: 0.5,
@@ -454,12 +465,12 @@ const styles = StyleSheet.create({
 
   filterContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',  
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: 12, 
+    gap: 12,
     marginBottom: 20,
   },
-  
+
   ratingCompactBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -469,7 +480,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     backgroundColor: '#fff',
-    width: 120, 
+    width: 120,
     minWidth: 100,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -477,27 +488,27 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  
+
   dateFiltersContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     marginLeft: 12,
   },
-  
+
   singleDateFilter: {
     flexDirection: 'column',
     width: 100,
-  
+
     marginTop: -15,
   },
-  
+
   dateLabel: {
     fontSize: 13,
     color: '#2c3e50',
     marginBottom: 2,
   },
-  
+
   dateInput: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -507,7 +518,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     backgroundColor: '#fff',
   },
-
 });
 
 export default FeedbackScreen;
