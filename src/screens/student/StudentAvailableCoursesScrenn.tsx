@@ -61,7 +61,7 @@ const AvailableCoursesScreen = () => {
           console.error('Cursos no es JSON válido:', coursesText);
         }
 
-        const approvedRes = await fetch(`${API_URL}/approved/`, {
+        const approvedRes = await fetch(`${API_URL}/api/courses/approved`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
