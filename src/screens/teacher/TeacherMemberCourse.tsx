@@ -51,7 +51,6 @@ const MembersScreen = () => {
   }, [courseId, token]); // Agregar token como dependencia
 
   const handleApprove = async (userId) => {
-   
     try {
       const res = await fetch(
         `${API_URL}/api/courses/approve/${userId}/${courseId}`,
@@ -64,7 +63,6 @@ const MembersScreen = () => {
           },
         },
       );
-
 
       if (!res.ok) throw new Error('Aprobación fallida');
       console.log('Aprobando usuario:', userId);

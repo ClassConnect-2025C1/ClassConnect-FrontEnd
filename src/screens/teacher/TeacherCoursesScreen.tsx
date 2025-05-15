@@ -46,7 +46,6 @@ const CoursesScreen = ({ route }) => {
   );
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 
-  
   useEffect(() => {
     const fetchUserCourses = async () => {
       try {
@@ -143,7 +142,7 @@ const CoursesScreen = ({ route }) => {
           />
         </TouchableOpacity>
       </View>
-  
+
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -153,7 +152,7 @@ const CoursesScreen = ({ route }) => {
           onChangeText={setSearchText}
         />
       </View>
-  
+
       <ScrollView contentContainerStyle={styles.courseList}>
         {filteredCourses
           .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -173,7 +172,7 @@ const CoursesScreen = ({ route }) => {
               >
                 <Text style={styles.courseText}>{course.title}</Text>
               </TouchableOpacity>
-  
+
               <TouchableOpacity
                 onPress={() => confirmDelete(course.id)}
                 style={styles.deleteButton}
@@ -183,7 +182,7 @@ const CoursesScreen = ({ route }) => {
             </View>
           ))}
       </ScrollView>
-  
+
       {/* Controles de paginación */}
       <View style={styles.paginationContainer}>
         <TouchableOpacity
@@ -196,23 +195,25 @@ const CoursesScreen = ({ route }) => {
         >
           <Text style={styles.pageButtonText}>{'← Prev'}</Text>
         </TouchableOpacity>
-  
+
         <Text style={styles.pageNumber}>
           Page {currentPage} of {totalPages}
         </Text>
-  
+
         <TouchableOpacity
           style={[
             styles.pageButton,
             currentPage === totalPages && { backgroundColor: '#ccc' },
           ]}
-          onPress={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+          onPress={() =>
+            currentPage < totalPages && setCurrentPage(currentPage + 1)
+          }
           disabled={currentPage === totalPages}
         >
           <Text style={styles.pageButtonText}>{'Next →'}</Text>
         </TouchableOpacity>
       </View>
-  
+
       <TouchableOpacity
         style={{
           backgroundColor: '#aaa',
@@ -228,7 +229,7 @@ const CoursesScreen = ({ route }) => {
           Create new course
         </Text>
       </TouchableOpacity>
-  
+
       <View
         style={{
           height: 1,
@@ -238,7 +239,7 @@ const CoursesScreen = ({ route }) => {
           marginBottom: 5,
         }}
       />
-  
+
       <AcceptRejectModal
         visible={showDeleteModal}
         message="Are you sure you want to delete this course?"
@@ -254,7 +255,7 @@ const CoursesScreen = ({ route }) => {
       />
     </View>
   );
-}  
+};
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -396,7 +397,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  
 });
 
 export default CoursesScreen;

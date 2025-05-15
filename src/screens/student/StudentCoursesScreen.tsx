@@ -44,9 +44,13 @@ const CoursesScreen = () => {
   const [showAddFavoriteCourse, setAddFavoriteCourse] = useState(false);
   const [showDeleteFavoriteCourse, setDeleteFavoriteCourse] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const filteredCourses = courses.filter((course) =>
     course.title.toLowerCase().includes(searchText.toLowerCase()),
   );
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 
   const refreshCourses = async () => {
     try {
@@ -162,6 +166,7 @@ const CoursesScreen = () => {
         onClose={() => setDeleteFavoriteCourse(false)}
       />
 
+
       <ScrollView contentContainerStyle={styles.courseList}>
         {[...filteredCourses]
           .sort((a, b) => {
@@ -170,6 +175,7 @@ const CoursesScreen = () => {
             if (aFav === bFav) return 0;
             return aFav ? -1 : 1;
           })
+          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
           .map((course, index) => (
             <TouchableOpacity
               key={course.id}
@@ -206,6 +212,37 @@ const CoursesScreen = () => {
       >
         <Text style={styles.buttonText}>Available courses</Text>
       </TouchableOpacity>
+
+      <View style={styles.paginationContainer}>
+        <TouchableOpacity
+          onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          style={[
+            styles.pageButton,
+            currentPage === 1 && styles.disabledButton,
+          ]}
+        >
+          <Text style={styles.pageButtonText}>Prev</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.pageInfo}>
+          Page {currentPage} of {totalPages}
+        </Text>
+
+        <TouchableOpacity
+          onPress={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+          style={[
+            styles.pageButton,
+            currentPage === totalPages && styles.disabledButton,
+          ]}
+        >
+          <Text style={styles.pageButtonText}>Next</Text>
+        </TouchableOpacity>
+      </View>
+
 
       <View style={styles.separator} />
 
@@ -336,6 +373,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderColor: '#ccc',
     borderWidth: 1,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 16,
+    gap: 16, // Si no funciona, usá `marginHorizontal` en los elementos hijos
+  },
+  pageButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#6c757d', // gris
+    borderRadius: 6,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  pageButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  pageInfo: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginHorizontal: 12,
+    color: '#333',
   },
 });
 

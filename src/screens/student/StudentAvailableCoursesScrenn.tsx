@@ -80,7 +80,6 @@ const AvailableCoursesScreen = () => {
     }
   };
 
-
   const enrollInCourse = async (courseId) => {
     const user = await getUserProfileData(token);
 
@@ -177,63 +176,64 @@ const AvailableCoursesScreen = () => {
       />
 
       <ScrollView contentContainerStyle={styles.courseList}>
-      {filteredCourses
-  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-  .map((course) => (
-          <View key={course.id} style={styles.courseCard}>
-            <Text style={styles.courseText}>{course.title}</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {isEligible(course) && (
+        {filteredCourses
+          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+          .map((course) => (
+            <View key={course.id} style={styles.courseCard}>
+              <Text style={styles.courseText}>{course.title}</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {isEligible(course) && (
+                  <TouchableOpacity
+                    style={styles.enrollButton}
+                    onPress={() => enrollInCourse(course.id)}
+                  >
+                    <Text style={styles.enrollButtonText}>Enroll</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
-                  style={styles.enrollButton}
-                  onPress={() => enrollInCourse(course.id)}
+                  style={[styles.enrollButton, { backgroundColor: '#4CAF50' }]}
+                  onPress={() =>
+                    navigation.navigate('ShowCourseData', { course })
+                  }
                 >
-                  <Text style={styles.enrollButtonText}>Enroll</Text>
+                  <Text style={[styles.enrollButtonText, { color: '#fff' }]}>
+                    Details
+                  </Text>
                 </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[styles.enrollButton, { backgroundColor: '#4CAF50' }]}
-                onPress={() =>
-                  navigation.navigate('ShowCourseData', { course })
-                }
-              >
-                <Text style={[styles.enrollButtonText, { color: '#fff' }]}>
-                  Details
-                </Text>
-              </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
+          ))}
       </ScrollView>
 
       <View style={styles.paginationContainer}>
-  <TouchableOpacity
-    style={[
-      styles.pageButton,
-      currentPage === 1 && { backgroundColor: '#ccc' },
-    ]}
-    onPress={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-    disabled={currentPage === 1}
-  >
-    <Text style={styles.pageButtonText}>{'← Prev'}</Text>
-  </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.pageButton,
+            currentPage === 1 && { backgroundColor: '#ccc' },
+          ]}
+          onPress={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <Text style={styles.pageButtonText}>{'← Prev'}</Text>
+        </TouchableOpacity>
 
-  <Text style={styles.pageNumber}>
-    Page {currentPage} of {totalPages}
-  </Text>
+        <Text style={styles.pageNumber}>
+          Page {currentPage} of {totalPages}
+        </Text>
 
-  <TouchableOpacity
-    style={[
-      styles.pageButton,
-      currentPage === totalPages && { backgroundColor: '#ccc' },
-    ]}
-    onPress={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-    disabled={currentPage === totalPages}
-  >
-    <Text style={styles.pageButtonText}>{'Next →'}</Text>
-  </TouchableOpacity>
-</View>
-
+        <TouchableOpacity
+          style={[
+            styles.pageButton,
+            currentPage === totalPages && { backgroundColor: '#ccc' },
+          ]}
+          onPress={() =>
+            currentPage < totalPages && setCurrentPage(currentPage + 1)
+          }
+          disabled={currentPage === totalPages}
+        >
+          <Text style={styles.pageButtonText}>{'Next →'}</Text>
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity
         style={styles.doneButton}
