@@ -26,6 +26,14 @@ const AvailableCoursesScreen = () => {
   const [error, setError] = useState(null);
   const [courseSearchText, setCourseSearchText] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const filteredCourses = courses.filter((course) => {
+    return course.title.toLowerCase().includes(courseSearchText.toLowerCase());
+  });
+
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 
   useEffect(() => {
     fetchCoursesAndApprovals();
@@ -71,9 +79,7 @@ const AvailableCoursesScreen = () => {
       setLoading(false);
     }
   };
-  const filteredCourses = courses.filter((course) => {
-    return course.title.toLowerCase().includes(courseSearchText.toLowerCase());
-  });
+
 
   const enrollInCourse = async (courseId) => {
     const user = await getUserProfileData(token);
@@ -171,7 +177,9 @@ const AvailableCoursesScreen = () => {
       />
 
       <ScrollView contentContainerStyle={styles.courseList}>
-        {filteredCourses.map((course) => (
+      {filteredCourses
+  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  .map((course) => (
           <View key={course.id} style={styles.courseCard}>
             <Text style={styles.courseText}>{course.title}</Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -197,6 +205,35 @@ const AvailableCoursesScreen = () => {
           </View>
         ))}
       </ScrollView>
+
+      <View style={styles.paginationContainer}>
+  <TouchableOpacity
+    style={[
+      styles.pageButton,
+      currentPage === 1 && { backgroundColor: '#ccc' },
+    ]}
+    onPress={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+    disabled={currentPage === 1}
+  >
+    <Text style={styles.pageButtonText}>{'← Prev'}</Text>
+  </TouchableOpacity>
+
+  <Text style={styles.pageNumber}>
+    Page {currentPage} of {totalPages}
+  </Text>
+
+  <TouchableOpacity
+    style={[
+      styles.pageButton,
+      currentPage === totalPages && { backgroundColor: '#ccc' },
+    ]}
+    onPress={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+    disabled={currentPage === totalPages}
+  >
+    <Text style={styles.pageButtonText}>{'Next →'}</Text>
+  </TouchableOpacity>
+</View>
+
 
       <TouchableOpacity
         style={styles.doneButton}
@@ -265,6 +302,28 @@ const styles = StyleSheet.create({
   },
   doneButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+    gap: 12,
+  },
+  pageButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#007bff',
+    borderRadius: 6,
+  },
+  pageButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  pageNumber: {
     fontSize: 16,
     fontWeight: 'bold',
   },

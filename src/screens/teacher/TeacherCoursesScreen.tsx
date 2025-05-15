@@ -38,11 +38,15 @@ const CoursesScreen = ({ route }) => {
   const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const { token } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const filteredCourses = courses.filter((course) =>
     course.title?.toLowerCase().includes(searchText.toLowerCase()),
   );
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 
+  
   useEffect(() => {
     const fetchUserCourses = async () => {
       try {
@@ -139,6 +143,7 @@ const CoursesScreen = ({ route }) => {
           />
         </TouchableOpacity>
       </View>
+  
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -148,35 +153,66 @@ const CoursesScreen = ({ route }) => {
           onChangeText={setSearchText}
         />
       </View>
-
+  
       <ScrollView contentContainerStyle={styles.courseList}>
-        {filteredCourses.map((course, index) => (
-          <View
-            key={course.id}
-            style={[
-              styles.courseCard,
-              { backgroundColor: cardColors[index % cardColors.length] },
-            ]}
-          >
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('TeacherCourseDetail', { course })
-              }
-              style={{ flex: 1 }}
+        {filteredCourses
+          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+          .map((course, index) => (
+            <View
+              key={course.id}
+              style={[
+                styles.courseCard,
+                { backgroundColor: cardColors[index % cardColors.length] },
+              ]}
             >
-              <Text style={styles.courseText}>{course.title}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => confirmDelete(course.id)}
-              style={styles.deleteButton}
-            >
-              <Text style={styles.deleteButtonText}>✕</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('TeacherCourseDetail', { course })
+                }
+                style={{ flex: 1 }}
+              >
+                <Text style={styles.courseText}>{course.title}</Text>
+              </TouchableOpacity>
+  
+              <TouchableOpacity
+                onPress={() => confirmDelete(course.id)}
+                style={styles.deleteButton}
+              >
+                <Text style={styles.deleteButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
       </ScrollView>
-
+  
+      {/* Controles de paginación */}
+      <View style={styles.paginationContainer}>
+        <TouchableOpacity
+          style={[
+            styles.pageButton,
+            currentPage === 1 && { backgroundColor: '#ccc' },
+          ]}
+          onPress={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <Text style={styles.pageButtonText}>{'← Prev'}</Text>
+        </TouchableOpacity>
+  
+        <Text style={styles.pageNumber}>
+          Page {currentPage} of {totalPages}
+        </Text>
+  
+        <TouchableOpacity
+          style={[
+            styles.pageButton,
+            currentPage === totalPages && { backgroundColor: '#ccc' },
+          ]}
+          onPress={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          <Text style={styles.pageButtonText}>{'Next →'}</Text>
+        </TouchableOpacity>
+      </View>
+  
       <TouchableOpacity
         style={{
           backgroundColor: '#aaa',
@@ -192,7 +228,7 @@ const CoursesScreen = ({ route }) => {
           Create new course
         </Text>
       </TouchableOpacity>
-
+  
       <View
         style={{
           height: 1,
@@ -202,7 +238,7 @@ const CoursesScreen = ({ route }) => {
           marginBottom: 5,
         }}
       />
-
+  
       <AcceptRejectModal
         visible={showDeleteModal}
         message="Are you sure you want to delete this course?"
@@ -218,8 +254,7 @@ const CoursesScreen = ({ route }) => {
       />
     </View>
   );
-};
-
+}  
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -340,6 +375,28 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
   },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+    gap: 10,
+  },
+  pageButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: '#888',
+    borderRadius: 5,
+  },
+  pageButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  pageNumber: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  
 });
 
 export default CoursesScreen;
