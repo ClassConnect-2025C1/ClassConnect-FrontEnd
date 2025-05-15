@@ -21,6 +21,7 @@ import { useAuthRequest } from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { AuthContext } from '../navigation/AuthContext';
+WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -44,16 +45,20 @@ const LoginScreen = () => {
       '98403984467-b7t9npmhl4bc1aa6tnrsh8hg4esi4mem.apps.googleusercontent.com',
     webClientId:
       '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com',
-    redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
+    redirectUri: AuthSession.makeRedirectUri({scheme: 'classconnect'}),
+    responseType: 'id_token'
   });
 
   useEffect(() => {
     if (googleLoginPressed && response?.type === 'success') {
-      WebBrowser.maybeCompleteAuthSession();
-      const { id_token } = response.authentication!;
+      console.log('Google response:', response);
+      const { id_token } = response.params;
       console.log('Google ID Token:', id_token);
-      handleGoogleLoginCallback(id_token, navigation);
-
+      if (id_token) {
+        handleGoogleLoginCallback(id_token, navigation);
+      } else {
+        console.warn('No id_token in Google response:', response);
+      }
       setGoogleLoginPressed(false);
     }
   }, [response, googleLoginPressed]);
@@ -69,7 +74,7 @@ const LoginScreen = () => {
       valid = false;
     }
 
-    if (password < 4) {
+    if (password.length < 4) {
       setPasswordError('password is not correct');
       valid = false;
     }
@@ -110,7 +115,7 @@ const LoginScreen = () => {
           );
 
           if (!profileResponse.ok) {
-            showLoginErrorToast();
+            showLoginErrorToast("Error fetching profile");
             return;
           }
 
