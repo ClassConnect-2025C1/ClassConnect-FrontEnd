@@ -20,8 +20,8 @@ export default function CourseDetail({ route }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
-  console.log('el token de los assigments es:', token);
-  console.log('Datos del curso:', course);
+
+
 
   const fetchAssignments = async () => {
     try {
@@ -42,6 +42,8 @@ export default function CourseDetail({ route }) {
 
       if (!response.ok) {
         throw new Error('Failed to fetch assignments');
+        
+
       }
 
       const data = await response.json();

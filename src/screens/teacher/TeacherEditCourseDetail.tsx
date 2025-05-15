@@ -188,25 +188,11 @@ export default function EditCourseScreen({ route }) {
           </View>
   
           {/* Selected Criteria */}
-          {selectedCriteria.filter((criteria) => criteria.trim() !== '').length > 0 ? (
-            <View style={{ marginBottom: 16 }}>
-              <Text style={styles.subHeader}>Selected Eligibility Criteria:</Text>
-              {selectedCriteria
-                .filter((criteria) => criteria.trim() !== '')
-                .map((criteria, index) => (
-                  <View key={index} style={styles.criteriaContainer}>
-                    <Text style={styles.criteriaText}>{criteria}</Text>
-                    <TouchableOpacity onPress={() => handleRemoveCriteria(criteria)}>
-                      <Text style={styles.removeText}>X</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-            </View>
-          ) : (
-            <Text style={styles.noCriteriaText}>
-              This course does not contain eligibility criteria.
-            </Text>
-          )}
+          {selectedCriteria.filter((criteria) => criteria.trim() !== '').length === 0 && (
+  <Text style={styles.noCriteriaText}>
+    This course does not contain eligibility criteria.
+  </Text>
+)}
   
           {/* Start Date */}
           <TextInput

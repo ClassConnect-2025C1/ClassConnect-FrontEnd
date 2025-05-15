@@ -12,6 +12,7 @@ import { getUserProfileData } from '../../utils/GetUserProfile';
 import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AuthContext';
+import { AcceptOnlyModal } from '@/components/Modals';
 
 const AvailableCoursesScreen = () => {
   const navigation = useNavigation();
@@ -24,6 +25,7 @@ const AvailableCoursesScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [courseSearchText, setCourseSearchText] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchCoursesAndApprovals();
@@ -99,14 +101,21 @@ const AvailableCoursesScreen = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Enrollment failed');
+        if (response.status === 409) {
+          setShowModal(true);
+          return;
+        } else {
+          const errorText = await response.text();
+          console.error('Error:', errorText);
+          alert('Enrollment failed'); 
+          return;
+        }
       }
 
       if (onEnroll) onEnroll();
       navigation.goBack();
     } catch (error) {
-      console.error(error);
-      alert('Failed to enroll in course.');
+      console.error(error);     
     }
   };
 
@@ -142,6 +151,7 @@ const AvailableCoursesScreen = () => {
   }
 
   return (
+    
     <View style={styles.container}>
       <Text style={styles.title}>Available Courses</Text>
       <View style={styles.searchContainer}>
@@ -153,6 +163,14 @@ const AvailableCoursesScreen = () => {
           onChangeText={setCourseSearchText}
         />
       </View>
+
+            <AcceptOnlyModal
+              visible={showModal}
+              message="Yo already enrolled in this course!"
+              onAccept={() => setShowModal(false)}
+              onClose={() => setShowModal(false)}
+            />
+
 
       <ScrollView contentContainerStyle={styles.courseList}>
         {filteredCourses.map((course) => (
