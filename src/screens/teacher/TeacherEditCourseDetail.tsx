@@ -18,6 +18,7 @@ import { validateFields } from '../../Errors/ValidationsEditCourse';
 import { API_URL } from '@env';
 import MultiSelect from 'react-native-multiple-select';
 import { useAuth } from '../../navigation/AuthContext';
+import StatusOverlay from '../../components/StatusOverlay';
 
 const { width } = Dimensions.get('window');
 
@@ -29,6 +30,8 @@ export default function EditCourseScreen({ route }) {
   const [startDate, setStartDate] = useState(course.startDate);
   const [endDate, setEndDate] = useState(course.endDate);
   const { token } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
 
   const [eligibilityOptions, setEligibilityOptions] = useState([]);
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>(
@@ -93,6 +96,7 @@ export default function EditCourseScreen({ route }) {
     const filteredCriteria = selectedCriteria.filter(
       (criteria) => criteria.trim() !== '',
     );
+    setIsLoading(true);
 
     try {
       if (!token) throw new Error('No token found');
@@ -127,7 +131,17 @@ export default function EditCourseScreen({ route }) {
         updatedCourse = await response.json();
       }
 
-      navigation.navigate('TeacherCourses', { updatedCourse });
+      setTimeout(() => {
+        setChangueConfirmed(true);
+
+        setTimeout(() => {
+          setIsLoading(false);
+          setChangueConfirmed(false);
+          navigation.navigate('TeacherCourses', { updatedCourse });
+        }, 1500);
+      }, 1000);
+
+
     } catch (error) {
       console.error('Network error:', error);
     }
@@ -136,7 +150,14 @@ export default function EditCourseScreen({ route }) {
   const handleRemoveCriteria = (criteria: string) => {
     setSelectedCriteria((prev) => prev.filter((item) => item !== criteria));
   };
-  return (
+  return isLoading ? (
+    <StatusOverlay
+      loading={!saveChangueConfirmed}
+      success={saveChangueConfirmed}
+      loadingMsg="Changing course..."
+      successMsg="Course changed successfully!"
+    />
+  ) : (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Edit Course</Text>
 

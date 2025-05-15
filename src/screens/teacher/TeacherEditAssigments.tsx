@@ -100,10 +100,10 @@ export default function TeacherEditAssignments({ route }) {
 
     const filesToSend = await Promise.all(
       newFiles
-        .filter((file) => !file.deleted) // Solo incluir archivos no eliminados
+        .filter((file) => !file.deleted) 
         .map(async (file) => ({
           name: file.name,
-          content: await convertToBase64(file.uri), // Asegúrate de esperar a que la conversión termine
+          content: await convertToBase64(file.uri), 
           size: file.size,
         })),
     );
