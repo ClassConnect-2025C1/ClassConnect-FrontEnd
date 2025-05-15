@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,7 +22,42 @@ export default function TeacherCourseDetail({ route }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
 
+  
+
+
+  const filteredAssignments = assignments.filter((assignment) => {
+    console.log('Assignment:', assignment.status);
+    const titleMatch = assignment.title
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+
+    const deadlineMatch = assignment.deadline
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+   
+    const statusMatch = assignment.status
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+ 
+
+
+    return titleMatch || deadlineMatch || statusMatch ;
+  });
+
+    const ITEMS_PER_PAGE = 2;
+    const [currentPage, setCurrentPage] = useState(1);
+  
+    const totalPages = Math.ceil(filteredAssignments.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedAssignments = filteredAssignments.slice(
+      startIndex,
+      startIndex + ITEMS_PER_PAGE,
+    );
+
+  
   const fetchAssignments = async () => {
     try {
       if (!token) {
@@ -94,64 +130,18 @@ export default function TeacherCourseDetail({ route }) {
       >
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
-
+  
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{course.title}</Text>
         <Text style={styles.subtitle}>
           {course.description || 'No description available'}
         </Text>
-
+  
         <View style={styles.tabContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              setActiveTab('Edit Course');
-              navigation.navigate('TeacherEditCourseDetail', { course });
-            }}
-          >
-            <Text
-              style={[
-                styles.tabTextLink,
-                activeTab === 'Edit Course' && styles.activeTabText,
-              ]}
-            >
-              Edit Course
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              setActiveTab('Feedbacks');
-              navigation.navigate('TeacherFeedbackCourse', { course });
-            }}
-          >
-            <Text
-              style={[
-                styles.tabTextLink,
-                activeTab === 'Feedbacks' && styles.activeTabText,
-              ]}
-            >
-              Feedbacks
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              setActiveTab('Members');
-              navigation.navigate('TeacherMembersCourse', { course });
-            }}
-          >
-            <Text
-              style={[
-                styles.tabTextLink,
-                activeTab === 'Members' && styles.activeTabText,
-              ]}
-            >
-              Members
-            </Text>
-          </TouchableOpacity>
+          {/* ... tus tabs ... */}
         </View>
       </View>
-
+  
       <View style={styles.sectionContainer}>
         <View style={styles.subTabContainer}>
           <TouchableOpacity onPress={() => setActiveSubTab('Assignments')}>
@@ -164,7 +154,7 @@ export default function TeacherCourseDetail({ route }) {
               Assignments
             </Text>
           </TouchableOpacity>
-
+  
           <TouchableOpacity onPress={() => setActiveSubTab('Resources')}>
             <Text
               style={[
@@ -178,17 +168,29 @@ export default function TeacherCourseDetail({ route }) {
         </View>
         <View style={styles.separator} />
       </View>
-
-      <ScrollView style={styles.contentContainer}>
+  
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search assignments..."
+          value={searchQuery}
+          onChangeText={(text) => {
+            setSearchQuery(text);
+            setCurrentPage(1);
+          }}
+        />
+      </View>
+  
+      {/* Aquí NO ScrollView, solo View */}
+      <View style={styles.contentContainer}>
         {loading ? (
           <Text>Loading assignments...</Text>
-        ) : (
-          activeSubTab === 'Assignments' &&
-          assignments.map((assignment, index) => (
+        ) : activeSubTab === 'Assignments' ? (
+          paginatedAssignments.map((assignment, index) => (
             <View key={index} style={styles.assignmentContainer}>
               <View style={styles.assignmentHeader}>
                 <Text style={styles.assignmentTitle}>{assignment.title}</Text>
-
+  
                 <View style={styles.assignmentActions}>
                   <Text style={styles.assignmentDate}>
                     {new Date(assignment.deadline).toLocaleDateString()}
@@ -200,10 +202,11 @@ export default function TeacherCourseDetail({ route }) {
                   </TouchableOpacity>
                 </View>
               </View>
-
+  
               <Text style={styles.assignmentDescription}>
                 {assignment.description}
               </Text>
+  
               <View style={styles.buttonRow}>
                 <TouchableOpacity
                   style={styles.smallButton}
@@ -230,34 +233,54 @@ export default function TeacherCourseDetail({ route }) {
               </View>
             </View>
           ))
+        ) : (
+          activeSubTab === 'Resources' && (
+            <View style={styles.assignmentContainer}>
+              <Text style={styles.assignmentTitle}>Course Resources</Text>
+              <Text style={styles.assignmentDescription}>
+                Here you will find resources such as slides, books, and other
+                materials related to this course.
+              </Text>
+            </View>
+          )
         )}
+      </View>
+  
+      {/* Botones paginación */}
+<View style={styles.paginationContainer}>
+  <TouchableOpacity
+    disabled={currentPage === 1}
+    onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+    style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
+  >
+    <Text style={styles.pageButtonText}>Prev</Text>
+  </TouchableOpacity>
 
-        {activeSubTab === 'Resources' && (
-          <View style={styles.assignmentContainer}>
-            <Text style={styles.assignmentTitle}>Course Resources</Text>
-            <Text style={styles.assignmentDescription}>
-              Here you will find resources such as slides, books, and other
-              materials related to this course.
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+  <Text style={styles.pageInfo}>
+    Page {currentPage} of {totalPages}
+  </Text>
 
-      <TouchableOpacity
-        style={[
-          styles.smallButton,
-          { alignSelf: 'flex-end', marginBottom: 40 },
-        ]}
-        onPress={() =>
-          navigation.navigate('TeacherCreateAssignments', { course })
-        }
-      >
-        <Text style={styles.smallButtonText}>Create assignment</Text>
-      </TouchableOpacity>
+  <TouchableOpacity
+    disabled={currentPage === totalPages}
+    onPress={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+    style={[styles.pageButton, currentPage === totalPages && styles.disabledButton]}
+  >
+    <Text style={styles.pageButtonText}>Next</Text>
+  </TouchableOpacity>
+</View>
+
+<TouchableOpacity
+  style={styles.createAssignmentButton}
+  onPress={() =>
+    navigation.navigate('TeacherCreateAssignments', { course })
+  }
+>
+  <Text style={styles.createAssignmentButtonText}>Create assignment</Text>
+</TouchableOpacity>
+
     </View>
   );
-}
-
+}  
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
@@ -270,7 +293,7 @@ const styles = StyleSheet.create({
     top: 30,
     left: 10,
     backgroundColor: '#E0E0E0',
-    borderRadius: 20,
+    borderRadius: 25, // más redondeado
     paddingVertical: 8,
     paddingHorizontal: 15,
     zIndex: 10,
@@ -313,7 +336,7 @@ const styles = StyleSheet.create({
   tabButton: {
     paddingVertical: 8,
     paddingHorizontal: 15,
-    borderRadius: 20,
+    borderRadius: 25, // más redondeado
     backgroundColor: '#D3D3D3',
   },
   activeTab: {
@@ -382,7 +405,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3D3D3',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 5,
+    borderRadius: 12, // más redondeado
   },
   smallButtonText: {
     color: '#fff',
@@ -402,11 +425,11 @@ const styles = StyleSheet.create({
   },
   createAssignmentButton: {
     backgroundColor: '#B0B0B0',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 25,
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+    borderRadius: 35, // más redondeado y botón más grande
     marginBottom: 40,
-    alignSelf: 'flex-end',
+    alignSelf: 'center', // centrado horizontal
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -415,20 +438,55 @@ const styles = StyleSheet.create({
   },
   createAssignmentButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
   assignmentActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-
   deleteIcon: {
     fontSize: 18,
     color: 'red',
     marginLeft: 10,
+  },
+  searchContainer: {
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center', // centra todo
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginVertical: 10,
+    gap: 30, // espacio entre botones y texto
+  },
+  pageButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#007AFF',
+    borderRadius: 15, // más redondeado
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  pageButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  pageInfo: {
+    fontSize: 16,
+    color: '#333',
   },
 });

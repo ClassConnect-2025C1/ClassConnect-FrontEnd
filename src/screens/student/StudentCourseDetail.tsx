@@ -24,13 +24,23 @@ export default function CourseDetail({ route }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredAssignments = assignments.filter((assignment) => {
+    console.log('Assignment:', assignment.status);
     const titleMatch = assignment.title
       ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
 
-    const deadlineMatch = assignment.deadline?.includes(searchQuery);
 
-    return titleMatch || deadlineMatch;
+    const deadlineMatch = assignment.deadline
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+   
+    const statusMatch = assignment.status
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+ 
+
+
+    return titleMatch || deadlineMatch || statusMatch ;
   });
 
   const ITEMS_PER_PAGE = 2;
@@ -158,7 +168,7 @@ export default function CourseDetail({ route }) {
           <View>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by title or deadline..."
+              placeholder="Search..."
               value={searchQuery}
               onChangeText={(text) => {
                 setSearchQuery(text);
