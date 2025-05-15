@@ -3,6 +3,7 @@
   "compilerOptions": {
     "strict": true, // Para escribir TypeScript más seguro
     "baseUrl": ".", // Te deja usar imports relativos más limpios
+    "jsx": "react", // Para usar JSX
     "paths": {
       "@/*": ["src/*"], // Opcional: atajo para tu carpeta src
       "@env": ["env.d.ts"] // Soluciona el tema de @env
