@@ -51,6 +51,7 @@ const MembersScreen = () => {
   }, [courseId, token]); // Agregar token como dependencia
 
   const handleApprove = async (userId) => {
+    console.log('Aprobando usuario:', userId);
     try {
       const res = await fetch(
         `${API_URL}/api/courses/approve/${userId}/${courseId}`,
