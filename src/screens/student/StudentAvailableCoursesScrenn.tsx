@@ -29,11 +29,11 @@ const AvailableCoursesScreen = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-    const filteredCourses = courses.filter((course) =>
-    course.title.toLowerCase().includes(courseSearchText.toLowerCase()) ||
-    course.createdBy.toLowerCase().includes(courseSearchText.toLowerCase()) ||
-    course.startDate.toLowerCase().includes(courseSearchText.toLowerCase()),
-
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.title.toLowerCase().includes(courseSearchText.toLowerCase()) ||
+      course.createdBy.toLowerCase().includes(courseSearchText.toLowerCase()) ||
+      course.startDate.toLowerCase().includes(courseSearchText.toLowerCase()),
   );
 
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);

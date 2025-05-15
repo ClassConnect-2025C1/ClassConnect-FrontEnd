@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,6 +21,27 @@ export default function CourseDetail({ route }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredAssignments = assignments.filter((assignment) => {
+    const titleMatch = assignment.title
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    const deadlineMatch = assignment.deadline?.includes(searchQuery);
+
+    return titleMatch || deadlineMatch;
+  });
+
+  const ITEMS_PER_PAGE = 2;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredAssignments.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedAssignments = filteredAssignments.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
 
   const fetchAssignments = async () => {
     try {
@@ -133,16 +155,33 @@ export default function CourseDetail({ route }) {
         {loading ? (
           <Text>Loading assignments...</Text>
         ) : activeTab === 'Assignments' ? (
-          <FlatList
-            contentContainerStyle={styles.contentContainer}
-            data={assignments}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.itemContainer}>
-                <Text style={styles.itemText}>{item.title}</Text>
-                <Text style={styles.itemDescription}>{item.description}</Text>
+          <View>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search by title or deadline..."
+              value={searchQuery}
+              onChangeText={(text) => {
+                setSearchQuery(text);
+                setCurrentPage(1); // Reinicia a la primera página al buscar
+              }}
+            />
+            {paginatedAssignments.map((item, index) => (
+              <View key={index} style={styles.itemContainer}>
                 <Text style={styles.itemText}>
-                  Due: {new Date(item.deadline).toLocaleDateString()}
+                  <Text style={{ fontWeight: 'bold' }}>Title: </Text>
+                  {item.title}
+                </Text>
+                <Text style={styles.itemText}>
+                  <Text style={{ fontWeight: 'bold' }}>Due: </Text>
+                  {new Date(item.deadline).toLocaleDateString()}
+                </Text>
+                <Text style={styles.itemText}>
+                  <Text style={{ fontWeight: 'bold' }}>Status: </Text>
+                  {item.status}
+                </Text>
+                <Text style={styles.itemText}>
+                  <Text style={{ fontWeight: 'bold' }}>Time limit: </Text>
+                  {item.time_limit}
                 </Text>
 
                 {Array.isArray(item.files) && item.files.length > 0 && (
@@ -187,11 +226,39 @@ export default function CourseDetail({ route }) {
                   </Text>
                 </TouchableOpacity>
               </View>
+            ))}
+
+            {/* Paginación */}
+            {assignments.length > ITEMS_PER_PAGE && (
+              <View style={styles.paginationContainer}>
+                <TouchableOpacity
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage((prev) => prev - 1)}
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.pageButtonDisabled,
+                  ]}
+                >
+                  <Text style={styles.pageButtonText}>Prev</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.pageIndicator}>
+                  Página {currentPage} de {totalPages}
+                </Text>
+
+                <TouchableOpacity
+                  disabled={currentPage === totalPages}
+                  onPress={() => setCurrentPage((prev) => prev + 1)}
+                  style={[
+                    styles.pageButton,
+                    currentPage === totalPages && styles.pageButtonDisabled,
+                  ]}
+                >
+                  <Text style={styles.pageButtonText}>Next</Text>
+                </TouchableOpacity>
+              </View>
             )}
-            ListEmptyComponent={<Text>No assignments available</Text>}
-            refreshing={loading}
-            onRefresh={fetchAssignments}
-          />
+          </View>
         ) : (
           <ScrollView contentContainerStyle={styles.contentContainer}>
             <View style={styles.itemContainer}>
@@ -223,59 +290,71 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: 40,
-    paddingHorizontal: 20,
+    paddingTop: 30,
+    paddingHorizontal: 16,
   },
   backButton: {
     position: 'absolute',
-    top: 30,
+    top: 20,
     left: 10,
     backgroundColor: '#E0E0E0',
     borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     zIndex: 10,
   },
   backButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
   },
   headerContainer: {
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    padding: 16,
     backgroundColor: '#F8F8F8',
-    marginHorizontal: 15,
-    marginTop: 40,
-    marginBottom: 20,
-    borderRadius: 15,
+    marginHorizontal: 0,
+    marginTop: 60,
+    marginBottom: 16,
+    borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#555',
-    marginBottom: 15,
+    marginBottom: 10,
   },
-  courseInfo: {
-    marginBottom: 20,
+  detail: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
   },
-  infoText: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 5,
+  eligibilityContainer: {
+    marginVertical: 8,
   },
-  boldText: {
-    fontWeight: 'bold',
+  chipsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  eligibilityChip: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginRight: 6,
+    marginTop: 6,
+  },
+  eligibilityText: {
+    fontSize: 12,
+    color: '#333',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -283,8 +362,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   tabButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 20,
     backgroundColor: '#D3D3D3',
   },
@@ -294,100 +373,99 @@ const styles = StyleSheet.create({
   tabText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 13,
   },
   sectionContainer: {
     flex: 1,
-    marginBottom: 20,
-  },
-  contentContainer: {
-    paddingBottom: 30,
+    marginBottom: 16,
   },
   itemContainer: {
     backgroundColor: '#F0F0F0',
     borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+    padding: 12,
+    marginBottom: 2,
   },
   itemText: {
     fontSize: 14,
     color: '#333',
+    marginBottom: 2,
   },
   itemDescription: {
     fontSize: 12,
     color: '#777',
-    marginBottom: 10,
-  },
-  submitButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginTop: 10,
-    alignSelf: 'flex-end',
-    borderWidth: 1,
-    borderColor: '#D3D3D3',
-  },
-  submitButtonText: {
-    color: 'black',
-  },
-
-  feedbackContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  feedbackButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-  },
-  feedbackButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginBottom: 6,
   },
   downloadButton: {
-    marginTop: 5,
+    marginTop: 4,
     backgroundColor: '#2196F3',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 6,
     alignSelf: 'flex-start',
   },
   downloadButtonText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
   },
-  detail: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  eligibilityContainer: {
-    marginVertical: 10,
-  },
-
-  chipsWrapper: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8, // si estás usando React Native 0.71+
-    rowGap: 8,
-    columnGap: 8,
+  submitButton: {
+    borderWidth: 1,
+    borderColor: '#D3D3D3',
+    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    alignSelf: 'flex-end',
     marginTop: 6,
   },
-
-  eligibilityChip: {
-    backgroundColor: '#e0e0e0',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 6,
-    marginBottom: 6,
+  submitButtonText: {
+    color: '#000',
+    fontSize: 13,
   },
-
-  eligibilityText: {
+  feedbackContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  feedbackButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+  },
+  feedbackButtonText: {
+    color: '#fff',
     fontSize: 14,
+    fontWeight: 'bold',
+    paddingTop: 0, // o marginTop: 4
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  pageButton: {
+    padding: 6,
+    marginHorizontal: 8,
+    backgroundColor: '#ddd',
+    borderRadius: 6,
+  },
+  pageButtonDisabled: {
+    backgroundColor: '#eee',
+  },
+  pageButtonText: {
+    fontSize: 12,
     color: '#333',
+  },
+  pageIndicator: {
+    fontSize: 12,
+    color: '#666',
+  },
+  searchInput: {
+    height: 40,
+    borderColor: '#CCC',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 12,
   },
 });

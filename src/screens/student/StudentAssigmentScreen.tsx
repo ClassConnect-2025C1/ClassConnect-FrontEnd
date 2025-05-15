@@ -10,6 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../navigation/AuthContext';
 import { API_URL } from '@env';
+import { downloadAndShareFile } from '../../utils/FileDowloader';
 
 export default function StudentAssignmentScreen({ route }) {
   const { assignment, course, userId, onStarted } = route.params;
@@ -135,7 +136,11 @@ export default function StudentAssignmentScreen({ route }) {
         {Array.isArray(files) && files.length > 0 && (
           <View style={{ marginTop: 10 }}>
             {files.map((file, idx) => (
-              <TouchableOpacity key={idx} style={styles.downloadButton}>
+              <TouchableOpacity
+                key={idx}
+                style={styles.downloadButton}
+                onPress={() => downloadAndShareFile(file)}
+              >
                 <Text style={styles.downloadButtonText}>
                   Download {file.name}
                 </Text>

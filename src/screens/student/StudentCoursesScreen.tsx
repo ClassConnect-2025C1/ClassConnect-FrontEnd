@@ -47,13 +47,13 @@ const CoursesScreen = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const filteredCourses = courses.filter((course) =>
-    course.title.toLowerCase().includes(searchText.toLowerCase()) ||
-    course.createdBy.toLowerCase().includes(searchText.toLowerCase()) ||
-    course.startDate.toLowerCase().includes(searchText.toLowerCase()),
-
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      course.createdBy.toLowerCase().includes(searchText.toLowerCase()) ||
+      course.startDate.toLowerCase().includes(searchText.toLowerCase()),
   );
-  
+
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 
   const refreshCourses = async () => {
@@ -170,7 +170,6 @@ const CoursesScreen = () => {
         onClose={() => setDeleteFavoriteCourse(false)}
       />
 
-
       <ScrollView contentContainerStyle={styles.courseList}>
         {[...filteredCourses]
           .sort((a, b) => {
@@ -246,7 +245,6 @@ const CoursesScreen = () => {
           <Text style={styles.pageButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
-
 
       <View style={styles.separator} />
 

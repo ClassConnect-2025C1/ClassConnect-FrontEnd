@@ -34,7 +34,6 @@ export default function ShowCourseDetail() {
         <Text style={styles.detail}>
           End date: {course.endDate ?? 'Not specified'}
         </Text>
-        
 
         <View style={styles.eligibilityWrapper}>
           <Text style={styles.detailLabel}>Eligibility Criteria</Text>
