@@ -47,7 +47,7 @@ export const handleGoogleLoginCallback = async (
     const userRole = userProfile.role;
 
     navigation.navigate(
-      userRole === 'teacher' ? 'TeacherCourses' : 'StudentCourses',
+      userRole === 'teacher' ? 'TeacherCourses' : 'StudentCourses', {userId: user_id}
     );
   } catch (error: any) {
     console.error('Error en login con Google:', error.message);
