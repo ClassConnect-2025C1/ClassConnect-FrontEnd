@@ -304,7 +304,10 @@ export default function TeacherCourseDetail({ route }) {
 
         <TouchableOpacity
           style={styles.editCourseButton}
-          onPress={() => navigation.navigate('EditCourseScreen', { course })}
+          onPress={() => {
+            setActiveTab('Edit Course');
+            navigation.navigate('TeacherEditCourseDetail', { course });
+          }}
         >
           <Text style={styles.createAssignmentButtonText}>Edit course</Text>
         </TouchableOpacity>
