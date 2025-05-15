@@ -41,12 +41,14 @@ const CoursesScreen = ({ route }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const filteredCourses = courses.filter(
-    (course) =>
-      course.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      course.createdBy.toLowerCase().includes(searchText.toLowerCase()) ||
-      course.startDate.toLowerCase().includes(searchText.toLowerCase()),
-  );
+  const filteredCourses = courses.filter((course) => {
+    const titleMatch = course.title?.toLowerCase().includes(searchText.toLowerCase());
+    const createdByMatch = course.createdBy?.toLowerCase().includes(searchText.toLowerCase());
+    const startDateMatch = course.startDate?.toLowerCase().includes(searchText.toLowerCase());
+    
+    return titleMatch || createdByMatch || startDateMatch;
+  });
+  
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 
   useEffect(() => {

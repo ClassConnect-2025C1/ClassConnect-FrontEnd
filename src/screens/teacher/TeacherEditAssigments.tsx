@@ -14,6 +14,7 @@ import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
 import * as DocumentPicker from 'expo-document-picker';
 import { Linking } from 'react-native';
+import StatusOverlay from '../../components/StatusOverlay';
 
 const { width } = Dimensions.get('window');
 
@@ -32,6 +33,10 @@ export default function TeacherEditAssignments({ route }) {
   const { assignment, course } = route.params;
   const navigation = useNavigation();
   const { token } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
+
+  const [errors, setErrors] = useState({});
 
   const [title, setTitle] = useState(assignment.title);
   const [description, setDescription] = useState(assignment.description);
@@ -80,17 +85,25 @@ export default function TeacherEditAssignments({ route }) {
   };
 
   const handleSaveChanges = async () => {
-    if (!title || !description || !deadline || !timeLimit) {
-      setError('All fields are required');
+    const newErrors = {};
+    if (!title) newErrors.title = 'Title is required';
+    if (!description) newErrors.description = 'Description is required';
+    if (!deadline) newErrors.deadline = 'Deadline is required';
+
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
+    setIsLoading(true);
+
     const filesToSend = await Promise.all(
       newFiles
-        .filter((file) => !file.deleted) // Solo incluir archivos no eliminados
+        .filter((file) => !file.deleted) 
         .map(async (file) => ({
           name: file.name,
-          content: await convertToBase64(file.uri), // Asegúrate de esperar a que la conversión termine
+          content: await convertToBase64(file.uri), 
           size: file.size,
         })),
     );
@@ -124,12 +137,27 @@ export default function TeacherEditAssignments({ route }) {
         return;
       }
 
-      navigation.goBack();
+      setTimeout(() => {
+        setChangueConfirmed(true);
+
+        setTimeout(() => {
+          setIsLoading(false);
+          setChangueConfirmed(false);
+          navigation.navigate('TeacherCourses');
+        }, 1500);
+      }, 1000);
     } catch (err) {
       console.error('Network error:', err);
     }
   };
-  return (
+  return isLoading ? (
+    <StatusOverlay
+      loading={!saveChangueConfirmed}
+      success={saveChangueConfirmed}
+      loadingMsg="Changing assignment..."
+      successMsg="Assignment changed successfully!"
+    />
+  ) : (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Edit Assignment</Text>
 
@@ -141,6 +169,7 @@ export default function TeacherEditAssignments({ route }) {
           value={title}
           onChangeText={setTitle}
         />
+        {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
 
         <Text style={styles.label}>Description</Text>
         <TextInput
@@ -149,6 +178,7 @@ export default function TeacherEditAssignments({ route }) {
           value={description}
           onChangeText={setDescription}
         />
+        {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
 
         <Text style={styles.label}>Deadline</Text>
         <TextInput
@@ -157,6 +187,7 @@ export default function TeacherEditAssignments({ route }) {
           value={deadline}
           onChangeText={setDeadline}
         />
+        {errors.deadline && <Text style={styles.errorText}>{errors.deadline}</Text>}
 
         <Text style={styles.label}>Time Limit (in minutes)</Text>
         <TextInput
@@ -166,6 +197,7 @@ export default function TeacherEditAssignments({ route }) {
           value={timeLimit}
           onChangeText={setTimeLimit}
         />
+
 
         <Text style={styles.label}>Current Files</Text>
         <View style={styles.fileContainer}>
@@ -213,7 +245,6 @@ export default function TeacherEditAssignments({ route }) {
           </Text>
         ))}
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
 
         <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
           <Text style={styles.buttonText}>Save Changes</Text>

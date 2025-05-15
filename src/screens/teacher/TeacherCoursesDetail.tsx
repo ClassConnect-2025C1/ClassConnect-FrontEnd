@@ -304,7 +304,10 @@ export default function TeacherCourseDetail({ route }) {
 
         <TouchableOpacity
           style={styles.editCourseButton}
-          onPress={() => navigation.navigate('EditCourseScreen', { course })}
+          onPress={() => {
+            setActiveTab('Edit Course');
+            navigation.navigate('TeacherEditCourseDetail', { course });
+          }}
         >
           <Text style={styles.createAssignmentButtonText}>Edit course</Text>
         </TouchableOpacity>
@@ -387,7 +390,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   subTabText: {
-    fontSize: 14.5, 
+    fontSize: 14.5,
     color: '#555',
     paddingHorizontal: 1,
   },
@@ -402,7 +405,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3D3D3',
     marginVertical: 10,
   },
- 
+
   contentContainer: {
     paddingBottom: 20,
   },

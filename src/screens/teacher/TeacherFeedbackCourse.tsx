@@ -3,15 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
+import { Picker } from '@react-native-picker/picker';
+import { DateTimePickerAndroid } from '../../../node_modules/@react-native-community/datetimepicker/src/DateTimePickerAndroid.android';
 
 const { width } = Dimensions.get('window');
 
@@ -20,22 +22,26 @@ const FeedbackScreen = () => {
   const route = useRoute();
   const { course } = route.params;
   const courseId = course.id;
+  const [selectedRating, setSelectedRating] = useState('Any');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
-  const [selectedFilter, setSelectedFilter] = useState('Any');
-  const [fromDate] = useState('25/02/2025');
-  const [toDate] = useState('30/02/2025');
   const [feedbacks, setFeedbacks] = useState([]);
   const { token } = useAuth();
+
+  const ITEMS_PER_PAGE = 3;
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
         const response = await fetch(
           `${API_URL}/api/courses/${courseId}/feedbacks`,
           {
-            method: 'GET', // Especificamos el método como 'GET' aunque sea implícito en este caso
+            method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`, // Agregar el token en los headers
+              Authorization: `Bearer ${token}`,
             },
           },
         );
@@ -44,8 +50,8 @@ const FeedbackScreen = () => {
           throw new Error('Failed to fetch feedbacks');
         }
         const data = await response.json();
-        console.log(data);
         setFeedbacks(data);
+        setCurrentPage(1);
       } catch (error) {
         console.error(error);
         alert('Failed to load feedbacks.');
@@ -54,66 +60,164 @@ const FeedbackScreen = () => {
 
     fetchFeedbacks();
   }, [courseId, token]);
+
+  const filteredFeedbacks = (feedbacks?.data || []).filter((f) => {
+    if (selectedRating !== 'Any' && f.rating !== parseInt(selectedRating)) {
+      return false;
+    }
+
+    const createdAt = new Date(f.created_at);
+
+    if (fromDate) {
+      const from = new Date(fromDate);
+      if (isNaN(from.getTime())) return false;
+      if (createdAt < from) return false;
+    }
+
+    if (toDate) {
+      const to = new Date(toDate);
+      if (isNaN(to.getTime())) return false;
+      if (createdAt > to) return false;
+    }
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredFeedbacks.length / ITEMS_PER_PAGE);
+
+  const paginatedFeedbacks = filteredFeedbacks.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Course Feedbacks</Text>
+      {/* Header y back button */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 20,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            backgroundColor: '#F0F0F0',
+            borderRadius: 8,
+            marginLeft: -1,
+            marginTop: -11,
+          }}
+        >
+          <Text
+            style={[styles.backButtonText, { fontSize: 16, color: '#2c3e50' }]}
+          >
+            Back
+          </Text>
+        </TouchableOpacity>
+        <Text
+          style={[
+            styles.header,
+            { flex: 1, textAlign: 'center', marginLeft: -40 },
+          ]}
+        >
+          Course Feedbacks
+        </Text>
+      </View>
 
+      {/* Filters */}
       <View style={styles.filterContainer}>
-        <View style={styles.dateFilter}>
-          <Text style={styles.filterLabel}>From</Text>
-          <View style={styles.dateBox}>
-            <Text style={styles.dateText}>{fromDate}</Text>
-          </View>
+        {/* Rating */}
+        <View style={styles.ratingCompactBox}>
+          <Text style={styles.ratingLabel}>Rating:</Text>
+          <Picker
+            selectedValue={selectedRating}
+            style={styles.ratingCompactPicker}
+            onValueChange={(itemValue) => {
+              setSelectedRating(itemValue);
+              setCurrentPage(1);
+            }}
+            dropdownIconColor="#2c3e50"
+          >
+            <Picker.Item label="Any" value="Any" />
+            <Picker.Item label="5" value="5" />
+            <Picker.Item label="4" value="4" />
+            <Picker.Item label="3" value="3" />
+            <Picker.Item label="2" value="2" />
+            <Picker.Item label="1" value="1" />
+          </Picker>
         </View>
 
-        <View style={styles.dateFilter}>
-          <Text style={styles.filterLabel}>To</Text>
-          <View style={styles.dateBox}>
-            <Text style={styles.dateText}>{toDate}</Text>
+        {/* Fecha desde / hasta - inputs en fila compacta al lado del rating */}
+        <View style={styles.dateFiltersContainer}>
+          <View style={styles.singleDateFilter}>
+            <Text style={styles.dateLabel}>From:</Text>
+            <TextInput
+              style={styles.dateInput}
+              placeholder="YYYY-MM-DD"
+              value={fromDate}
+              onChangeText={(text) => {
+                setFromDate(text);
+                setCurrentPage(1);
+              }}
+            />
           </View>
-        </View>
 
-        <View style={styles.ratingFilter}>
-          <Text style={styles.filterLabel}>Rating</Text>
-          <View style={styles.ratingBox}>
-            <Text style={styles.ratingText}>{selectedFilter}</Text>
-            <MaterialIcons name="arrow-drop-down" size={24} color="black" />
+          <View style={styles.singleDateFilter}>
+            <Text style={styles.dateLabel}>To:</Text>
+            <TextInput
+              style={styles.dateInput}
+              placeholder="YYYY-MM-DD"
+              value={toDate}
+              onChangeText={(text) => {
+                setToDate(text);
+                setCurrentPage(1);
+              }}
+            />
           </View>
         </View>
       </View>
 
       <View style={styles.divider} />
 
-      <FlatList
-        data={feedbacks.data}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.feedbackItem}>
+      <Text style={styles.sectionHeader}>Feedbacks</Text>
+      <View style={styles.feedbackList}>
+        {paginatedFeedbacks.map((item) => (
+          <View key={item.id.toString()} style={styles.feedbackItem}>
             <View style={styles.feedbackHeader}>
               <Text style={styles.feedbackTitle}>{item.summary}</Text>
+
               <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
             </View>
+
             <Text style={styles.feedbackContent}>{item.comment}</Text>
+            <Text style={[styles.dateText, { marginTop: 10 }]}>
+              {new Date(item.created_at)
+                .toLocaleDateString('es-US', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                })
+                .replace(/(\d+)\/(\d+)\/(\d+)/, '$3/$1/$2')}
+            </Text>
           </View>
-        )}
-        ListHeaderComponent={
-          <Text style={styles.sectionHeader}>Feedbacks</Text>
-        }
-        style={styles.feedbackList}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+        ))}
+      </View>
 
-      <View style={styles.bottomButtonContainer}>
+      <View style={{ marginTop: 11, marginBottom: 20, alignItems: 'center' }}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={[styles.generateButton, { marginBottom: 15 }]}
           onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>Close</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.generateButton}
-          onPress={() => navigation.goBack()} // Aquí en el futuro podrías usar otra lógica
         >
           <MaterialIcons
             name="star"
@@ -123,6 +227,46 @@ const FeedbackScreen = () => {
           />
           <Text style={styles.generateButtonText}>Generate AI summary</Text>
         </TouchableOpacity>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+          }}
+        >
+          <TouchableOpacity
+            style={[
+              styles.backButton,
+              currentPage === 1 && styles.disabledButton,
+            ]}
+            onPress={handlePrevPage}
+            disabled={currentPage === 1}
+          >
+            <Text style={styles.backButtonText}>Prev</Text>
+          </TouchableOpacity>
+
+          <Text
+            style={[
+              styles.backButtonText,
+              { marginHorizontal: 15, fontWeight: 'bold' },
+            ]}
+          >
+            Page {currentPage} of {totalPages || 1}
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.backButton,
+              currentPage === totalPages && styles.disabledButton,
+            ]}
+            onPress={handleNextPage}
+            disabled={currentPage === totalPages}
+          >
+            <Text style={styles.backButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -141,11 +285,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     color: '#2c3e50',
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
   },
   dateFilter: {
     flex: 1,
@@ -290,6 +429,90 @@ const styles = StyleSheet.create({
     color: '#5B6799',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  ratingLabel: {
+    fontSize: 13,
+    color: '#2c3e50',
+    marginRight: 6,
+  },
+  ratingCompactPicker: {
+    height: 30,
+    width: 70,
+  },
+  dateFilterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    marginHorizontal: 5,
+  },
+  dateButton: {
+    flex: 1,
+    paddingVertical: 10,
+  },
+  disabledButton: {
+    opacity: 0.5,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  dateButtonText: {
+    color: '#2c3e50',
+    fontSize: 14,
+  },
+
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
+  },
+
+  ratingCompactBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: '#fff',
+    width: 120,
+    minWidth: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+
+  dateFiltersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginLeft: 12,
+  },
+
+  singleDateFilter: {
+    flexDirection: 'column',
+    width: 100,
+
+    marginTop: -15,
+  },
+
+  dateLabel: {
+    fontSize: 13,
+    color: '#2c3e50',
+    marginBottom: 2,
+  },
+
+  dateInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    fontSize: 14,
+    backgroundColor: '#fff',
   },
 });
 

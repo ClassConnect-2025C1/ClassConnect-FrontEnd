@@ -131,7 +131,6 @@ const UploadFilesScreen = ({ route }) => {
       }, 1500);
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload files!');
     }
   };
 
@@ -171,7 +170,7 @@ const UploadFilesScreen = ({ route }) => {
       setTimeout(() => {
         setShowDeleteModal(false);
         navigation.goBack();
-      }, 3000);
+      }, 1000);
     } catch (error) {
       console.error('Error deleting files:', error);
     }
