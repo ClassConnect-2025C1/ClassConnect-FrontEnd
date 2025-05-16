@@ -13,6 +13,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 const { width } = Dimensions.get('window');
 import { useAuth } from '../../navigation/AuthContext';
+import StatusOverlay from '../../components/StatusOverlay';
+
 const MembersScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -23,6 +25,8 @@ const MembersScreen = () => {
   const [loading, setLoading] = useState(true);
   const [approvedMembers, setApprovedMembers] = useState([]);
   const { token } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -48,7 +52,7 @@ const MembersScreen = () => {
     };
 
     fetchMembers();
-  }, [courseId, token]); // Agregar token como dependencia
+  }, [courseId, token]);
 
   const handleApprove = async (userId) => {
     try {
@@ -67,12 +71,30 @@ const MembersScreen = () => {
       if (!res.ok) throw new Error('Aprobación fallida');
       console.log('Aprobando usuario:', userId);
       setApprovedMembers((prev) => [...prev, userId]);
+      setIsLoading(true);
+
+      setTimeout(() => {
+        setChangueConfirmed(true);
+
+        setTimeout(() => {
+          setIsLoading(false);
+          setChangueConfirmed(false);
+          navigation.goBack();
+        }, 1500);
+      }, 1000);
     } catch (error) {
       console.error('Error al aprobar:', error);
     }
   };
 
-  return (
+  return isLoading ? (
+    <StatusOverlay
+      loading={!saveChangueConfirmed}
+      success={saveChangueConfirmed}
+      loadingMsg="Approving student..."
+      successMsg="Studen approved successfully!"
+    />
+  ) : (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Course Members</Text>
 

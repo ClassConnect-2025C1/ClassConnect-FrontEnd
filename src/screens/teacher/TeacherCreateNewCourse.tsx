@@ -103,7 +103,7 @@ const TeacherCreateNewCourseScreen = () => {
       }
 
       const data = await response.json();
-     
+
       setIsLoading(false);
 
       setTimeout(() => {
@@ -115,8 +115,6 @@ const TeacherCreateNewCourseScreen = () => {
           navigation.navigate('TeacherCourses', { newCourse: data });
         }, 1500);
       }, 1000);
-
-     
     } catch (error) {
       setIsLoading(false);
       setModalMessage('An unexpected error occurred.');
@@ -127,12 +125,12 @@ const TeacherCreateNewCourseScreen = () => {
   return (
     <View style={styles.container}>
       {isLoading ? (
-            <StatusOverlay
-            loading={!saveChangueConfirmed}
-            success={saveChangueConfirmed}
-            loadingMsg="Changing course..."
-            successMsg="Course changed successfully!"
-          />
+        <StatusOverlay
+          loading={!saveChangueConfirmed}
+          success={saveChangueConfirmed}
+          loadingMsg="Changing course..."
+          successMsg="Course changed successfully!"
+        />
       ) : (
         <>
           <Text style={styles.title}>Create New Course</Text>
