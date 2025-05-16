@@ -27,6 +27,8 @@ export const getUserProfileData = async (token, userIdParam = null) => {
       lastName: userProfile.last_name,
       phone: userProfile.phone,
       photo: userProfile.photo,
+      bio: userProfile.bio,
+      location: userProfile.location,
     };
   } catch (error) {
     console.error('Error getting user profile:', error);

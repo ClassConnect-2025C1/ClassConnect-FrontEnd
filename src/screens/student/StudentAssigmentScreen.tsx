@@ -111,12 +111,6 @@ export default function StudentAssignmentScreen({ route }) {
 
   return (
     <View style={styles.mainContainer}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
 
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{title}</Text>

@@ -7,7 +7,7 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation,useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
@@ -21,7 +21,9 @@ export default function CourseDetail({ route }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
+  const isFocused = useIsFocused();
   const [searchQuery, setSearchQuery] = useState('');
+
 
   const filteredAssignments = assignments.filter((assignment) => {
     console.log('Assignment:', assignment.status);
@@ -88,8 +90,10 @@ export default function CourseDetail({ route }) {
   };
 
   useEffect(() => {
-    fetchAssignments();
-  }, []);
+    if (isFocused) {
+      fetchAssignments();
+    }
+  }, [isFocused]);
 
   return (
     <View style={styles.mainContainer}>
@@ -112,12 +116,12 @@ export default function CourseDetail({ route }) {
         <Text style={styles.detail}>
           Capacity: {course.capacity || 'Not specified'}
         </Text>
-        <Text style={styles.detail}>
-          Start date: {course.startDate || 'Not specified'}
-        </Text>
-        <Text style={styles.detail}>
-          End date: {course.endDate || 'Not specified'}
-        </Text>
+        <View style={styles.detailRow}>
+          <Text style={styles.detail}>
+            Start date: {course.startDate || 'Not specified'}
+            End date: {course.endDate || 'Not specified'}
+          </Text>
+        </View>
         {Array.isArray(course.eligibilityCriteria) &&
         course.eligibilityCriteria.length > 0 ? (
           <View style={styles.eligibilityContainer}>
@@ -294,185 +298,186 @@ export default function CourseDetail({ route }) {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingTop: 30,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 10,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    zIndex: 10,
-  },
-  backButtonText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerContainer: {
-    padding: 16,
-    backgroundColor: '#F8F8F8',
-    marginHorizontal: 0,
-    marginTop: 60,
-    marginBottom: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#555',
-    marginBottom: 10,
-  },
-  detail: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
-  },
-  eligibilityContainer: {
-    marginVertical: 8,
-  },
-  chipsWrapper: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  eligibilityChip: {
-    backgroundColor: '#E0E0E0',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginRight: 6,
-    marginTop: 6,
-  },
-  eligibilityText: {
-    fontSize: 12,
-    color: '#333',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
-  },
-  tabButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#D3D3D3',
-  },
-  activeTab: {
-    backgroundColor: '#4CAF50',
-  },
-  tabText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-  sectionContainer: {
-    flex: 1,
-    marginBottom: 16,
-  },
-  itemContainer: {
-    backgroundColor: '#F0F0F0',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 2,
-  },
-  itemText: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 2,
-  },
-  itemDescription: {
-    fontSize: 12,
-    color: '#777',
-    marginBottom: 6,
-  },
-  downloadButton: {
-    marginTop: 4,
-    backgroundColor: '#2196F3',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  downloadButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  submitButton: {
-    borderWidth: 1,
-    borderColor: '#D3D3D3',
-    borderRadius: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    alignSelf: 'flex-end',
-    marginTop: 6,
-  },
-  submitButtonText: {
-    color: '#000',
-    fontSize: 13,
-  },
-  feedbackContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  feedbackButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-  },
-  feedbackButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    paddingTop: 0, // o marginTop: 4
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  pageButton: {
-    padding: 6,
-    marginHorizontal: 8,
-    backgroundColor: '#ddd',
-    borderRadius: 6,
-  },
-  pageButtonDisabled: {
-    backgroundColor: '#eee',
-  },
-  pageButtonText: {
-    fontSize: 12,
-    color: '#333',
-  },
-  pageIndicator: {
-    fontSize: 12,
-    color: '#666',
-  },
-  searchInput: {
-    height: 40,
-    borderColor: '#CCC',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 12,
-  },
+mainContainer: {
+  flex: 1,
+  backgroundColor: '#FFFFFF',
+  paddingTop: 20,
+  paddingHorizontal: 15,
+},
+backButton: {
+  position: 'absolute',
+  top: 40,
+  left: 10,
+  backgroundColor: '#E0E0E0',
+  borderRadius: 19,
+  paddingVertical: 5.7,
+  paddingHorizontal: 11.4,
+  zIndex: 10,
+},
+backButtonText: {
+  fontSize: 13.3,
+  fontWeight: 'bold',
+  color: '#333',
+},
+headerContainer: {
+  padding: 15,
+  backgroundColor: '#F8F8F8',
+  marginHorizontal: 0,
+  marginTop: 57,
+  marginBottom: 15,
+  borderRadius: 11.4,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.05,
+  shadowRadius: 1.9,
+  elevation: 2,
+},
+title: {
+  fontSize: 14.3,
+  fontWeight: 'bold',
+  color: '#333',
+},
+subtitle: {
+  fontSize: 12.4,
+  color: '#555',
+  marginBottom: 9.5,
+},
+detail: {
+  fontSize: 12.4,
+  color: '#666',
+  marginTop: 1.9,
+},
+eligibilityContainer: {
+  marginVertical: 7.6,
+},
+chipsWrapper: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 5.7,
+},
+eligibilityChip: {
+  backgroundColor: '#E0E0E0',
+  borderRadius: 11.4,
+  paddingVertical: 3.8,
+  paddingHorizontal: 9.5,
+  marginRight: 5.7,
+  marginTop: 5.7,
+},
+eligibilityText: {
+  fontSize: 11.4,
+  color: '#333',
+},
+tabContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  marginTop: 9.5,
+},
+tabButton: {
+  paddingVertical: 5.7,
+  paddingHorizontal: 11.4,
+  borderRadius: 19,
+  backgroundColor: '#D3D3D3',
+},
+activeTab: {
+  backgroundColor: '#4CAF50',
+},
+tabText: {
+  color: '#fff',
+  fontWeight: 'bold',
+  fontSize: 12.4,
+},
+sectionContainer: {
+  flex: 1,
+  marginBottom: 15,
+},
+itemContainer: {
+  backgroundColor: '#F0F0F0',
+  borderRadius: 9.5,
+  padding: 11.4,
+  marginBottom: 1.9,
+},
+itemText: {
+  fontSize: 13.3,
+  color: '#333',
+  marginBottom: 1.9,
+},
+itemDescription: {
+  fontSize: 11.4,
+  color: '#777',
+  marginBottom: 5.7,
+},
+downloadButton: {
+  marginTop: 3.8,
+  backgroundColor: '#2196F3',
+  paddingVertical: 4.8,
+  paddingHorizontal: 9.5,
+  borderRadius: 5.7,
+  alignSelf: 'flex-start',
+},
+downloadButtonText: {
+  color: '#fff',
+  fontSize: 11.4,
+  fontWeight: '500',
+},
+submitButton: {
+  borderWidth: 1,
+  borderColor: '#D3D3D3',
+  borderRadius: 7.6,
+  paddingVertical: 4.8,
+  paddingHorizontal: 11.4,
+  alignSelf: 'flex-end',
+  marginTop: 5.7,
+},
+submitButtonText: {
+  color: '#000',
+  fontSize: 12.4,
+},
+feedbackContainer: {
+  alignItems: 'center',
+  marginBottom: 19,
+},
+feedbackButton: {
+  backgroundColor: '#4CAF50',
+  paddingVertical: 9.5,
+  paddingHorizontal: 22.8,
+  borderRadius: 19,
+},
+feedbackButtonText: {
+  color: '#fff',
+  fontSize: 13.3,
+  fontWeight: 'bold',
+  paddingTop: 0,
+},
+paginationContainer: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginTop: 9.5,
+},
+pageButton: {
+  padding: 5.7,
+  marginHorizontal: 7.6,
+  backgroundColor: '#ddd',
+  borderRadius: 5.7,
+},
+pageButtonDisabled: {
+  backgroundColor: '#eee',
+},
+pageButtonText: {
+  fontSize: 11.4,
+  color: '#333',
+},
+pageIndicator: {
+  fontSize: 11.4,
+  color: '#666',
+},
+searchInput: {
+  height: 38,
+  borderColor: '#CCC',
+  borderWidth: 1,
+  borderRadius: 7.6,
+  paddingHorizontal: 9.5,
+  marginBottom: 11.4,
+},
+
 });

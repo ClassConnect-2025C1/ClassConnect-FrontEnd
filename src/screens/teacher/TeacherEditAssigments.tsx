@@ -90,7 +90,6 @@ export default function TeacherEditAssignments({ route }) {
     if (!description) newErrors.description = 'Description is required';
     if (!deadline) newErrors.deadline = 'Deadline is required';
 
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -100,10 +99,10 @@ export default function TeacherEditAssignments({ route }) {
 
     const filesToSend = await Promise.all(
       newFiles
-        .filter((file) => !file.deleted) 
+        .filter((file) => !file.deleted)
         .map(async (file) => ({
           name: file.name,
-          content: await convertToBase64(file.uri), 
+          content: await convertToBase64(file.uri),
           size: file.size,
         })),
     );
@@ -178,7 +177,9 @@ export default function TeacherEditAssignments({ route }) {
           value={description}
           onChangeText={setDescription}
         />
-        {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+        {errors.description && (
+          <Text style={styles.errorText}>{errors.description}</Text>
+        )}
 
         <Text style={styles.label}>Deadline</Text>
         <TextInput
@@ -187,7 +188,9 @@ export default function TeacherEditAssignments({ route }) {
           value={deadline}
           onChangeText={setDeadline}
         />
-        {errors.deadline && <Text style={styles.errorText}>{errors.deadline}</Text>}
+        {errors.deadline && (
+          <Text style={styles.errorText}>{errors.deadline}</Text>
+        )}
 
         <Text style={styles.label}>Time Limit (in minutes)</Text>
         <TextInput
@@ -197,7 +200,6 @@ export default function TeacherEditAssignments({ route }) {
           value={timeLimit}
           onChangeText={setTimeLimit}
         />
-
 
         <Text style={styles.label}>Current Files</Text>
         <View style={styles.fileContainer}>
@@ -244,7 +246,6 @@ export default function TeacherEditAssignments({ route }) {
             {file.name}
           </Text>
         ))}
-
 
         <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
           <Text style={styles.buttonText}>Save Changes</Text>

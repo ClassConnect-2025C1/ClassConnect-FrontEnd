@@ -7,22 +7,26 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AuthContext';
 import { API_URL } from '@env';
 import { Feather } from '@expo/vector-icons';
+import StatusOverlay from '../../components/StatusOverlay';
 
 export default function TeacherCourseDetail({ route }) {
   const { course } = route.params;
   const navigation = useNavigation();
 
+  const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState('Assignments');
   const [activeSubTab, setActiveSubTab] = useState('Assignments');
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
 
   const filteredAssignments = assignments.filter((assignment) => {
     console.log('Assignment:', assignment.status);
@@ -89,8 +93,10 @@ export default function TeacherCourseDetail({ route }) {
   };
 
   useEffect(() => {
-    fetchAssignments();
-  }, []);
+    if (isFocused) {
+      fetchAssignments();
+    }
+  }, [isFocused]);
 
   const handleDeleteAssignment = async (assignmentId) => {
     try {
@@ -110,12 +116,30 @@ export default function TeacherCourseDetail({ route }) {
       }
 
       setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+
+      setIsLoading(true);
+
+      setTimeout(() => {
+        setChangueConfirmed(true);
+
+        setTimeout(() => {
+          setIsLoading(false);
+          setChangueConfirmed(false);
+        }, 1500);
+      }, 1000);
     } catch (error) {
       console.error('Error deleting assignment:', error);
     }
   };
 
-  return (
+  return isLoading ? (
+    <StatusOverlay
+      loading={!saveChangueConfirmed}
+      success={saveChangueConfirmed}
+      loadingMsg="Deleting assignment..."
+      successMsg="Assignment deleted successfully!"
+    />
+  ) : (
     <View style={styles.mainContainer}>
       <TouchableOpacity
         style={styles.backButton}
@@ -129,8 +153,32 @@ export default function TeacherCourseDetail({ route }) {
         <Text style={styles.subtitle}>
           {course.description || 'No description available'}
         </Text>
+        <Text style={styles.detail}>
+          Capacity: {course.capacity || 'Not specified'}
+        </Text>
+        <Text style={styles.detail}>
+          Start date: {course.startDate || 'Not specified'}
+        </Text>
+        <Text style={styles.detail}>
+          End date: {course.endDate || 'Not specified'}
+        </Text>
 
-        <View style={styles.tabContainer}>{/* ... tus tabs ... */}</View>
+        {Array.isArray(course.eligibilityCriteria) &&
+        course.eligibilityCriteria.length > 0 ? (
+          <View style={styles.eligibilityContainer}>
+            <Text style={styles.detail}>Eligibility Criteria:</Text>
+
+            <View style={styles.chipsWrapper}>
+              {course.eligibilityCriteria.map((criteria, index) => (
+                <View key={index} style={styles.eligibilityChip}>
+                  <Text style={styles.eligibilityText}>{criteria}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : (
+          <Text style={styles.detail}>No eligibility criteria available.</Text>
+        )}
       </View>
 
       <View style={styles.sectionContainer}>
@@ -319,7 +367,7 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: 40,
+    paddingTop: 35,
     paddingHorizontal: 15,
   },
   backButton: {
@@ -387,7 +435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 27, // 10% menos que 30
-    marginBottom: 0,
+    marginBottom: -30,
   },
   subTabText: {
     fontSize: 14.5,
@@ -403,7 +451,7 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: '#D3D3D3',
-    marginVertical: 10,
+    marginVertical: -5,
   },
 
   contentContainer: {
@@ -516,14 +564,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // centra todo
     alignItems: 'center',
     marginHorizontal: 20,
-    marginVertical: 10,
+    marginVertical: -6,
     gap: 30, // espacio entre botones y texto
   },
   pageButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     backgroundColor: '#007AFF',
-    borderRadius: 15, // más redondeado
+    borderRadius: 15,
+    marginBottom: 1,
   },
   disabledButton: {
     backgroundColor: '#ccc',
@@ -535,5 +584,32 @@ const styles = StyleSheet.create({
   pageInfo: {
     fontSize: 16,
     color: '#333',
+    marginBottom: 10,
+  },
+
+  detail: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
+  },
+  chipsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  eligibilityChip: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginRight: 6,
+    marginTop: 6,
+  },
+  eligibilityText: {
+    fontSize: 12,
+    color: '#333',
+  },
+  eligibilityContainer: {
+    marginVertical: 2,
   },
 });

@@ -27,6 +27,7 @@ const ViewProfileScreen = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       const data = await getUserProfileData(token, userId); // Pasar userId si se proporciona
+
       if (data) {
         setProfile({
           name: data.name || '',
@@ -34,12 +35,14 @@ const ViewProfileScreen = () => {
           email: data.email || '',
           phone: data.phone || '+5491165101272',
           photo: data.photo || '',
+          bio: data.bio || '',
+          location: data.location || '',
         });
       }
     };
 
     fetchProfile();
-  }, [userId]); // Asegurarse de que el efecto se ejecute nuevamente si el userId cambia
+  }, [userId]);
 
   return (
     <View style={styles.container}>
@@ -80,6 +83,20 @@ const ViewProfileScreen = () => {
         <TextInput
           style={[styles.input, styles.readOnlyInput]}
           value={profile.phone}
+          editable={false}
+        />
+
+        <Text style={styles.label}>Bio</Text>
+        <TextInput
+          style={[styles.input, styles.readOnlyInput]}
+          value={profile.bio}
+          editable={false}
+        />
+
+        <Text style={styles.label}>Location</Text>
+        <TextInput
+          style={[styles.input, styles.readOnlyInput]}
+          value={profile.location}
           editable={false}
         />
       </ScrollView>

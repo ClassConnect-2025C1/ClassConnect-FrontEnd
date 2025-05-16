@@ -140,8 +140,6 @@ export default function EditCourseScreen({ route }) {
           navigation.navigate('TeacherCourses', { updatedCourse });
         }, 1500);
       }, 1000);
-
-
     } catch (error) {
       console.error('Network error:', error);
     }
