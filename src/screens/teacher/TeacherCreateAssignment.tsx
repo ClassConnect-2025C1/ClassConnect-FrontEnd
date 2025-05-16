@@ -79,6 +79,19 @@ const TeacherCreateAssignments = () => {
       return;
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    if (due < today) {
+      setModalMessage(
+        'Due date cannot be in the past. Please select today or a future date.',
+      );
+      setShowModal(true);
+      return;
+    }
+
     const isoDueDate = parsedDate.toISOString();
 
     const fileContents = await Promise.all(

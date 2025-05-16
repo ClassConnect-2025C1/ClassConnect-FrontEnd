@@ -14,6 +14,7 @@ import { API_URL } from '@env';
 const { width } = Dimensions.get('window');
 import { useAuth } from '../../navigation/AuthContext';
 import StatusOverlay from '../../components/StatusOverlay';
+import { AcceptOnlyModal } from '@/components/Modals';
 
 const MembersScreen = () => {
   const navigation = useNavigation();
@@ -27,6 +28,7 @@ const MembersScreen = () => {
   const { token } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
+  const [showAcceptOnlyModal, setShowAcceptOnlyModal] = useState(false);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -55,10 +57,11 @@ const MembersScreen = () => {
   }, [courseId, token]);
 
   const handleApprove = async (userId) => {
+    setIsLoading(true); // Siempre empieza cargando
+
     try {
       const res = await fetch(
         `${API_URL}/api/courses/approve/${userId}/${courseId}`,
-
         {
           method: 'POST',
           headers: {
@@ -69,21 +72,21 @@ const MembersScreen = () => {
       );
 
       if (!res.ok) throw new Error('Aprobación fallida');
-      console.log('Aprobando usuario:', userId);
-      setApprovedMembers((prev) => [...prev, userId]);
-      setIsLoading(true);
 
+      setApprovedMembers((prev) => [...prev, userId]);
+    } catch (error) {
+      setIsLoading(false);
+
+      setShowAcceptOnlyModal(true);
+    } finally {
       setTimeout(() => {
         setChangueConfirmed(true);
-
         setTimeout(() => {
           setIsLoading(false);
           setChangueConfirmed(false);
           navigation.goBack();
         }, 1500);
       }, 1000);
-    } catch (error) {
-      console.error('Error al aprobar:', error);
     }
   };
 
@@ -96,6 +99,12 @@ const MembersScreen = () => {
     />
   ) : (
     <SafeAreaView style={styles.container}>
+      <AcceptOnlyModal
+        visible={showAcceptOnlyModal}
+        onClose={() => setShowAcceptOnlyModal(false)}
+        onClose={() => setShowAcceptOnlyModal(false)}
+        message="You have already approved this student!"
+      />
       <Text style={styles.header}>Course Members</Text>
 
       {loading ? (

@@ -265,7 +265,7 @@ export default function TeacherCourseDetail({ route }) {
                   onPress={() =>
                     navigation.navigate('StudentsSubmissions', {
                       course,
-                      assignmentId: assignment.id,
+                      assignment,
                     })
                   }
                 >

@@ -217,7 +217,9 @@ const FeedbackScreen = () => {
       <View style={{ marginTop: 11, marginBottom: 20, alignItems: 'center' }}>
         <TouchableOpacity
           style={[styles.generateButton, { marginBottom: 15 }]}
-          onPress={() => navigation.goBack()}
+          onPress={() =>
+            navigation.navigate('TeacherResumeFeedbacks', { course })
+          }
         >
           <MaterialIcons
             name="star"
