@@ -124,10 +124,8 @@ export default function StudentAssignmentScreen({ route }) {
           Due: {new Date(deadline).toLocaleDateString()}
         </Text>
 
-        {session?.started_at && timeLeft ? (
+        {session?.started_at && data?.time_limit > 0 && (
           <Text style={styles.timeLeftText}>Time remaining: {timeLeft}</Text>
-        ) : (
-          <Text style={styles.timeLeftText}>Assignment started yet</Text>
         )}
 
         {Array.isArray(files) && files.length > 0 && (
@@ -158,7 +156,11 @@ export default function StudentAssignmentScreen({ route }) {
             })
           }
         >
-          <Text style={styles.submitButtonText}>Enter Submission</Text>
+          <Text style={styles.submitButtonText}>
+            {assignment.status == 'submitted'
+              ? 'Edit Assignment'
+              : 'Enter Assignment'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
