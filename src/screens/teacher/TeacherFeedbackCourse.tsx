@@ -13,7 +13,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
 import { Picker } from '@react-native-picker/picker';
-import { DateTimePickerAndroid } from '../../../node_modules/@react-native-community/datetimepicker/src/DateTimePickerAndroid.android';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const { width } = Dimensions.get('window');
 
@@ -23,8 +23,8 @@ const FeedbackScreen = () => {
   const { course } = route.params;
   const courseId = course.id;
   const [selectedRating, setSelectedRating] = useState('Any');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
 
   const [feedbacks, setFeedbacks] = useState([]);
   const { token } = useAuth();
@@ -60,6 +60,30 @@ const FeedbackScreen = () => {
 
     fetchFeedbacks();
   }, [courseId, token]);
+
+  const showDatePicker = (currentDate, onChangeDate) => {
+    DateTimePickerAndroid.open({
+      value: currentDate || new Date(),
+      onChange: (event, selectedDate) => {
+        if (event.type === 'set' && selectedDate) {
+          onChangeDate(selectedDate);
+          setCurrentPage(1);
+        }
+      },
+      mode: 'date',
+      is24Hour: true,
+    });
+  };
+
+  // Función para formatear fechas a YYYY-MM-DD
+  const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const month = `${d.getMonth() + 1}`.padStart(2, '0');
+    const day = `${d.getDate()}`.padStart(2, '0');
+    const year = d.getFullYear();
+    return `${year}-${month}-${day}`;
+  };
 
   const filteredFeedbacks = (feedbacks?.data || []).filter((f) => {
     if (selectedRating !== 'Any' && f.rating !== parseInt(selectedRating)) {
@@ -158,32 +182,37 @@ const FeedbackScreen = () => {
           </Picker>
         </View>
 
-        {/* Fecha desde / hasta - inputs en fila compacta al lado del rating */}
+        {/* Fecha desde / hasta - botones que abren el DateTimePicker */}
         <View style={styles.dateFiltersContainer}>
           <View style={styles.singleDateFilter}>
             <Text style={styles.dateLabel}>From:</Text>
-            <TextInput
+            <TouchableOpacity
               style={styles.dateInput}
-              placeholder="YYYY-MM-DD"
-              value={fromDate}
-              onChangeText={(text) => {
-                setFromDate(text);
-                setCurrentPage(1);
-              }}
-            />
+              onPress={() =>
+                showDatePicker(
+                  fromDate ? new Date(fromDate) : null,
+                  setFromDate,
+                )
+              }
+            >
+              <Text style={{ color: fromDate ? '#000' : '#999' }}>
+                {fromDate ? formatDate(fromDate) : 'Select date'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.singleDateFilter}>
             <Text style={styles.dateLabel}>To:</Text>
-            <TextInput
+            <TouchableOpacity
               style={styles.dateInput}
-              placeholder="YYYY-MM-DD"
-              value={toDate}
-              onChangeText={(text) => {
-                setToDate(text);
-                setCurrentPage(1);
-              }}
-            />
+              onPress={() =>
+                showDatePicker(toDate ? new Date(toDate) : null, setToDate)
+              }
+            >
+              <Text style={{ color: toDate ? '#000' : '#999' }}>
+                {toDate ? formatDate(toDate) : 'Select date'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
