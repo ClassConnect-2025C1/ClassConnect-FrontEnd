@@ -233,7 +233,7 @@ export default function CourseDetail({ route }) {
                   }
                 >
                   <Text style={styles.submitButtonText}>
-                    {item.started_at
+                    {item.status !== 'pending'
                       ? 'Continue Assignment'
                       : 'Start Assignment'}
                   </Text>

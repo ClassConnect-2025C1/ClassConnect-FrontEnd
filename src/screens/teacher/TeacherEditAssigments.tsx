@@ -15,6 +15,7 @@ import { useAuth } from '../../navigation/AuthContext';
 import * as DocumentPicker from 'expo-document-picker';
 import { Linking } from 'react-native';
 import StatusOverlay from '../../components/StatusOverlay';
+import { AcceptOnlyModal } from '../../components/Modals';
 
 const { width } = Dimensions.get('window');
 
@@ -46,6 +47,8 @@ export default function TeacherEditAssignments({ route }) {
   const [existingFiles, setExistingFiles] = useState(assignment.files || []);
   const [newFiles, setNewFiles] = useState([]);
   const [deletedExistingFileIds, setDeletedExistingFileIds] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -92,6 +95,26 @@ export default function TeacherEditAssignments({ route }) {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      return;
+    }
+
+    const parsedDate = new Date(`${deadline}T23:59:59Z`);
+    if (isNaN(parsedDate.getTime())) {
+      setModalMessage('Invalid date. Please check the value.');
+      setShowModal(true);
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(deadline);
+    due.setHours(0, 0, 0, 0);
+
+    if (due < today) {
+      setModalMessage(
+        'Due date cannot be in the past. Please select today or a future date.',
+      );
+      setShowModal(true);
       return;
     }
 
@@ -158,6 +181,13 @@ export default function TeacherEditAssignments({ route }) {
     />
   ) : (
     <SafeAreaView style={styles.container}>
+      <AcceptOnlyModal
+        visible={showModal}
+        message={modalMessage}
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
+
       <Text style={styles.header}>Edit Assignment</Text>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>

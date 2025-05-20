@@ -299,17 +299,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
   },
-courseText: {
-  color: '#333',
-  fontSize: 18,
-  fontWeight: 'bold',
-},
+  courseText: {
+    color: '#333',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 
-courseActions: {
-  flexDirection: 'row',
-  flexWrap: 'wrap', // 👈 permite que se acomoden mejor
-  gap: 8,
-},
+  courseActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap', // 👈 permite que se acomoden mejor
+    gap: 8,
+  },
 
   enrollButton: {
     borderColor: '#BDBDBD',

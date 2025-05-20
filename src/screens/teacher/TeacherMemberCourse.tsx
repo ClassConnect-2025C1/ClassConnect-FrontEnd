@@ -15,6 +15,7 @@ const { width } = Dimensions.get('window');
 import { useAuth } from '../../navigation/AuthContext';
 import StatusOverlay from '../../components/StatusOverlay';
 import { AcceptOnlyModal } from '@/components/Modals';
+import { getUserProfileData } from '../../utils/GetUserProfile';
 
 const MembersScreen = () => {
   const navigation = useNavigation();
@@ -43,9 +44,22 @@ const MembersScreen = () => {
             },
           },
         );
+
         if (!response.ok) throw new Error('Error al obtener los miembros');
+
         const data = await response.json();
-        setMembers(data.data);
+
+        const enrichedMembers = await Promise.all(
+          data.data.map(async (member) => {
+            const profile = await getUserProfileData(token, member.user_id);
+            return {
+              ...member,
+              email: profile?.email || '',
+            };
+          }),
+        );
+
+        setMembers(enrichedMembers);
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -125,7 +139,7 @@ const MembersScreen = () => {
               <View style={styles.memberItem}>
                 <View style={styles.memberInfo}>
                   <Text style={styles.memberRole}>
-                    {item.role || 'student'}
+                    {item.email || 'student'}
                   </Text>
                 </View>
                 <View style={styles.buttonsContainer}>
