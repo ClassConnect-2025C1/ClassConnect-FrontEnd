@@ -8,12 +8,15 @@ import {
   SafeAreaView,
   Dimensions,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 const { width } = Dimensions.get('window');
 import { useAuth } from '../../navigation/AuthContext';
 import StatusOverlay from '../../components/StatusOverlay';
+import { AcceptOnlyModal } from '@/components/Modals';
+import { getUserProfileData } from '../../utils/GetUserProfile';
 
 const MembersScreen = () => {
   const navigation = useNavigation();
@@ -27,6 +30,7 @@ const MembersScreen = () => {
   const { token } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
+  const [showAcceptOnlyModal, setShowAcceptOnlyModal] = useState(false);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -41,9 +45,25 @@ const MembersScreen = () => {
             },
           },
         );
+
         if (!response.ok) throw new Error('Error al obtener los miembros');
+
         const data = await response.json();
-        setMembers(data.data);
+
+        const enrichedMembers = await Promise.all(
+          data.data.map(async (member) => {
+            const profile = await getUserProfileData(token, member.user_id);
+            return {
+              ...member,
+              email: profile?.email || '',
+              name: profile?.name || '',
+              lastname: profile?.lastname || '',
+              photo: profile?.photo || '', // puede ser null
+            };
+          }),
+        );
+
+        setMembers(enrichedMembers);
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -55,10 +75,11 @@ const MembersScreen = () => {
   }, [courseId, token]);
 
   const handleApprove = async (userId) => {
+    setIsLoading(true); // Siempre empieza cargando
+
     try {
       const res = await fetch(
         `${API_URL}/api/courses/approve/${userId}/${courseId}`,
-
         {
           method: 'POST',
           headers: {
@@ -69,21 +90,21 @@ const MembersScreen = () => {
       );
 
       if (!res.ok) throw new Error('Aprobación fallida');
-      console.log('Aprobando usuario:', userId);
-      setApprovedMembers((prev) => [...prev, userId]);
-      setIsLoading(true);
 
+      setApprovedMembers((prev) => [...prev, userId]);
+    } catch (error) {
+      setIsLoading(false);
+
+      setShowAcceptOnlyModal(true);
+    } finally {
       setTimeout(() => {
         setChangueConfirmed(true);
-
         setTimeout(() => {
           setIsLoading(false);
           setChangueConfirmed(false);
           navigation.goBack();
         }, 1500);
       }, 1000);
-    } catch (error) {
-      console.error('Error al aprobar:', error);
     }
   };
 
@@ -96,6 +117,12 @@ const MembersScreen = () => {
     />
   ) : (
     <SafeAreaView style={styles.container}>
+      <AcceptOnlyModal
+        visible={showAcceptOnlyModal}
+        onClose={() => setShowAcceptOnlyModal(false)}
+        onClose={() => setShowAcceptOnlyModal(false)}
+        message="You have already approved this student!"
+      />
       <Text style={styles.header}>Course Members</Text>
 
       {loading ? (
@@ -114,11 +141,29 @@ const MembersScreen = () => {
             const isApproved = approvedMembers.includes(item.id);
             return (
               <View style={styles.memberItem}>
-                <View style={styles.memberInfo}>
-                  <Text style={styles.memberRole}>
-                    {item.role || 'student'}
+                <Image
+                  source={
+                    item.photo
+                      ? item.photo
+                      : {
+                          uri: 'https://www.w3schools.com/howto/img_avatar.png',
+                        }
+                  }
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 25,
+                    marginRight: 12,
+                  }}
+                />
+
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <Text style={styles.memberName}>
+                    {item.name} {item.lastname}
                   </Text>
+                  <Text style={styles.memberEmail}>{item.email}</Text>
                 </View>
+
                 <View style={styles.buttonsContainer}>
                   <TouchableOpacity
                     style={[
@@ -134,18 +179,6 @@ const MembersScreen = () => {
                     <Text style={styles.approveButtonText}>
                       {isApproved ? 'Approved' : 'Approve'}
                     </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.profileButton}
-                    onPress={() =>
-                      navigation.navigate('ShowProfileData', {
-                        userId: item.user_id,
-                        token: token,
-                      })
-                    }
-                  >
-                    <Text style={styles.profileButtonText}>Profile</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -237,17 +270,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   approveButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  profileButton: {
-    backgroundColor: '#3498db',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  profileButtonText: {
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 14,

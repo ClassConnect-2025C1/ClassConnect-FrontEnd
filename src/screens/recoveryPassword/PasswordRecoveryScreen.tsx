@@ -9,12 +9,15 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { API_URL } from '@env';
+import { AcceptOnlyModal } from '@/components/Modals';
 
 const PasswordRecoveryScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
 
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   const handleSubmit = async () => {
     let valid = true;
     setEmailError('');
@@ -47,17 +50,26 @@ const PasswordRecoveryScreen = () => {
         navigation.navigate('VerifyPin', { email });
       } else {
         const errorMessage = data?.detail || 'Something went wrong';
-        alert(errorMessage);
+
+        setShowModal(true);
+        setModalMessage('This mail is not registered');
       }
     } catch (error) {
       console.error('Error sending recovery email:', error);
-      alert('Failed to send recovery email. Please try again later.');
+      setShowModal(true);
+      setModalMessage('An error occurred. Please try again later.');
       console.log('Catcheo el error');
     }
   };
 
   return (
     <View style={styles.container}>
+      <AcceptOnlyModal
+        visible={showModal}
+        message={modalMessage}
+        onAccept={() => setShowModal(false)}
+        onClose={() => setShowModal(false)}
+      />
       <View style={styles.topHalf}>
         <Image
           source={require('../../../assets/images/logo.png')}

@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semitransparente
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Fondo semitransparente
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000, // Asegura que esté encima de otros componentes
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     textAlign: 'center',
-    color: 'white', // Para que el mensaje sea visible sobre el fondo oscuro
+    color: 'black', // Para que el mensaje sea visible sobre el fondo oscuro
   },
 });
 

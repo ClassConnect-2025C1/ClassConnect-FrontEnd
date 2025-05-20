@@ -13,12 +13,16 @@ import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AuthContext';
 import { AcceptOnlyModal } from '@/components/Modals';
+import StatusOverlay from '../../components/StatusOverlay';
 
 const AvailableCoursesScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userId, onEnroll } = route.params || {};
   const { token } = useAuth();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
 
   const [courses, setCourses] = useState([]);
   const [approvedCourses, setApprovedCourses] = useState([]);
@@ -90,7 +94,7 @@ const AvailableCoursesScreen = () => {
       alert('Could not get user info.');
       return;
     }
-
+    setIsLoading(true);
     try {
       const response = await fetch(
         `${API_URL}/api/courses/${courseId}/enroll`,
@@ -110,6 +114,7 @@ const AvailableCoursesScreen = () => {
 
       if (!response.ok) {
         if (response.status === 409) {
+          setIsLoading(false);
           setShowModal(true);
           return;
         } else {
@@ -120,8 +125,19 @@ const AvailableCoursesScreen = () => {
         }
       }
 
+      setIsLoading(true);
+
       if (onEnroll) onEnroll();
-      navigation.goBack();
+
+      setTimeout(() => {
+        setChangueConfirmed(true);
+
+        setTimeout(() => {
+          setIsLoading(false);
+          setChangueConfirmed(false);
+          navigation.goBack();
+        }, 2000);
+      }, 2000);
     } catch (error) {
       console.error(error);
     }
@@ -158,7 +174,14 @@ const AvailableCoursesScreen = () => {
     );
   }
 
-  return (
+  return isLoading ? (
+    <StatusOverlay
+      loading={!saveChangueConfirmed}
+      success={saveChangueConfirmed}
+      loadingMsg="Enrrolling ..."
+      successMsg="Enrrolled successfully!"
+    />
+  ) : (
     <View style={styles.container}>
       <Text style={styles.title}>Available Courses</Text>
       <View style={styles.searchContainer}>
@@ -271,15 +294,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginHorizontal: 8, // 👈 achica el ancho del card
+    flexDirection: 'column', // 👈 cambiamos a columna
+    alignItems: 'flex-start',
+    gap: 12,
   },
   courseText: {
     color: '#333',
     fontSize: 18,
     fontWeight: 'bold',
   },
+
+  courseActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap', // 👈 permite que se acomoden mejor
+    gap: 8,
+  },
+
   enrollButton: {
     borderColor: '#BDBDBD',
     borderWidth: 1,

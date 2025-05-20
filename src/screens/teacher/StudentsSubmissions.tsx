@@ -15,15 +15,15 @@ import { useAuth } from '../../navigation/AuthContext';
 const DownloadFilesScreen = ({ route }) => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { course } = route.params;
+  const { course, assignment } = route.params;
   const navigation = useNavigation();
   const { token } = useAuth();
 
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `${API_URL}/api/courses/${course.id}/assignments`,
+      const assignmentsRes = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignment/${assignment.id}`,
         {
           method: 'GET',
           headers: {
@@ -33,12 +33,47 @@ const DownloadFilesScreen = ({ route }) => {
         },
       );
 
-      const json = await response.json();
+      const assignmentsJson = await assignmentsRes.json();
 
-      if (Array.isArray(json?.data)) {
-        setTasks(json.data);
+      if (assignmentsJson?.data && assignmentsJson?.data?.id) {
+        const assignment = assignmentsJson.data;
+
+        try {
+          const submissionsRes = await fetch(
+            `${API_URL}/api/courses/${course.id}/assignment/${assignment.id}/submissions`,
+            {
+              method: 'GET',
+              headers: {
+                Accept: 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          const submissionsJson = await submissionsRes.json();
+
+          setTasks([
+            {
+              ...assignment,
+              session: assignmentsJson.session,
+              submissions: submissionsJson?.data || [],
+            },
+          ]);
+        } catch (err) {
+          console.error(
+            `Error fetching submissions for assignment ${assignment.id}`,
+            err,
+          );
+          setTasks([
+            {
+              ...assignment,
+              session: assignmentsJson.session,
+              submissions: [],
+            },
+          ]);
+        }
       } else {
-        console.error('Unexpected response format:', json);
+        console.error('Unexpected response format:', assignmentsJson);
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -62,6 +97,8 @@ const DownloadFilesScreen = ({ route }) => {
   const renderTaskItem = ({ item }) => (
     <View style={styles.taskItem}>
       <Text style={styles.taskTitle}>{item.title}</Text>
+
+      {/* Archivos del assignment original */}
       {item.files?.length > 0 ? (
         item.files.map((file) => (
           <TouchableOpacity
@@ -74,6 +111,32 @@ const DownloadFilesScreen = ({ route }) => {
         ))
       ) : (
         <Text>No files for this task.</Text>
+      )}
+
+      {/* Archivos de submissions */}
+      {item.submissions?.length > 0 ? (
+        <>
+          <Text style={styles.submissionTitle}>Submissions:</Text>
+          {item.submissions.map((submission, index) => (
+            <View key={submission.id || index} style={{ marginTop: 6 }}>
+              <Text style={styles.submissionLabel}>
+                Student:{' '}
+                {submission.student_name || submission.student_id || 'fran'}
+              </Text>
+              {submission.files?.map((file) => (
+                <TouchableOpacity
+                  key={file.id ?? file.name}
+                  onPress={() => handleDownloadFile(file)}
+                  style={styles.fileButton}
+                >
+                  <Text style={styles.fileName}>📄 {file.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+        </>
+      ) : (
+        <Text style={{ marginTop: 8 }}>No submissions yet.</Text>
       )}
     </View>
   );
@@ -155,6 +218,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#2c3e50',
+  },
+  submissionTitle: {
+    fontWeight: '600',
+    marginTop: 10,
+    color: '#2980b9',
+  },
+  submissionLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+    color: '#7f8c8d',
   },
 });
 

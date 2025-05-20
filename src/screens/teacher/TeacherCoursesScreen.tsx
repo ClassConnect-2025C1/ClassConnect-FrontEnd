@@ -54,6 +54,7 @@ const CoursesScreen = ({ route }) => {
 
     return titleMatch || createdByMatch || startDateMatch;
   });
+  console.log('Cursos filtrados:', filteredCourses);
 
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
 
@@ -75,6 +76,7 @@ const CoursesScreen = ({ route }) => {
 
           try {
             const json = JSON.parse(text);
+            console.log('Respuesta JSON:', json);
 
             if (Array.isArray(json.data)) {
               const filteredCourses = json.data.filter(
@@ -97,7 +99,7 @@ const CoursesScreen = ({ route }) => {
 
     fetchUserCourses();
   }, []);
-
+  console.log('Todos los cursos:', courses);
   const confirmDelete = (courseId: string) => {
     setCourseToDelete(courseId);
     setShowDeleteModal(true);

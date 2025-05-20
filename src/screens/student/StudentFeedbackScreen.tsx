@@ -31,8 +31,8 @@ const StudentFeedbackScreen = () => {
   const { token } = useAuth();
 
   const handleSubmitFeedback = async () => {
-    if (!rating) {
-      setModalMessage('Please provide a rating.');
+    if (!rating || comment === '' || summary === '') {
+      setModalMessage('Please fill all fields.');
       setShowModal(true);
       return;
     }

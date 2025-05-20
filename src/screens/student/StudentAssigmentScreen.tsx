@@ -80,7 +80,11 @@ export default function StudentAssignmentScreen({ route }) {
       console.log('Assignment details:', data);
       setAssignmentDetails(data);
 
-      if (data.session?.started_at && data.data?.time_limit) {
+      if (
+        data.session?.started_at &&
+        data.data?.time_limit &&
+        data.data.time_limit > 0
+      ) {
         startCountdown(data.session.started_at, data.data.time_limit);
       }
     } catch (error) {
@@ -111,7 +115,6 @@ export default function StudentAssignmentScreen({ route }) {
 
   return (
     <View style={styles.mainContainer}>
-
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>
@@ -121,10 +124,8 @@ export default function StudentAssignmentScreen({ route }) {
           Due: {new Date(deadline).toLocaleDateString()}
         </Text>
 
-        {session?.started_at && timeLeft ? (
+        {session?.started_at && data?.time_limit > 0 && (
           <Text style={styles.timeLeftText}>Time remaining: {timeLeft}</Text>
-        ) : (
-          <Text style={styles.timeLeftText}>Assignment not started yet</Text>
         )}
 
         {Array.isArray(files) && files.length > 0 && (
@@ -155,7 +156,11 @@ export default function StudentAssignmentScreen({ route }) {
             })
           }
         >
-          <Text style={styles.submitButtonText}>Enter Submission</Text>
+          <Text style={styles.submitButtonText}>
+            {assignment.status == 'submitted'
+              ? 'Edit Assignment'
+              : 'Enter Assignment'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
