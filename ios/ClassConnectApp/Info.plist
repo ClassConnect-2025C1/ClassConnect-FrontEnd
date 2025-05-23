@@ -27,8 +27,14 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>classconnect</string>
-          <string>com.classconnect.app</string>
+          <string>com.classconnect1.app</string>
+          <string>com.classconnect1.app</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>exp+classconnect-app</string>
         </array>
       </dict>
     </array>

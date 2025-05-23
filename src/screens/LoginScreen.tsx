@@ -17,11 +17,32 @@ import { jwtDecode } from 'jwt-decode';
 import { handleGoogleLoginCallback } from '../components/GoogleAuth';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 import { API_URL } from '@env';
-import { useAuthRequest } from 'expo-auth-session/providers/google';
+//import { useAuthRequest } from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { AuthContext } from '../navigation/AuthContext';
 WebBrowser.maybeCompleteAuthSession();
+
+
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
+
+// Somewhere in your code
+GoogleSignin.configure();
+const signIn = async () => {
+  try {
+    await GoogleSignin.hasPlayServices();
+    const response = await GoogleSignin.signIn();
+    console.log('Google response:', response);   
+    const id_token  = response.data?.idToken; 
+  } catch (error) {
+    console.error(error); 
+  }
+};
+
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -37,33 +58,33 @@ const LoginScreen = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const [googleLoginPressed, setGoogleLoginPressed] = useState(false);
+  //const [googleLoginPressed, setGoogleLoginPressed] = useState(false);
   const { token, setToken } = useContext(AuthContext);
 
-  const [request, response, promptAsync] = useAuthRequest({
-    androidClientId:
-      '98403984467-b7t9npmhl4bc1aa6tnrsh8hg4esi4mem.apps.googleusercontent.com',
-    webClientId:
-      '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com',
-    redirectUri: AuthSession.makeRedirectUri({
-      scheme: 'com.classconnect1.app',
-    }),
-    responseType: 'id_token',
-  });
+  // const [request, response, promptAsync] = useAuthRequest({
+  //   androidClientId:
+  //     '98403984467-b7t9npmhl4bc1aa6tnrsh8hg4esi4mem.apps.googleusercontent.com',
+  //   webClientId:
+  //     '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com',
+  //   redirectUri: AuthSession.makeRedirectUri({
+  //     scheme: 'com.classconnect1.app',
+  //   }),
+  //   responseType: 'id_token',
+  // });
 
-  useEffect(() => {
-    if (googleLoginPressed && response?.type === 'success') {
-      console.log('Google response:', response);
-      const { id_token } = response.params;
-      console.log('Google ID Token:', id_token);
-      if (id_token) {
-        handleGoogleLoginCallback(id_token, navigation);
-      } else {
-        console.warn('No id_token in Google response:', response);
-      }
-      setGoogleLoginPressed(false);
-    }
-  }, [response, googleLoginPressed]);
+  // useEffect(() => {
+  //   if (googleLoginPressed && response?.type === 'success') {
+  //     console.log('Google response:', response);
+  //     const { id_token } = response.params;
+  //     console.log('Google ID Token:', id_token);
+  //     if (id_token) {
+  //       handleGoogleLoginCallback(id_token, navigation);
+  //     } else {
+  //       console.warn('No id_token in Google response:', response);
+  //     }
+  //     setGoogleLoginPressed(false);
+  //   }
+  // }, [response, googleLoginPressed]);
 
   const handleLogin = async () => {
     setEmailError('');
@@ -231,7 +252,7 @@ const LoginScreen = () => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+            <TouchableOpacity
             style={{
               backgroundColor: '#fff',
               padding: 12,
@@ -239,17 +260,14 @@ const LoginScreen = () => {
               flexDirection: 'row',
               alignItems: 'center',
             }}
-            onPress={() => {
-              setGoogleLoginPressed(true);
-              promptAsync();
-            }}
-          >
+            onPress={signIn}
+            >
             <Image
               source={require('../../assets/images/googlelog.png')}
               style={{ width: 20, height: 20, marginRight: 10 }}
             />
             <Text>Login with Google</Text>
-          </TouchableOpacity>
+            </TouchableOpacity>
         </View>
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>

@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.classconnect.app'
+    namespace 'com.classconnect1.app'
     defaultConfig {
-        applicationId 'com.classconnect.app'
+        applicationId 'com.classconnect1.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -145,11 +145,11 @@ android {
         }
     }
 }
+
 dependencies {
-    // Las dependencias existentes
+    // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
-    // Otras dependencias que ya tienes para soportar GIF y WebP
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
     def isWebpAnimatedEnabled = (findProperty('expo.webp.animated') ?: "") == "true";
@@ -173,8 +173,6 @@ dependencies {
     } else {
         implementation jscFlavor
     }
-
-    // Aquí agregamos las dependencias para Google SignIn
-    implementation 'com.google.android.gms:play-services-auth:19.2.0'  // Dependencia necesaria para Google Sign-In
-    implementation project(':@react-native-google-signin_google-signin')  // Asegúrate de tener esta línea correctamente
 }
+
+apply plugin: 'com.google.gms.google-services'
