@@ -1,4 +1,4 @@
-package com.classconnect.app
+package com.classconnect1.app
 
 import android.os.Build
 import android.os.Bundle
