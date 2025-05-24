@@ -57,7 +57,7 @@ const MembersScreen = () => {
               ...member,
               email: profile?.email || '',
               name: profile?.name || '',
-              lastname: profile?.lastname || '',
+              lastname: profile?.lastName || '',
               photo: profile?.photo || '', // puede ser null
             };
           }),
@@ -108,18 +108,19 @@ const MembersScreen = () => {
     }
   };
 
+  // ... importaciones y hooks sin cambios
+
   return isLoading ? (
     <StatusOverlay
       loading={!saveChangueConfirmed}
       success={saveChangueConfirmed}
       loadingMsg="Approving student..."
-      successMsg="Studen approved successfully!"
+      successMsg="Student approved successfully!"
     />
   ) : (
     <SafeAreaView style={styles.container}>
       <AcceptOnlyModal
         visible={showAcceptOnlyModal}
-        onClose={() => setShowAcceptOnlyModal(false)}
         onClose={() => setShowAcceptOnlyModal(false)}
         message="You have already approved this student!"
       />
@@ -132,64 +133,68 @@ const MembersScreen = () => {
           style={{ marginTop: 30 }}
         />
       ) : (
-        <FlatList
-          data={members}
-          keyExtractor={(item, index) =>
-            item.id?.toString() || index.toString()
-          }
-          renderItem={({ item }) => {
-            const isApproved = approvedMembers.includes(item.id);
-            return (
-              <View style={styles.memberItem}>
-                <Image
-                  source={
-                    item.photo
-                      ? item.photo
-                      : {
-                          uri: 'https://www.w3schools.com/howto/img_avatar.png',
-                        }
-                  }
-                  style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 25,
-                    marginRight: 12,
-                  }}
-                />
+        <>
+          <Text style={styles.sectionHeader}>Teachers</Text>
+          {/* Por ahora no se muestra nada */}
 
-                <View style={{ flex: 1, justifyContent: 'center' }}>
-                  <Text style={styles.memberName}>
-                    {item.name} {item.lastname}
-                  </Text>
-                  <Text style={styles.memberEmail}>{item.email}</Text>
-                </View>
+          <Text style={styles.sectionHeader}>Students</Text>
 
-                <View style={styles.buttonsContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.approveButton,
-                      isApproved && {
-                        backgroundColor: '#bdc3c7',
-                        opacity: 0.6,
-                      },
-                    ]}
-                    onPress={() => handleApprove(item.user_id)}
-                    disabled={isApproved}
-                  >
-                    <Text style={styles.approveButtonText}>
-                      {isApproved ? 'Approved' : 'Approve'}
+          <FlatList
+            data={members}
+            keyExtractor={(item, index) =>
+              item.id?.toString() || index.toString()
+            }
+            renderItem={({ item }) => {
+              const isApproved = approvedMembers.includes(item.id);
+              return (
+                <View style={styles.memberItem}>
+                  <Image
+                    source={
+                      item.photo
+                        ? item.photo
+                        : {
+                            uri: 'https://www.w3schools.com/howto/img_avatar.png',
+                          }
+                    }
+                    style={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 25,
+                      marginRight: 12,
+                    }}
+                  />
+
+                  <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <Text style={styles.memberName}>
+                      {item.name} {item.lastname}
                     </Text>
-                  </TouchableOpacity>
+                    <Text style={styles.memberEmail}>{item.email}</Text>
+                  </View>
+
+                  <View style={styles.buttonsContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.approveButton,
+                        isApproved && {
+                          backgroundColor: '#bdc3c7',
+                          opacity: 0.6,
+                        },
+                      ]}
+                      onPress={() => handleApprove(item.user_id)}
+                      disabled={isApproved}
+                    >
+                      <Text style={styles.approveButtonText}>
+                        {isApproved ? 'Approved' : 'Approve'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            );
-          }}
-          ListHeaderComponent={
-            <Text style={styles.sectionHeader}>Members</Text>
-          }
-          style={styles.memberList}
-          contentContainerStyle={{ paddingBottom: 100 }}
-        />
+              );
+            }}
+            style={styles.memberList}
+            contentContainerStyle={{ paddingBottom: 100 }}
+          />
+        </>
       )}
 
       <View style={styles.bottomButtonContainer}>
@@ -223,6 +228,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 12,
     color: '#34495e',
+    textAlign: 'center',
   },
   memberList: {
     flex: 1,

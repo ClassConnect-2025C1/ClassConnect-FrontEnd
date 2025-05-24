@@ -38,9 +38,7 @@
         "projectId": "c01c75ab-7cf3-457c-9edc-98d09376e36e"
       }
     },
-    "plugins": [
-      "@react-native-google-signin/google-signin"
-    ],
+    "plugins": ["@react-native-google-signin/google-signin"],
     "owner": "franl0pez12",
     "runtimeVersion": "1.0.0",
     "updates": {
