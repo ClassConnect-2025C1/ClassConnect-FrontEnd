@@ -135,7 +135,20 @@ const MembersScreen = () => {
       ) : (
         <>
           <Text style={styles.sectionHeader}>Teachers</Text>
-          {/* Por ahora no se muestra nada */}
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#bdc3c7',
+              padding: 10,
+              borderRadius: 8,
+              alignSelf: 'center',
+              marginVertical: 10,
+            }}
+            onPress={() => {}}
+          >
+            <Text style={{ color: '#2c3e50', fontWeight: 'bold' }}>
+              Add Assistant
+            </Text>
+          </TouchableOpacity>
 
           <Text style={styles.sectionHeader}>Students</Text>
 
@@ -156,37 +169,55 @@ const MembersScreen = () => {
                             uri: 'https://www.w3schools.com/howto/img_avatar.png',
                           }
                     }
-                    style={{
-                      width: 50,
-                      height: 50,
-                      borderRadius: 25,
-                      marginRight: 12,
-                    }}
+                    style={styles.memberImage}
                   />
 
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.memberName}>
                       {item.name} {item.lastname}
                     </Text>
                     <Text style={styles.memberEmail}>{item.email}</Text>
-                  </View>
 
-                  <View style={styles.buttonsContainer}>
-                    <TouchableOpacity
-                      style={[
-                        styles.approveButton,
-                        isApproved && {
-                          backgroundColor: '#bdc3c7',
-                          opacity: 0.6,
-                        },
-                      ]}
-                      onPress={() => handleApprove(item.user_id)}
-                      disabled={isApproved}
-                    >
-                      <Text style={styles.approveButtonText}>
-                        {isApproved ? 'Approved' : 'Approve'}
-                      </Text>
-                    </TouchableOpacity>
+                    <View style={styles.buttonsContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.approveButton,
+                          isApproved && {
+                            backgroundColor: '#bdc3c7',
+                            opacity: 0.6,
+                          },
+                        ]}
+                        onPress={() => handleApprove(item.user_id)}
+                        disabled={isApproved}
+                      >
+                        <Text style={styles.approveButtonText}>
+                          {isApproved ? 'Approved' : 'Approve'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.approveButton,
+                          { backgroundColor: '#95a5a6', marginLeft: 5 },
+                        ]}
+                      >
+                        <Text style={styles.approveButtonText}>Statistics</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.approveButton,
+                          { backgroundColor: '#95a5a6', marginLeft: 5 },
+                        ]}
+                        onPress={() =>
+                          navigation.navigate('TeacherFeedbackStudent', {
+                            studentId: item.user_id,
+                            courseId,
+                          })
+                        }
+                      >
+                        <Text style={styles.approveButtonText}>Feedback</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               );
@@ -263,11 +294,7 @@ const styles = StyleSheet.create({
   memberInfo: {
     flex: 1,
   },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+
   approveButton: {
     backgroundColor: '#27ae60',
     paddingVertical: 8,
@@ -302,6 +329,20 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  memberImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+    marginTop: 4,
+  },
+
+  buttonsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+    gap: 5,
   },
 });
 
