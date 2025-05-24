@@ -116,13 +116,33 @@ const DownloadFilesScreen = ({ route }) => {
       {/* Archivos de submissions */}
       {item.submissions?.length > 0 ? (
         <>
-          <Text style={styles.submissionTitle}>Submissions:</Text>
+          <Text style={styles.submissionTitle}>Submissions</Text>
           {item.submissions.map((submission, index) => (
-            <View key={submission.id || index} style={{ marginTop: 6 }}>
-              <Text style={styles.submissionLabel}>
-                Student:{' '}
-                {submission.student_name || submission.student_id || 'fran'}
-              </Text>
+            <View
+              key={submission.id || index}
+              style={styles.submissionContainer}
+            >
+              {/* Encabezado: Nombre, Grade y botón */}
+              <View style={styles.submissionHeader}>
+                <Text style={styles.submissionStudentName}>
+                  {submission.student_name || submission.student_id || 'fran'}
+                </Text>
+
+                <View style={styles.gradeBox}>
+                  <Text style={styles.gradeText}>{submission.grade || ''}</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.qualifyButton}
+                  onPress={() => {
+                    navigation.navigate('TeacherQualifyAssignment');
+                  }}
+                >
+                  <Text style={styles.qualifyButtonText}>Qualify</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Archivos entregados */}
               {submission.files?.map((file) => (
                 <TouchableOpacity
                   key={file.id ?? file.name}
@@ -222,13 +242,56 @@ const styles = StyleSheet.create({
   submissionTitle: {
     fontWeight: '600',
     marginTop: 10,
-    color: '#2980b9',
+    color: '#2c3e50',
+
+    textAlign: 'center',
   },
   submissionLabel: {
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 4,
     color: '#7f8c8d',
+  },
+  submissionContainer: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    alignItems: 'center',
+  },
+  submissionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  submissionStudentName: {
+    fontWeight: 'bold',
+    marginRight: 12,
+    color: '#2c3e50',
+  },
+  gradeBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  gradeText: {
+    fontSize: 12,
+    color: '#333',
+  },
+  qualifyButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#ecf0f1', // gris claro
+    borderRadius: 6,
+  },
+  qualifyButtonText: {
+    color: '#2c3e50', // gris oscuro
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 

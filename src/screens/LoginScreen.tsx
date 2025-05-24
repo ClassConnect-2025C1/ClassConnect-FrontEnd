@@ -23,7 +23,6 @@ import * as AuthSession from 'expo-auth-session';
 import { AuthContext } from '../navigation/AuthContext';
 WebBrowser.maybeCompleteAuthSession();
 
-
 import {
   GoogleSignin,
   GoogleSigninButton,
@@ -36,13 +35,12 @@ const signIn = async () => {
   try {
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
-    console.log('Google response:', response);   
-    const id_token  = response.data?.idToken; 
+    console.log('Google response:', response);
+    const id_token = response.data?.idToken;
   } catch (error) {
-    console.error(error); 
+    console.error(error);
   }
 };
-
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -252,7 +250,7 @@ const LoginScreen = () => {
             </Text>
           </TouchableOpacity>
 
-            <TouchableOpacity
+          <TouchableOpacity
             style={{
               backgroundColor: '#fff',
               padding: 12,
@@ -261,13 +259,13 @@ const LoginScreen = () => {
               alignItems: 'center',
             }}
             onPress={signIn}
-            >
+          >
             <Image
               source={require('../../assets/images/googlelog.png')}
               style={{ width: 20, height: 20, marginRight: 10 }}
             />
             <Text>Login with Google</Text>
-            </TouchableOpacity>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
