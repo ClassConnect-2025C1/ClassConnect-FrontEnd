@@ -75,7 +75,7 @@ const MembersScreen = () => {
   }, [courseId, token]);
 
   const handleApprove = async (userId) => {
-    setIsLoading(true); // Siempre empieza cargando
+    setIsLoading(true);
 
     try {
       const res = await fetch(
@@ -108,7 +108,31 @@ const MembersScreen = () => {
     }
   };
 
-  // ... importaciones y hooks sin cambios
+  useEffect(() => {
+    const fetchApprovedMembers = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/courses/${courseId}/approved-users`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (!response.ok) throw new Error('Error al obtener aprobados');
+
+        const result = await response.json();
+        setApprovedMembers(result.data);
+      } catch (error) {
+        console.error('Error al cargar aprobados:', error);
+      }
+    };
+
+    fetchApprovedMembers();
+  }, [courseId, token]);
 
   return isLoading ? (
     <StatusOverlay
@@ -155,10 +179,10 @@ const MembersScreen = () => {
           <FlatList
             data={members}
             keyExtractor={(item, index) =>
-              item.id?.toString() || index.toString()
+              item.user_id?.toString() || index.toString()
             }
             renderItem={({ item }) => {
-              const isApproved = approvedMembers.includes(item.id);
+              const isApproved = approvedMembers.includes(item.user_id);
               return (
                 <View style={styles.memberItem}>
                   <Image
@@ -179,21 +203,14 @@ const MembersScreen = () => {
                     <Text style={styles.memberEmail}>{item.email}</Text>
 
                     <View style={styles.buttonsContainer}>
-                      <TouchableOpacity
-                        style={[
-                          styles.approveButton,
-                          isApproved && {
-                            backgroundColor: '#bdc3c7',
-                            opacity: 0.6,
-                          },
-                        ]}
-                        onPress={() => handleApprove(item.user_id)}
-                        disabled={isApproved}
-                      >
-                        <Text style={styles.approveButtonText}>
-                          {isApproved ? 'Approved' : 'Approve'}
-                        </Text>
-                      </TouchableOpacity>
+                      {!isApproved && (
+                        <TouchableOpacity
+                          style={styles.approveButton}
+                          onPress={() => handleApprove(item.user_id)}
+                        >
+                          <Text style={styles.approveButtonText}>Approve</Text>
+                        </TouchableOpacity>
+                      )}
 
                       <TouchableOpacity
                         style={[
