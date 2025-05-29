@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   resendButton: {
-    backgroundColor: '#FFC107',
+    backgroundColor: '#607D8B',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 10,
