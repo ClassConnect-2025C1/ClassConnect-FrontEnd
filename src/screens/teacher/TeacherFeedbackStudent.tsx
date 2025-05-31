@@ -36,11 +36,11 @@ const TeacherFeedbackStudent = () => {
     try {
       setIsLoading(true);
       if (!token) throw new Error('No token found');
-      const decodedToken = jwtDecode(token);
-      const teacherId = decodedToken.sub;
-
+      console.log(token);
+      const decodedToken: any = jwtDecode(token);
+      console.log('token decode', decodedToken);
       const response = await fetch(
-        `${API_URL}/api/courses/${courseId}/students/${studentId}/feedback`,
+        `${API_URL}/api/courses/${courseId}/user/${studentId}/feedback`,
         {
           method: 'POST',
           headers: {
@@ -48,7 +48,6 @@ const TeacherFeedbackStudent = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            teacher_id: teacherId,
             comment,
             rating,
           }),

@@ -17,6 +17,7 @@ import StudentFeedbackScreen from '../screens/student/StudentFeedbackScreen';
 import StudentEditAssigment from '../screens/student/StudentEditAssigment';
 import ShowProfileData from '../utils/ShowProfileData';
 import StudentAssigmentScreen from '../screens/student/StudentAssigmentScreen';
+import StudentViewFeedback from '../screens/student/StudentViewFeedback';
 
 import TeacherCoursesScreen from '../screens/teacher/TeacherCoursesScreen';
 import TeacherCreateNewCourse from '../screens/teacher/TeacherCreateNewCourse';
@@ -29,7 +30,7 @@ import TeacherEditAssigments from '@/screens/teacher/TeacherEditAssigments';
 import TeacherResumeFeedbacks from '@/screens/teacher/TeacherResumeFeedbacks';
 import TeacherQualifyAssignment from '@/screens/teacher/TeacherQualifyAssignment';
 import TeacherFeedbackStudent from '@/screens/teacher/TeacherFeedbackStudent';
-
+import TeacherStatistics from '@/screens/teacher/TeacherStatistics';
 import StudentsSubmissions from '../screens/teacher/StudentsSubmissions';
 import ShowCourseData from '../utils/ShowCourseData';
 
@@ -78,6 +79,12 @@ const AuthStack = () => (
       options={{ headerShown: true, title: 'Assignment' }}
     />
 
+    <Stack.Screen
+      name="StudentViewFeedback"
+      component={StudentViewFeedback}
+      options={{ headerShown: true, title: 'Feedback' }}
+    />
+
     {/* Teacher Screens */}
 
     <Stack.Screen name="TeacherCourses" component={TeacherCoursesScreen} />
@@ -118,6 +125,8 @@ const AuthStack = () => (
       name="TeacherFeedbackStudent"
       component={TeacherFeedbackStudent}
     />
+
+    <Stack.Screen name="TeacherStatistics" component={TeacherStatistics} />
   </Stack.Navigator>
 );
 

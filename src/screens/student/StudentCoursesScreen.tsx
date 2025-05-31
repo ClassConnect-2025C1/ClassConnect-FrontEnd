@@ -34,7 +34,7 @@ const getColorForCourse = (id: number) => {
 const CoursesScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { userId } = route.params;
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchText, setSearchText] = useState('');
   const [favoriteCourses, setFavoriteCourses] = useState<Set<number>>(
@@ -55,7 +55,7 @@ const CoursesScreen = () => {
   );
 
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
-
+  const { userId } = route.params;
   const refreshCourses = async () => {
     try {
       if (token) {
@@ -213,7 +213,18 @@ const CoursesScreen = () => {
           })
         }
       >
-        <Text style={styles.buttonText}>Available courses</Text>
+        <Text style={styles.buttonText}>Available Courses</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.availableCoursesButton}
+        onPress={() =>
+          navigation.navigate('StudentViewFeedback', {
+            userId,
+          })
+        }
+      >
+        <Text style={styles.buttonText}>Feedbacks</Text>
       </TouchableOpacity>
 
       <View style={styles.paginationContainer}>

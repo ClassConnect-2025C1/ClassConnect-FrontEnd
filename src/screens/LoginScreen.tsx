@@ -139,7 +139,7 @@ const LoginScreen = () => {
             showLoginErrorToast('Error fetching profile');
             return;
           }
-
+          console.log('userId del login', user_id);
           const userProfile = await profileResponse.json();
           const userRole = userProfile.role;
 

@@ -226,22 +226,21 @@ const CoursesScreen = ({ route }) => {
           <Text style={styles.pageButtonText}>{'Next →'}</Text>
         </TouchableOpacity>
       </View>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => navigation.navigate('CreateNewCourse')}
+        >
+          <Text style={styles.buttonText}>Create new course</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={{
-          backgroundColor: '#aaa',
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          borderRadius: 20,
-          alignSelf: 'center',
-          marginBottom: 10,
-        }}
-        onPress={() => navigation.navigate('CreateNewCourse')}
-      >
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>
-          Create new course
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => navigation.navigate('TeacherStatistics')}
+        >
+          <Text style={styles.buttonText}>Statistics</Text>
+        </TouchableOpacity>
+      </View>
 
       <View
         style={{
@@ -410,6 +409,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+
+  buttonRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-evenly',
+  marginBottom: 20,
+},
+
+actionButton: {
+  backgroundColor: '#aaa',
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  borderRadius: 20,
+},
+
+buttonText: {
+  color: 'white',
+  fontWeight: 'bold',
+},
+
 });
 
 export default CoursesScreen;
