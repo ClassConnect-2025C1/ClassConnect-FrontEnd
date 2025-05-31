@@ -223,11 +223,20 @@ const StudentViewFeedback = () => {
       <View style={styles.feedbackList}>
         {paginatedFeedbacks.map((item) => (
           <View key={item.id.toString()} style={styles.feedbackItem}>
+            <Text
+              style={[
+                styles.backButtonText,
+                { fontSize: 18, color: '#2c3e50' },
+              ]}
+            >
+              {item.course_title}
+            </Text>
+
             <View style={styles.feedbackHeader}>
-              <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
+              <Text style={styles.feedbackContent}>{item.comment}</Text>
             </View>
 
-            <Text style={styles.feedbackContent}>{item.comment}</Text>
+            <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
             <Text style={[styles.dateText, { marginTop: 10 }]}>
               {new Date(item.created_at)
                 .toLocaleDateString('es-US', {

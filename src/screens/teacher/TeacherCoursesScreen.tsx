@@ -411,23 +411,22 @@ const styles = StyleSheet.create({
   },
 
   buttonRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-evenly',
-  marginBottom: 20,
-},
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginBottom: 20,
+  },
 
-actionButton: {
-  backgroundColor: '#aaa',
-  paddingVertical: 10,
-  paddingHorizontal: 20,
-  borderRadius: 20,
-},
+  actionButton: {
+    backgroundColor: '#aaa',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
 
-buttonText: {
-  color: 'white',
-  fontWeight: 'bold',
-},
-
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
 });
 
 export default CoursesScreen;
