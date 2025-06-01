@@ -21,16 +21,18 @@ import { API_URL } from '@env';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { AuthContext } from '../navigation/AuthContext';
-WebBrowser.maybeCompleteAuthSession();
+/*
+//WebBrowser.maybeCompleteAuthSession();
 
-import {
-  GoogleSignin,
-  GoogleSigninButton,
-  statusCodes,
-} from '@react-native-google-signin/google-signin';
+//import {
+//  GoogleSignin,
+//  GoogleSigninButton,
+//  statusCodes,
+//} from '@react-native-google-signin/google-signin';
 
 // Somewhere in your code
-GoogleSignin.configure();
+//GoogleSignin.configure();
+/*
 const signIn = async () => {
   try {
     await GoogleSignin.hasPlayServices();
@@ -41,6 +43,7 @@ const signIn = async () => {
     console.error(error);
   }
 };
+*/
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -258,7 +261,7 @@ const LoginScreen = () => {
               flexDirection: 'row',
               alignItems: 'center',
             }}
-            onPress={signIn}
+            onPress={console.log("signIn")}
           >
             <Image
               source={require('../../assets/images/googlelog.png')}

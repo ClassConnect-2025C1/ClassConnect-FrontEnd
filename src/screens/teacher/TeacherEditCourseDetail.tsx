@@ -39,8 +39,9 @@ export default function EditCourseScreen({ route }) {
   );
 
   const [auxTeachersOptions, setAuxTeachersOptions] = useState([]);
-  const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(course.auxTeachers || []);
-
+  const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
+    course.auxTeachers || [],
+  );
 
   const [errors, setErrors] = useState({
     title: '',
@@ -85,32 +86,31 @@ export default function EditCourseScreen({ route }) {
   }, []);
 
   const fetchAuxTeachers = async () => {
-  try {
-    const auxResponse = await fetch(`${API_URL}/users/teacher-emails`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const auxResponse = await fetch(`${API_URL}/users/teacher-emails`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!auxResponse.ok) {
-      throw new Error('Failed to fetch auxiliary teachers');
+      if (!auxResponse.ok) {
+        throw new Error('Failed to fetch auxiliary teachers');
+      }
+
+      const auxEmails: string[] = await auxResponse.json();
+
+      const auxOptions = auxEmails.map((email) => ({
+        id: email,
+        name: email,
+      }));
+
+      setAuxTeachersOptions(auxOptions);
+    } catch (error) {
+      console.error('Error fetching auxiliary teachers:', error);
     }
+  };
 
-    const auxEmails: string[] = await auxResponse.json();
-
-    const auxOptions = auxEmails.map(email => ({
-      id: email,
-      name: email,
-    }));
-
-    setAuxTeachersOptions(auxOptions);
-  } catch (error) {
-    console.error('Error fetching auxiliary teachers:', error);
-  }
-};
-
-fetchAuxTeachers();
-
+  fetchAuxTeachers();
 
   const handleSaveChanges = async () => {
     const newErrors = validateFields(
@@ -246,28 +246,27 @@ fetchAuxTeachers();
           )}
 
           {/* Teaching Assistants */}
-        <Text style={{ marginBottom: 6 }}>Teaching Assistants</Text>
-        <View style={{ maxHeight: 200, marginBottom: 16 }}>
-          <MultiSelect
-            items={auxTeachersOptions}
-            uniqueKey="id"
-            onSelectedItemsChange={setSelectedAuxTeachers}
-            selectedItems={selectedAuxTeachers}
-            selectText="Select assistants"
-            searchInputPlaceholderText="Search teachers..."
-            tagRemoveIconColor="#333"
-            tagBorderColor="#333"
-            tagTextColor="#333"
-            selectedItemTextColor="#333"
-            selectedItemIconColor="#333"
-            itemTextColor="#000"
-            displayKey="name"
-            searchInputStyle={{ color: '#333' }}
-            submitButtonColor="#333"
-            submitButtonText="Confirm"
-          />
-        </View>
-
+          <Text style={{ marginBottom: 6 }}>Teaching Assistants</Text>
+          <View style={{ maxHeight: 200, marginBottom: 16 }}>
+            <MultiSelect
+              items={auxTeachersOptions}
+              uniqueKey="id"
+              onSelectedItemsChange={setSelectedAuxTeachers}
+              selectedItems={selectedAuxTeachers}
+              selectText="Select assistants"
+              searchInputPlaceholderText="Search teachers..."
+              tagRemoveIconColor="#333"
+              tagBorderColor="#333"
+              tagTextColor="#333"
+              selectedItemTextColor="#333"
+              selectedItemIconColor="#333"
+              itemTextColor="#000"
+              displayKey="name"
+              searchInputStyle={{ color: '#333' }}
+              submitButtonColor="#333"
+              submitButtonText="Confirm"
+            />
+          </View>
 
           {/* Start Date */}
           <TextInput
