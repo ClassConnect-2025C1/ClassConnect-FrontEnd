@@ -28,6 +28,8 @@ const TeacherCreateNewCourseScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
   const { token } = useAuth();
+  const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>([]);
+  const [auxTeachersOptions, setAuxTeachersOptions] = useState([]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -37,6 +39,7 @@ const TeacherCreateNewCourseScreen = () => {
       }
 
       try {
+        // Traer cursos
         const response = await fetch(`${API_URL}/api/courses/`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -50,9 +53,28 @@ const TeacherCreateNewCourseScreen = () => {
           name: course.title,
         }));
         setEligibilityOptions(options);
+
+        // Traer auxiliares (emails)
+        const auxResponse = await fetch(`${API_URL}/users/teacher-emails`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!auxResponse.ok) {
+          throw new Error('Failed to fetch auxiliary teachers');
+        }
+
+        const auxEmails: string[] = await auxResponse.json();
+
+        const auxOptions = auxEmails.map((email) => ({
+          id: email,
+          name: email,
+        }));
+        setAuxTeachersOptions(auxOptions);
       } catch (error) {
-        console.error('Error fetching courses:', error);
-        setModalMessage('Could not load eligibility criteria.');
+        console.error('Error fetching data:', error);
+        setModalMessage('Could not load data.');
         setShowModal(true);
       }
     };
@@ -90,6 +112,7 @@ const TeacherCreateNewCourseScreen = () => {
           eligibility_criteria: selectedCriteria,
           capacity: capacityNumber,
           created_by: teacherEmail,
+          teaching_assistants: selectedAuxTeachers,
         }),
       });
 
@@ -150,7 +173,7 @@ const TeacherCreateNewCourseScreen = () => {
             multiline
           />
 
-          <Text style={styles.label}>Eligibility Criteria</Text>
+          <Text style={styles.label}>Eligibility Criterials</Text>
           <MultiSelect
             items={eligibilityOptions}
             uniqueKey="id"
@@ -158,6 +181,27 @@ const TeacherCreateNewCourseScreen = () => {
             selectedItems={selectedCriteria}
             selectText="Select criteria"
             searchInputPlaceholderText="Search criteria..."
+            tagRemoveIconColor="#333"
+            tagBorderColor="#333"
+            tagTextColor="#333"
+            selectedItemTextColor="#333"
+            selectedItemIconColor="#333"
+            itemTextColor="#000"
+            displayKey="name"
+            searchInputStyle={{ color: '#333' }}
+            submitButtonColor="#333"
+            submitButtonText="Confirm"
+            styleMainWrapper={styles.multiSelect}
+          />
+
+          <Text style={styles.label}>Auxiliar teachers</Text>
+          <MultiSelect
+            items={auxTeachersOptions}
+            uniqueKey="id"
+            onSelectedItemsChange={setSelectedAuxTeachers}
+            selectedItems={selectedAuxTeachers}
+            selectText="Select auxiliary teachers"
+            searchInputPlaceholderText="Search auxiliary teachers..."
             tagRemoveIconColor="#333"
             tagBorderColor="#333"
             tagTextColor="#333"
