@@ -1,11 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import { useNavigation } from '@react-navigation/native';
 
 const submissionsData = [5, 10, 8, 4, 7];
-const gradesData = [70, 85, 90, 78, 92];  
+const gradesData = [70, 85, 90, 78, 92];
 const average = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
 
 const TeacherStatistics = () => {
@@ -35,7 +42,9 @@ const TeacherStatistics = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Statistics</Text>
 
-      <Text style={styles.label}>Submissions (avg: {average(submissionsData).toFixed(2)})</Text>
+      <Text style={styles.label}>
+        Submissions (avg: {average(submissionsData).toFixed(2)})
+      </Text>
       <BarChart
         data={{
           labels: ['User1', 'User2', 'User3', 'User4', 'User5'],
@@ -48,7 +57,9 @@ const TeacherStatistics = () => {
         style={styles.chart}
       />
 
-      <Text style={styles.label}>Grades (avg: {average(gradesData).toFixed(2)})</Text>
+      <Text style={styles.label}>
+        Grades (avg: {average(gradesData).toFixed(2)})
+      </Text>
       <BarChart
         data={{
           labels: ['User1', 'User2', 'User3', 'User4', 'User5'],
@@ -65,7 +76,10 @@ const TeacherStatistics = () => {
         <TouchableOpacity style={styles.sendButton} onPress={handleDownloadPDF}>
           <Text style={styles.buttonText}>Download</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.buttonText}>Close</Text>
         </TouchableOpacity>
       </View>

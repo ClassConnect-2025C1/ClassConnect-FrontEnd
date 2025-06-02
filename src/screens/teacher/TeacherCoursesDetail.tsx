@@ -27,9 +27,9 @@ export default function TeacherCourseDetail({ route }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
-
+  const [modules, setModules] = useState([]);
   const filteredAssignments = assignments.filter((assignment) => {
-    console.log('Assignment:', assignment.status);
+
     const titleMatch = assignment.title
       ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -47,6 +47,7 @@ export default function TeacherCourseDetail({ route }) {
 
   const ITEMS_PER_PAGE = 2;
   const [currentPage, setCurrentPage] = useState(1);
+  const [resourceCurrentPage, setResourceCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(filteredAssignments.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -54,6 +55,11 @@ export default function TeacherCourseDetail({ route }) {
     startIndex,
     startIndex + ITEMS_PER_PAGE,
   );
+
+  // Lógica de paginación para Resources
+  const totalResourcePages = Math.ceil(modules.length / ITEMS_PER_PAGE);
+  const startResourceIndex = (resourceCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedModules = modules.slice(startResourceIndex, startResourceIndex + ITEMS_PER_PAGE);
 
   const fetchAssignments = async () => {
     try {
@@ -95,6 +101,7 @@ export default function TeacherCourseDetail({ route }) {
   useEffect(() => {
     if (isFocused) {
       fetchAssignments();
+      fetchModules();
     }
   }, [isFocused]);
 
@@ -132,6 +139,89 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
+  /*Resources modules functions*/
+  const handleAddModule = async () => {
+    try {
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const formData = new FormData();
+      formData.append('name', 'Test add module');
+
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/resource/module`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to add module');
+      }
+      console.log('Module added successfully');
+    } catch (error) {
+      console.error('Error adding module:', error);
+    }
+  };
+
+  const fetchModules = async () => {
+    try {
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/resources`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch modules');
+      }
+      const data = await response.json();
+      if (data && Array.isArray(data.modules)) { // Cambiamos data por data.modules
+        const formattedModules = data.modules.map((item, index) => ({
+          module_id: item['module_id'],
+          title: item['module_name'],
+          order: item['order'],
+          resources: item['resources'].map(r => ({
+            id: r['id'],
+            name: r['type'] === 'link' ? r['url'] : r['id'],
+          })),
+        }));
+        setModules(formattedModules);
+      } else {
+        console.error('Modules data is not in the expected format:', data);
+        setModules([]);
+      }
+    } catch (error) {
+      console.error('Error fetching modules:', error);
+      setModules([]);
+    }
+  };
+
+  const handleAddResource = (moduleIndex) => {
+    const newModules = [...modules];
+    newModules[moduleIndex].resources.push({ name: `Resource ${newModules[moduleIndex].resources.length + 1}.pdf` });
+    setModules(newModules);
+  };
+
+  const handleDeleteResource = (moduleIndex, resourceIndex) => {
+    const newModules = [...modules];
+    newModules[moduleIndex].resources.splice(resourceIndex, 1);
+    setModules(newModules);
+  };
+
+
+  console.log('Modules:', modules);
+
   return isLoading ? (
     <StatusOverlay
       loading={!saveChangueConfirmed}
@@ -164,7 +254,7 @@ export default function TeacherCourseDetail({ route }) {
         </Text>
 
         {Array.isArray(course.eligibilityCriteria) &&
-        course.eligibilityCriteria.length > 0 ? (
+          course.eligibilityCriteria.length > 0 ? (
           <View style={styles.eligibilityContainer}>
             <Text style={styles.detail}>Eligibility Criteria:</Text>
 
@@ -274,35 +364,88 @@ export default function TeacherCourseDetail({ route }) {
               </View>
             </View>
           ))
-        ) : (
-          activeSubTab === 'Resources' && (
-            <View style={styles.assignmentContainer}>
-              <Text style={styles.assignmentTitle}>Course Resources</Text>
-              <Text style={styles.assignmentDescription}>
-                Here you will find resources such as slides, books, and other
-                materials related to this course.
+        ) : activeSubTab === 'Resources' ? (
+          <View style={styles.resourcesContainer}>
+            {/* Mostrar módulos paginados */}
+            {paginatedModules.map((module, moduleIndex) => (
+              <View key={moduleIndex} style={styles.moduleContainer}>
+                <Text style={styles.moduleTitle}>
+                  Module {startResourceIndex + moduleIndex + 1}: {module.title}
+                </Text>
+                {module.resources.map((resource, resourceIndex) => (
+                  <View key={resourceIndex} style={styles.resourceItem}>
+                    <Text style={styles.resourceText}>{resource.name}</Text>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteResource(startResourceIndex + moduleIndex, resourceIndex)}
+                      style={styles.deleteButton}
+                    >
+                      <Text style={styles.deleteText}>Del</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                <TouchableOpacity
+                  style={styles.addResourceButton}
+                  onPress={() => handleAddResource(startResourceIndex + moduleIndex)}
+                >
+                  <Text style={styles.addResourceText}>+ Add resource</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+
+            {/* Add new module button */}
+              <TouchableOpacity
+                  style={styles.smallButton}
+                  onPress={() =>
+                    navigation.navigate('AddModuleScreen', {
+                      token,
+                      course,
+                    })
+                  }
+                >
+                  <Text style={styles.smallButtonText}>Create module</Text>
+                </TouchableOpacity>
+
+
+            {/* Update order button */}
+            <TouchableOpacity
+              style={styles.updateOrderButton}
+              onPress={() => console.log('Update order pressed')}
+            >
+              <Text style={styles.updateOrderText}>Update Order</Text>
+            </TouchableOpacity>
+
+            {/* Botones paginación para Resources */}
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                disabled={resourceCurrentPage === 1}
+                onPress={() => setResourceCurrentPage((prev) => Math.max(prev - 1, 1))}
+                style={[
+                  styles.pageButton,
+                  resourceCurrentPage === 1 && styles.disabledButton,
+                ]}
+              >
+                <Text style={styles.pageButtonText}>Prev</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.pageInfo}>
+                Page {resourceCurrentPage} of {totalResourcePages}
               </Text>
+
+              <TouchableOpacity
+                disabled={resourceCurrentPage === totalResourcePages}
+                onPress={() =>
+                  setResourceCurrentPage((prev) => Math.min(prev + 1, totalResourcePages))
+                }
+                style={[
+                  styles.pageButton,
+                  resourceCurrentPage === totalResourcePages && styles.disabledButton,
+                ]}
+              >
+                <Text style={styles.pageButtonText}>Next</Text>
+              </TouchableOpacity>
             </View>
-          )
-        )}
-
-        {activeSubTab === 'Feedback' && (
-          <View style={styles.assignmentContainer}>
-            <Text style={styles.assignmentTitle}>Feedback</Text>
-            <Text style={styles.assignmentDescription}>
-              View and manage feedback left by students or teachers here.
-            </Text>
           </View>
-        )}
-
-        {activeSubTab === 'Members' && (
-          <View style={styles.assignmentContainer}>
-            <Text style={styles.assignmentTitle}>Members</Text>
-            <Text style={styles.assignmentDescription}>
-              View and manage members of this course here.
-            </Text>
-          </View>
-        )}
+        ) : null}
       </View>
 
       {/* Botones paginación */}
@@ -338,28 +481,30 @@ export default function TeacherCourseDetail({ route }) {
         </View>
       )}
 
-      <View style={styles.bottomButtonsContainer}>
-        <TouchableOpacity
-          style={styles.createAssignmentButton}
-          onPress={() =>
-            navigation.navigate('TeacherCreateAssignments', { course })
-          }
-        >
-          <Text style={styles.createAssignmentButtonText}>
-            Create assignment
-          </Text>
-        </TouchableOpacity>
+      {activeSubTab !== 'Resources' && (
+        <View style={styles.bottomButtonsContainer}>
+          <TouchableOpacity
+            style={styles.createAssignmentButton}
+            onPress={() =>
+              navigation.navigate('TeacherCreateAssignments', { course })
+            }
+          >
+            <Text style={styles.createAssignmentButtonText}>
+              Create assignment
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.editCourseButton}
-          onPress={() => {
-            setActiveTab('Edit Course');
-            navigation.navigate('TeacherEditCourseDetail', { course });
-          }}
-        >
-          <Text style={styles.createAssignmentButtonText}>Edit course</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.editCourseButton}
+            onPress={() => {
+              setActiveTab('Edit Course');
+              navigation.navigate('TeacherEditCourseDetail', { course });
+            }}
+          >
+            <Text style={styles.createAssignmentButtonText}>Edit course</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -572,7 +717,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: '#007AFF',
     borderRadius: 15,
-    marginBottom: 1,
+    marginBottom: 2,
   },
   disabledButton: {
     backgroundColor: '#ccc',
@@ -582,7 +727,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   pageInfo: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
     marginBottom: 10,
   },
@@ -612,4 +757,86 @@ const styles = StyleSheet.create({
   eligibilityContainer: {
     marginVertical: 2,
   },
+
+  resourcesContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  moduleContainer: {
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 6,
+  },
+  moduleTitle: {
+    fontSize: 14, // más pequeño
+    fontWeight: '600',
+    marginBottom: 6,
+    color: '#333',
+  },
+  resourceItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  resourceText: {
+    fontSize: 12,
+    color: '#444',
+    flexShrink: 1,
+  },
+  deleteButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: '#ffdddd',
+    borderRadius: 4,
+  },
+  deleteText: {
+    fontSize: 11,
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  addResourceButton: {
+    marginTop: 6,
+    paddingVertical: 6,
+    alignItems: 'center',
+    backgroundColor: '#cccccc',
+    borderRadius: 5,
+  },
+  addResourceText: {
+    fontSize: 12,
+    color: '#999999',
+    fontWeight: '600',
+  },
+  addModuleButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    backgroundColor: '#cce5cc',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  addModuleText: {
+    fontSize: 13,
+    color: '#2d862d',
+    fontWeight: '700',
+  },
+  updateOrderButton: {
+    marginTop: 10,
+    paddingVertical: 6,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  updateOrderText: {
+    fontSize: 12,
+    color: '#666',
+  },
+
+
 });

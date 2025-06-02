@@ -19,6 +19,8 @@ import ShowProfileData from '../utils/ShowProfileData';
 import StudentAssigmentScreen from '../screens/student/StudentAssigmentScreen';
 import StudentViewFeedback from '../screens/student/StudentViewFeedback';
 
+
+
 import TeacherCoursesScreen from '../screens/teacher/TeacherCoursesScreen';
 import TeacherCreateNewCourse from '../screens/teacher/TeacherCreateNewCourse';
 import TeacherCoursesDetail from '../screens/teacher/TeacherCoursesDetail';
@@ -33,6 +35,7 @@ import TeacherFeedbackStudent from '@/screens/teacher/TeacherFeedbackStudent';
 import TeacherStatistics from '@/screens/teacher/TeacherStatistics';
 import StudentsSubmissions from '../screens/teacher/StudentsSubmissions';
 import ShowCourseData from '../utils/ShowCourseData';
+import AddModuleScreen from '../screens/teacher/AddModuleScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -125,6 +128,9 @@ const AuthStack = () => (
       name="TeacherFeedbackStudent"
       component={TeacherFeedbackStudent}
     />
+
+    <Stack.Screen name="AddModuleScreen" component={AddModuleScreen} />
+
 
     <Stack.Screen name="TeacherStatistics" component={TeacherStatistics} />
   </Stack.Navigator>

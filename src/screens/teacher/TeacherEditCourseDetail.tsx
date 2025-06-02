@@ -38,6 +38,11 @@ export default function EditCourseScreen({ route }) {
     course.eligibilityCriteria || [],
   );
 
+  const [auxTeachersOptions, setAuxTeachersOptions] = useState([]);
+  const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
+    course.auxTeachers || [],
+  );
+
   const [errors, setErrors] = useState({
     title: '',
     description: '',
@@ -80,6 +85,33 @@ export default function EditCourseScreen({ route }) {
     fetchEligibilityOptions();
   }, []);
 
+  const fetchAuxTeachers = async () => {
+    try {
+      const auxResponse = await fetch(`${API_URL}/users/teacher-emails`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!auxResponse.ok) {
+        throw new Error('Failed to fetch auxiliary teachers');
+      }
+
+      const auxEmails: string[] = await auxResponse.json();
+
+      const auxOptions = auxEmails.map((email) => ({
+        id: email,
+        name: email,
+      }));
+
+      setAuxTeachersOptions(auxOptions);
+    } catch (error) {
+      console.error('Error fetching auxiliary teachers:', error);
+    }
+  };
+
+  fetchAuxTeachers();
+
   const handleSaveChanges = async () => {
     const newErrors = validateFields(
       title,
@@ -115,6 +147,7 @@ export default function EditCourseScreen({ route }) {
           eligibility_criteria: filteredCriteria,
           start_date: formattedStartDate,
           end_date: formattedEndDate,
+          teaching_assistants: selectedAuxTeachers,
         }),
       });
 
@@ -211,6 +244,29 @@ export default function EditCourseScreen({ route }) {
               This course does not contain eligibility criteria.
             </Text>
           )}
+
+          {/* Teaching Assistants */}
+          <Text style={{ marginBottom: 6 }}>Teaching Assistants</Text>
+          <View style={{ maxHeight: 200, marginBottom: 16 }}>
+            <MultiSelect
+              items={auxTeachersOptions}
+              uniqueKey="id"
+              onSelectedItemsChange={setSelectedAuxTeachers}
+              selectedItems={selectedAuxTeachers}
+              selectText="Select assistants"
+              searchInputPlaceholderText="Search teachers..."
+              tagRemoveIconColor="#333"
+              tagBorderColor="#333"
+              tagTextColor="#333"
+              selectedItemTextColor="#333"
+              selectedItemIconColor="#333"
+              itemTextColor="#000"
+              displayKey="name"
+              searchInputStyle={{ color: '#333' }}
+              submitButtonColor="#333"
+              submitButtonText="Confirm"
+            />
+          </View>
 
           {/* Start Date */}
           <TextInput
