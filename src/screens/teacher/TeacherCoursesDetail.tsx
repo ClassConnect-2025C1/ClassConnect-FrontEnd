@@ -139,34 +139,6 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-  /*Resources modules functions*/
-  const handleAddModule = async () => {
-    try {
-      if (!token) {
-        throw new Error('No token found');
-      }
-      const formData = new FormData();
-      formData.append('name', 'Test add module');
-
-      const response = await fetch(
-        `${API_URL}/api/courses/${course.id}/resource/module`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-      if (!response.ok) {
-        throw new Error('Failed to add module');
-      }
-      console.log('Module added successfully');
-    } catch (error) {
-      console.error('Error adding module:', error);
-    }
-  };
-
   const fetchModules = async () => {
     try {
       if (!token) {
@@ -207,17 +179,45 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-  const handleAddResource = (moduleIndex) => {
-    const newModules = [...modules];
-    newModules[moduleIndex].resources.push({ name: `Resource ${newModules[moduleIndex].resources.length + 1}.pdf` });
-    setModules(newModules);
-  };
-
-  const handleDeleteResource = (moduleIndex, resourceIndex) => {
-    const newModules = [...modules];
-    newModules[moduleIndex].resources.splice(resourceIndex, 1);
-    setModules(newModules);
-  };
+const handleDeleteResource = async (resource) => {
+  try {
+    const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${module.id}/${resource.id}`;
+    
+    // Mostrar loading state
+    setLoading(true);
+  
+    // Hacer la petición DELETE
+    const response = await fetch(deleteUrl, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+   
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (response.ok) {
+      console.log('Resource deleted successfully');
+      
+      
+    } else {
+      // Manejar error de la API
+      const errorData = await response.json();
+      console.error('Error deleting resource:', errorData);
+      setLoading(false);
+      
+      // Opcional: mostrar mensaje de error al usuario
+      console.log('Error', 'Failed to delete resource. Please try again.');
+    }
+    
+  } catch (error) {
+    console.error('Network error deleting resource:', error);
+    setLoading(false);
+    
+    // Manejar errores de red
+   console.log('Error', 'Network error. Please check your connection and try again.');
+  }
+};
 
 
   console.log('Modules:', modules);
@@ -376,18 +376,24 @@ export default function TeacherCourseDetail({ route }) {
                   <View key={resourceIndex} style={styles.resourceItem}>
                     <Text style={styles.resourceText}>{resource.name}</Text>
                     <TouchableOpacity
-                      onPress={() => handleDeleteResource(startResourceIndex + moduleIndex, resourceIndex)}
+                      onPress={() => handleDeleteResource(resource)}
                       style={styles.deleteButton}
                     >
-                      <Text style={styles.deleteText}>Del</Text>
+                      <Text style={styles.deleteText}>Delete</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
-                <TouchableOpacity
-                  style={styles.addResourceButton}
-                  onPress={() => handleAddResource(startResourceIndex + moduleIndex)}
+                  <TouchableOpacity
+                  style={styles.smallButton}
+                  onPress={() =>
+                    navigation.navigate('AddResourceForModule', {
+                      token,
+                      course,
+                      module
+                    })
+                  }
                 >
-                  <Text style={styles.addResourceText}>+ Add resource</Text>
+                  <Text style={styles.addResourceText}>+ Add resources</Text>
                 </TouchableOpacity>
               </View>
             ))}

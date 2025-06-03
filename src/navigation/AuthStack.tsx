@@ -35,8 +35,8 @@ import TeacherFeedbackStudent from '@/screens/teacher/TeacherFeedbackStudent';
 import TeacherStatistics from '@/screens/teacher/TeacherStatistics';
 import StudentsSubmissions from '../screens/teacher/StudentsSubmissions';
 import ShowCourseData from '../utils/ShowCourseData';
-import AddModuleScreen from '../screens/teacher/AddModuleScreen';
-
+import AddModuleScreen from '../screens/teacher/resources/AddModuleScreen';
+import AddResourceForModule from '../screens/teacher/resources/AddResourceForModule';
 const Stack = createNativeStackNavigator();
 
 const AuthStack = () => (
@@ -130,7 +130,11 @@ const AuthStack = () => (
     />
 
     <Stack.Screen name="AddModuleScreen" component={AddModuleScreen} />
-
+    
+    <Stack.Screen
+      name="AddResourceForModule"
+      component={AddResourceForModule}
+    />
 
     <Stack.Screen name="TeacherStatistics" component={TeacherStatistics} />
   </Stack.Navigator>

@@ -116,6 +116,8 @@ const LoginScreen = () => {
       });
 
       const data = await response.json();
+      const decodeToken = jwtDecode(data.access_token);
+      console.log('Decoded token:', decodeToken);
 
       if (response.ok) {
         await AsyncStorage.setItem('token', data.access_token);
