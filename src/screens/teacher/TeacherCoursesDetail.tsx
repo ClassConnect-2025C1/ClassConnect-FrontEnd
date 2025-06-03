@@ -415,7 +415,7 @@ export default function TeacherCourseDetail({ route }) {
                     onPress={() => handleDeleteModule(module.module_id)}
                     style={styles.deleteButton}
                   >
-                    <Text style={styles.deleteText}>Delete</Text>
+                    <Text style={styles.deleteText}> X </Text>
                   </TouchableOpacity>
                 </View>
 
@@ -426,7 +426,7 @@ export default function TeacherCourseDetail({ route }) {
                       onPress={() => handleDeleteResource(resource)}
                       style={styles.deleteButton}
                     >
-                      <Text style={styles.deleteText}>Delete</Text>
+                      <Text style={styles.deleteText}> X </Text>
                     </TouchableOpacity>
                   </View>
                 ))}
