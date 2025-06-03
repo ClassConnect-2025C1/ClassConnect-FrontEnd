@@ -7,6 +7,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Animated,
+  Vibration,
 } from 'react-native';
 import { useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -53,10 +55,17 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [saveChangueConfirmed, setSaveChangueConfirmed] = useState(false);
+  const [animatingModuleId, setAnimatingModuleId] = useState<string | null>(null);
+  const [animatingResourceId, setAnimatingResourceId] = useState<string | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
 
   // Función para mover módulos completos
   const moveModuleUp = (moduleIndex: number) => {
     if (moduleIndex === 0) return; // No se puede mover más arriba
+    
+    const moduleId = modules[moduleIndex].module_id;
+    setAnimatingModuleId(moduleId);
+    Vibration.vibrate(50); // Feedback háptico suave
     
     const newModules = [...modules];
     // Intercambiar el módulo actual con el anterior
@@ -69,10 +78,18 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
     }));
     
     setModules(updatedModules);
+    setHasChanges(true);
+    
+    // Quitar la animación después de un tiempo
+    setTimeout(() => setAnimatingModuleId(null), 600);
   };
 
   const moveModuleDown = (moduleIndex: number) => {
     if (moduleIndex === modules.length - 1) return; // No se puede mover más abajo
+    
+    const moduleId = modules[moduleIndex].module_id;
+    setAnimatingModuleId(moduleId);
+    Vibration.vibrate(50); // Feedback háptico suave
     
     const newModules = [...modules];
     // Intercambiar el módulo actual con el siguiente
@@ -85,11 +102,19 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
     }));
     
     setModules(updatedModules);
+    setHasChanges(true);
+    
+    // Quitar la animación después de un tiempo
+    setTimeout(() => setAnimatingModuleId(null), 600);
   };
 
   // Función para mover recursos dentro del mismo módulo únicamente
   const moveResourceUp = (moduleIndex: number, resourceIndex: number) => {
     if (resourceIndex === 0) return; // No se puede mover más arriba
+    
+    const resourceId = modules[moduleIndex].resources[resourceIndex].id;
+    setAnimatingResourceId(resourceId);
+    Vibration.vibrate(30); // Feedback háptico más suave para recursos
     
     const newModules = [...modules];
     const moduleResources = [...newModules[moduleIndex].resources];
@@ -97,11 +122,19 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
     [moduleResources[resourceIndex], moduleResources[resourceIndex - 1]] = [moduleResources[resourceIndex - 1], moduleResources[resourceIndex]];
     newModules[moduleIndex].resources = moduleResources;
     setModules(newModules);
+    setHasChanges(true);
+    
+    // Quitar la animación después de un tiempo
+    setTimeout(() => setAnimatingResourceId(null), 400);
   };
 
   const moveResourceDown = (moduleIndex: number, resourceIndex: number) => {
     const module = modules[moduleIndex];
     if (resourceIndex === module.resources.length - 1) return; // No se puede mover más abajo
+    
+    const resourceId = modules[moduleIndex].resources[resourceIndex].id;
+    setAnimatingResourceId(resourceId);
+    Vibration.vibrate(30); // Feedback háptico más suave para recursos
     
     const newModules = [...modules];
     const moduleResources = [...newModules[moduleIndex].resources];
@@ -109,6 +142,10 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
     [moduleResources[resourceIndex], moduleResources[resourceIndex + 1]] = [moduleResources[resourceIndex + 1], moduleResources[resourceIndex]];
     newModules[moduleIndex].resources = moduleResources;
     setModules(newModules);
+    setHasChanges(true);
+    
+    // Quitar la animación después de un tiempo
+    setTimeout(() => setAnimatingResourceId(null), 400);
   };
 
   // Función para guardar el nuevo orden
@@ -176,13 +213,21 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Update Order</Text>
-        <Text style={styles.headerSubtitle}>Drag items to reorder</Text>
+        <Text style={styles.headerSubtitle}>
+          {hasChanges ? "✓ Changes detected - Ready to save" : "Drag items to reorder"}
+        </Text>
       </View>
 
       {/* Content */}
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {modules.map((module, moduleIndex) => (
-          <View key={module.module_id} style={styles.moduleContainer}>
+          <View 
+            key={module.module_id} 
+            style={[
+              styles.moduleContainer,
+              animatingModuleId === module.module_id && styles.animatingModule
+            ]}
+          >
             {/* Module Header with move buttons - Mueve módulos completos */}
             <View style={styles.moduleHeader}>
               <View style={styles.moduleInfo}>
@@ -210,7 +255,13 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
             {/* Resources - Solo se mueven dentro del mismo módulo */}
             <View style={styles.resourcesContainer}>
               {module.resources.map((resource, resourceIndex) => (
-                <View key={resource.id} style={styles.resourceItem}>
+                <View 
+                  key={resource.id} 
+                  style={[
+                    styles.resourceItem,
+                    animatingResourceId === resource.id && styles.animatingResource
+                  ]}
+                >
                   <View style={styles.resourceInfo}>
                     <Text style={styles.resourceName}>{resource.name}</Text>
                     <Text style={styles.resourceType}>{resource.type}</Text>
@@ -243,8 +294,19 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
         <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveOrder}>
-          <Text style={styles.saveButtonText}>Save Order</Text>
+        <TouchableOpacity 
+          style={[
+            styles.saveButton,
+            hasChanges && styles.saveButtonHighlight
+          ]} 
+          onPress={handleSaveOrder}
+        >
+          <Text style={[
+            styles.saveButtonText,
+            hasChanges && styles.saveButtonTextHighlight
+          ]}>
+            {hasChanges ? "Save Changes" : "Save Order"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -271,6 +333,7 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: '#6c757d',
+    marginTop: 4,
   },
   scrollContainer: {
     flex: 1,
@@ -288,6 +351,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    transform: [{ scale: 1 }],
+  },
+  animatingModule: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#2196f3',
+    borderWidth: 2,
+    shadowColor: '#2196f3',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    transform: [{ scale: 1.02 }],
   },
   moduleHeader: {
     flexDirection: 'row',
@@ -326,6 +400,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
     marginBottom: 8,
+    transform: [{ scale: 1 }],
+  },
+  animatingResource: {
+    backgroundColor: '#fff3e0',
+    borderColor: '#ff9800',
+    borderWidth: 2,
+    shadowColor: '#ff9800',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    transform: [{ scale: 1.05 }],
   },
   resourceInfo: {
     flex: 1,
@@ -383,10 +472,26 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#007AFF',
     alignItems: 'center',
+    transform: [{ scale: 1 }],
+  },
+  saveButtonHighlight: {
+    backgroundColor: '#28a745',
+    shadowColor: '#28a745',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    transform: [{ scale: 1.02 }],
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  saveButtonTextHighlight: {
+    fontWeight: 'bold',
   },
 });
