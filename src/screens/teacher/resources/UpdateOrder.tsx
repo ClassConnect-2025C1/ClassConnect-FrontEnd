@@ -55,10 +55,28 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
   const [saveChangueConfirmed, setSaveChangueConfirmed] = useState(false);
 
   // Función para mover módulos completos
-  const moveModule = (fromIndex: number, toIndex: number) => {
+  const moveModuleUp = (moduleIndex: number) => {
+    if (moduleIndex === 0) return; // No se puede mover más arriba
+    
     const newModules = [...modules];
-    const [movedModule] = newModules.splice(fromIndex, 1);
-    newModules.splice(toIndex, 0, movedModule);
+    // Intercambiar el módulo actual con el anterior
+    [newModules[moduleIndex], newModules[moduleIndex - 1]] = [newModules[moduleIndex - 1], newModules[moduleIndex]];
+    
+    // Actualizar el orden de los módulos
+    const updatedModules = newModules.map((module, index) => ({
+      ...module,
+      order: index + 1
+    }));
+    
+    setModules(updatedModules);
+  };
+
+  const moveModuleDown = (moduleIndex: number) => {
+    if (moduleIndex === modules.length - 1) return; // No se puede mover más abajo
+    
+    const newModules = [...modules];
+    // Intercambiar el módulo actual con el siguiente
+    [newModules[moduleIndex], newModules[moduleIndex + 1]] = [newModules[moduleIndex + 1], newModules[moduleIndex]];
     
     // Actualizar el orden de los módulos
     const updatedModules = newModules.map((module, index) => ({
@@ -70,11 +88,25 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
   };
 
   // Función para mover recursos dentro del mismo módulo únicamente
-  const moveResource = (moduleIndex: number, fromIndex: number, toIndex: number) => {
+  const moveResourceUp = (moduleIndex: number, resourceIndex: number) => {
+    if (resourceIndex === 0) return; // No se puede mover más arriba
+    
     const newModules = [...modules];
     const moduleResources = [...newModules[moduleIndex].resources];
-    const [movedResource] = moduleResources.splice(fromIndex, 1);
-    moduleResources.splice(toIndex, 0, movedResource);
+    // Intercambiar el recurso actual con el anterior
+    [moduleResources[resourceIndex], moduleResources[resourceIndex - 1]] = [moduleResources[resourceIndex - 1], moduleResources[resourceIndex]];
+    newModules[moduleIndex].resources = moduleResources;
+    setModules(newModules);
+  };
+
+  const moveResourceDown = (moduleIndex: number, resourceIndex: number) => {
+    const module = modules[moduleIndex];
+    if (resourceIndex === module.resources.length - 1) return; // No se puede mover más abajo
+    
+    const newModules = [...modules];
+    const moduleResources = [...newModules[moduleIndex].resources];
+    // Intercambiar el recurso actual con el siguiente
+    [moduleResources[resourceIndex], moduleResources[resourceIndex + 1]] = [moduleResources[resourceIndex + 1], moduleResources[resourceIndex]];
     newModules[moduleIndex].resources = moduleResources;
     setModules(newModules);
   };
@@ -84,12 +116,19 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
     try {
       setIsLoading(true);
       
-      // Preparar datos para el endpoint
-      const modulesData = modules.map((module, index) => ({
-        module_id: module.module_id,
-        order: index + 1,
-        resources: module.resources.map(resource => resource.id)
+      // Preparar datos para el endpoint según el formato requerido
+      const modulesData = modules.map((module) => ({
+        module_id: parseInt(module.module_id), // Convertir a número si es necesario
+        resources: module.resources.map(resource => ({
+          id: resource.id
+        }))
       }));
+
+      const requestBody = {
+        modules: modulesData
+      };
+
+      console.log('Enviando datos:', JSON.stringify(requestBody, null, 2));
 
       const response = await fetch(`${API_URL}/api/courses/${course.id}/resources`, {
         method: 'PATCH',
@@ -97,9 +136,7 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          modules: modulesData
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -155,14 +192,14 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
               <View style={styles.moduleActions}>
                 <TouchableOpacity
                   disabled={moduleIndex === 0}
-                  onPress={() => moveModule(moduleIndex, moduleIndex - 1)}
+                  onPress={() => moveModuleUp(moduleIndex)}
                   style={[styles.moveButton, moduleIndex === 0 && styles.disabledButton]}
                 >
                   <Feather name="chevron-up" size={20} color={moduleIndex === 0 ? "#ccc" : "#007AFF"} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   disabled={moduleIndex === modules.length - 1}
-                  onPress={() => moveModule(moduleIndex, moduleIndex + 1)}
+                  onPress={() => moveModuleDown(moduleIndex)}
                   style={[styles.moveButton, moduleIndex === modules.length - 1 && styles.disabledButton]}
                 >
                   <Feather name="chevron-down" size={20} color={moduleIndex === modules.length - 1 ? "#ccc" : "#007AFF"} />
@@ -181,14 +218,14 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
                   <View style={styles.resourceActions}>
                     <TouchableOpacity
                       disabled={resourceIndex === 0}
-                      onPress={() => moveResource(moduleIndex, resourceIndex, resourceIndex - 1)}
+                      onPress={() => moveResourceUp(moduleIndex, resourceIndex)}
                       style={[styles.moveButton, resourceIndex === 0 && styles.disabledButton]}
                     >
                       <Feather name="chevron-up" size={16} color={resourceIndex === 0 ? "#ccc" : "#007AFF"} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       disabled={resourceIndex === module.resources.length - 1}
-                      onPress={() => moveResource(moduleIndex, resourceIndex, resourceIndex + 1)}
+                      onPress={() => moveResourceDown(moduleIndex, resourceIndex)}
                       style={[styles.moveButton, resourceIndex === module.resources.length - 1 && styles.disabledButton]}
                     >
                       <Feather name="chevron-down" size={16} color={resourceIndex === module.resources.length - 1 ? "#ccc" : "#007AFF"} />
@@ -217,48 +254,48 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    backgroundColor: 'white',
     padding: 20,
-    paddingTop: 60,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#e1e5e9',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1a1a1a',
+    marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 4,
+    color: '#6c757d',
   },
   scrollContainer: {
     flex: 1,
     padding: 16,
   },
   moduleContainer: {
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 16,
-    overflow: 'hidden',
-    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   moduleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#f8f9fa',
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#f0f0f0',
   },
   moduleInfo: {
     flex: 1,
@@ -266,27 +303,19 @@ const styles = StyleSheet.create({
   moduleTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#1a1a1a',
+    marginBottom: 4,
   },
   moduleSubtitle: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+    color: '#6c757d',
   },
   moduleActions: {
     flexDirection: 'row',
     gap: 8,
   },
-  moveButton: {
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: '#f0f0f0',
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
   resourcesContainer: {
-    padding: 16,
+    padding: 12,
   },
   resourceItem: {
     flexDirection: 'row',
@@ -304,37 +333,49 @@ const styles = StyleSheet.create({
   resourceName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: '#1a1a1a',
+    marginBottom: 2,
   },
   resourceType: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-    textTransform: 'uppercase',
+    fontSize: 14,
+    color: '#6c757d',
+    textTransform: 'capitalize',
   },
   resourceActions: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 8,
+  },
+  moveButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#f8f9fa',
   },
   bottomActions: {
     flexDirection: 'row',
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#e1e5e9',
     gap: 12,
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 16,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#dc3545',
     alignItems: 'center',
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: '#dc3545',
   },
   saveButton: {
     flex: 1,
@@ -346,6 +387,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'white',
+    color: '#fff',
   },
 });
