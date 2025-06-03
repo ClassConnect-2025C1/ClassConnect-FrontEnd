@@ -158,14 +158,16 @@ export default function TeacherCourseDetail({ route }) {
         throw new Error('Failed to fetch modules');
       }
       const data = await response.json();
-      if (data && Array.isArray(data.modules)) { // Cambiamos data por data.modules
+      if (data && Array.isArray(data.modules)) {
         const formattedModules = data.modules.map((item, index) => ({
           module_id: item['module_id'],
           title: item['module_name'],
           order: item['order'],
           resources: item['resources'].map(r => ({
             id: r['id'],
-            name: r['type'] === 'link' ? r['url'] : r['id'],
+            type: r['type'],
+            name: r['name'],
+            url: r['url'],
           })),
         }));
         setModules(formattedModules);
@@ -179,45 +181,77 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-const handleDeleteResource = async (resource) => {
-  try {
-    const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${module.id}/${resource.id}`;
-    
-    // Mostrar loading state
-    setLoading(true);
-  
-    // Hacer la petición DELETE
-    const response = await fetch(deleteUrl, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-   
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    
-    if (response.ok) {
-      console.log('Resource deleted successfully');
-      
-      
-    } else {
-      // Manejar error de la API
-      const errorData = await response.json();
-      console.error('Error deleting resource:', errorData);
+  const handleDeleteResource = async (resource) => {
+    try {
+      const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${module.id}/${resource.id}`;
+
+      // Mostrar loading state
+      setLoading(true);
+
+      // Hacer la petición DELETE
+      console.log("Vamos a eliminar el recurso:", resource);
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log('Resource deleted successfully');
+
+
+      } else {
+        // Manejar error de la API
+        const errorData = await response.json();
+        console.error('Error deleting resource:', errorData);
+        setLoading(false);
+
+        // Opcional: mostrar mensaje de error al usuario
+        console.log('Error', 'Failed to delete resource. Please try again.');
+      }
+
+    } catch (error) {
+      console.error('Network error deleting resource:', error);
       setLoading(false);
-      
-      // Opcional: mostrar mensaje de error al usuario
-      console.log('Error', 'Failed to delete resource. Please try again.');
+
+      // Manejar errores de red
+      console.log('Error', 'Network error. Please check your connection and try again.');
     }
-    
-  } catch (error) {
-    console.error('Network error deleting resource:', error);
-    setLoading(false);
-    
-    // Manejar errores de red
-   console.log('Error', 'Network error. Please check your connection and try again.');
-  }
-};
+  };
+
+  const handleDeleteModule = async (moduleId: string | number) => {
+    try {
+      const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${moduleId}`;
+
+      // Mostrar loading state
+      setLoading(true);
+
+      // Hacer la petición DELETE
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log('Module deleted successfully');
+      } else {
+        // Manejar error de la API
+        const errorData = await response.json();
+        console.error('Error deleting module:', errorData);
+        console.log('Error', 'Failed to delete module. Please try again.');
+      }
+    } catch (error) {
+      console.error('Network error deleting module:', error);
+      setLoading(false);
+      console.log('Error', 'Network error. Please check your connection and try again.');
+    }
+  };
 
 
   console.log('Modules:', modules);
@@ -365,13 +399,26 @@ const handleDeleteResource = async (resource) => {
             </View>
           ))
         ) : activeSubTab === 'Resources' ? (
+
           <View style={styles.resourcesContainer}>
             {/* Mostrar módulos paginados */}
             {paginatedModules.map((module, moduleIndex) => (
+
               <View key={moduleIndex} style={styles.moduleContainer}>
-                <Text style={styles.moduleTitle}>
-                  Module {startResourceIndex + moduleIndex + 1}: {module.title}
-                </Text>
+
+                {/* Header del módulo con título y botón delete */}
+                <View style={styles.moduleHeader}>
+                  <Text style={styles.moduleTitle}>
+                    Module {startResourceIndex + moduleIndex + 1}: {module.title}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteModule(module.module_id)}
+                    style={styles.deleteButton}
+                  >
+                    <Text style={styles.deleteText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+
                 {module.resources.map((resource, resourceIndex) => (
                   <View key={resourceIndex} style={styles.resourceItem}>
                     <Text style={styles.resourceText}>{resource.name}</Text>
@@ -383,7 +430,7 @@ const handleDeleteResource = async (resource) => {
                     </TouchableOpacity>
                   </View>
                 ))}
-                  <TouchableOpacity
+                <TouchableOpacity
                   style={styles.smallButton}
                   onPress={() =>
                     navigation.navigate('AddResourceForModule', {
@@ -399,17 +446,17 @@ const handleDeleteResource = async (resource) => {
             ))}
 
             {/* Add new module button */}
-              <TouchableOpacity
-                  style={styles.smallButton}
-                  onPress={() =>
-                    navigation.navigate('AddModuleScreen', {
-                      token,
-                      course,
-                    })
-                  }
-                >
-                  <Text style={styles.smallButtonText}>Create module</Text>
-                </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.smallButton}
+              onPress={() =>
+                navigation.navigate('AddModuleScreen', {
+                  token,
+                  course,
+                })
+              }
+            >
+              <Text style={styles.smallButtonText}>Create module</Text>
+            </TouchableOpacity>
 
 
             {/* Update order button */}
@@ -843,6 +890,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
+
+  moduleHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 10,
+  paddingHorizontal: 5,
+},
+
+
+
+
+
 
 
 });
