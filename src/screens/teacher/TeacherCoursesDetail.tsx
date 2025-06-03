@@ -429,17 +429,23 @@ export default function TeacherCourseDetail({ route }) {
                   </View>
                 </View>
 
-                {module.resources.map((resource, resourceIndex) => (
-                  <View key={resourceIndex} style={styles.resourceItem}>
-                    <Text style={styles.resourceText}>{resource.name}</Text>
-                    <TouchableOpacity
-                      onPress={() => handleDeleteResource(resource)}
-                      style={styles.deleteButton}
-                    >
-                      <Text style={styles.deleteText}> X </Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
+                <ScrollView
+                  style={styles.resourcesScrollView}
+                  showsVerticalScrollIndicator={true}
+                  nestedScrollEnabled={true}
+                >
+                  {module.resources.map((resource, resourceIndex) => (
+                    <View key={resourceIndex} style={styles.resourceItem}>
+                      <Text style={styles.resourceText}>{resource.name}</Text>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteResource(resource)}
+                        style={styles.deleteButton}
+                      >
+                        <Text style={styles.deleteText}> X </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
                 <TouchableOpacity
                   style={styles.smallButton}
                   onPress={() =>
@@ -910,23 +916,24 @@ const styles = StyleSheet.create({
   },
 
   moduleActions: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: '#e6f3ff',
+    borderRadius: 4,
+  },
+  editText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+
+  resourcesScrollView: {
+  maxHeight: 60, // Altura para aproximadamente 3 recursos
+  marginBottom: 5,
 },
-editButton: {
-  paddingHorizontal: 6,
-  paddingVertical: 2,
-  backgroundColor: '#e6f3ff',
-  borderRadius: 4,
-},
-editText: {
-  fontSize: 12,
-  fontWeight: 'bold',
-},
-
-
-
-
 
 });
