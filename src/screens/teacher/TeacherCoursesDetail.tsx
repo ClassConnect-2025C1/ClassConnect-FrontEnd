@@ -139,34 +139,6 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-  /*Resources modules functions*/
-  const handleAddModule = async () => {
-    try {
-      if (!token) {
-        throw new Error('No token found');
-      }
-      const formData = new FormData();
-      formData.append('name', 'Test add module');
-
-      const response = await fetch(
-        `${API_URL}/api/courses/${course.id}/resource/module`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-      if (!response.ok) {
-        throw new Error('Failed to add module');
-      }
-      console.log('Module added successfully');
-    } catch (error) {
-      console.error('Error adding module:', error);
-    }
-  };
-
   const fetchModules = async () => {
     try {
       if (!token) {
@@ -186,14 +158,16 @@ export default function TeacherCourseDetail({ route }) {
         throw new Error('Failed to fetch modules');
       }
       const data = await response.json();
-      if (data && Array.isArray(data.modules)) { // Cambiamos data por data.modules
+      if (data && Array.isArray(data.modules)) {
         const formattedModules = data.modules.map((item, index) => ({
           module_id: item['module_id'],
           title: item['module_name'],
           order: item['order'],
           resources: item['resources'].map(r => ({
             id: r['id'],
-            name: r['type'] === 'link' ? r['url'] : r['id'],
+            type: r['type'],
+            name: r['name'],
+            url: r['url'],
           })),
         }));
         setModules(formattedModules);
@@ -207,20 +181,78 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-  const handleAddResource = (moduleIndex) => {
-    const newModules = [...modules];
-    newModules[moduleIndex].resources.push({ name: `Resource ${newModules[moduleIndex].resources.length + 1}.pdf` });
-    setModules(newModules);
+  const handleDeleteResource = async (resource) => {
+    try {
+      const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${module.id}/${resource.id}`;
+
+      // Mostrar loading state
+      setLoading(true);
+
+      // Hacer la petición DELETE
+      console.log("Vamos a eliminar el recurso:", resource);
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log('Resource deleted successfully');
+
+
+      } else {
+        // Manejar error de la API
+        const errorData = await response.json();
+        console.error('Error deleting resource:', errorData);
+        setLoading(false);
+
+        // Opcional: mostrar mensaje de error al usuario
+        console.log('Error', 'Failed to delete resource. Please try again.');
+      }
+
+    } catch (error) {
+      console.error('Network error deleting resource:', error);
+      setLoading(false);
+
+      // Manejar errores de red
+      console.log('Error', 'Network error. Please check your connection and try again.');
+    }
   };
 
-  const handleDeleteResource = (moduleIndex, resourceIndex) => {
-    const newModules = [...modules];
-    newModules[moduleIndex].resources.splice(resourceIndex, 1);
-    setModules(newModules);
+  const handleDeleteModule = async (moduleId: string | number) => {
+    try {
+      const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${moduleId}`;
+
+      // Mostrar loading state
+      setLoading(true);
+
+      // Hacer la petición DELETE
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log('Module deleted successfully');
+      } else {
+        // Manejar error de la API
+        const errorData = await response.json();
+        console.error('Error deleting module:', errorData);
+        console.log('Error', 'Failed to delete module. Please try again.');
+      }
+    } catch (error) {
+      console.error('Network error deleting module:', error);
+      setLoading(false);
+      console.log('Error', 'Network error. Please check your connection and try again.');
+    }
   };
 
-
-  console.log('Modules:', modules);
 
   return isLoading ? (
     <StatusOverlay
@@ -365,51 +397,88 @@ export default function TeacherCourseDetail({ route }) {
             </View>
           ))
         ) : activeSubTab === 'Resources' ? (
+
           <View style={styles.resourcesContainer}>
             {/* Mostrar módulos paginados */}
             {paginatedModules.map((module, moduleIndex) => (
+
               <View key={moduleIndex} style={styles.moduleContainer}>
-                <Text style={styles.moduleTitle}>
-                  Module {startResourceIndex + moduleIndex + 1}: {module.title}
-                </Text>
-                {module.resources.map((resource, resourceIndex) => (
-                  <View key={resourceIndex} style={styles.resourceItem}>
-                    <Text style={styles.resourceText}>{resource.name}</Text>
+
+                {/* Header del módulo con título y botón delete */}
+                <View style={styles.moduleHeader}>
+                  <Text style={styles.moduleTitle}>
+                    Module {startResourceIndex + moduleIndex + 1}: {module.title}
+                  </Text>
+                  <View style={styles.moduleActions}>
                     <TouchableOpacity
-                      onPress={() => handleDeleteResource(startResourceIndex + moduleIndex, resourceIndex)}
+                      onPress={() => navigation.navigate('EditModule', {
+                        token,
+                        course,
+                        module,
+                      })}
+                      style={styles.editButton}
+                    >
+                      <Text style={styles.editText}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteModule(module.module_id)}
                       style={styles.deleteButton}
                     >
-                      <Text style={styles.deleteText}>Del</Text>
+                      <Text style={styles.deleteText}> X </Text>
                     </TouchableOpacity>
                   </View>
-                ))}
-                <TouchableOpacity
-                  style={styles.addResourceButton}
-                  onPress={() => handleAddResource(startResourceIndex + moduleIndex)}
+                </View>
+
+                <ScrollView
+                  style={styles.resourcesScrollView}
+                  showsVerticalScrollIndicator={true}
+                  nestedScrollEnabled={true}
                 >
-                  <Text style={styles.addResourceText}>+ Add resource</Text>
+                  {module.resources.map((resource, resourceIndex) => (
+                    <View key={resourceIndex} style={styles.resourceItem}>
+                      <Text style={styles.resourceText}>{resource.name}</Text>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteResource(resource)}
+                        style={styles.deleteButton}
+                      >
+                        <Text style={styles.deleteText}> X </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+                <TouchableOpacity
+                  style={styles.smallButton}
+                  onPress={() =>
+                    navigation.navigate('AddResourceForModule', {
+                      token,
+                      course,
+                      module
+                    })
+                  }
+                >
+                  <Text style={styles.addResourceText}>+ Add resources</Text>
                 </TouchableOpacity>
               </View>
             ))}
 
             {/* Add new module button */}
-              <TouchableOpacity
-                  style={styles.smallButton}
-                  onPress={() =>
-                    navigation.navigate('AddModuleScreen', {
-                      token,
-                      course,
-                    })
-                  }
-                >
-                  <Text style={styles.smallButtonText}>Create module</Text>
-                </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.smallButton}
+              onPress={() =>
+                navigation.navigate('AddModuleScreen', {
+                  token,
+                  course,
+                })
+              }
+            >
+              <Text style={styles.smallButtonText}>Create module</Text>
+            </TouchableOpacity>
 
 
             {/* Update order button */}
             <TouchableOpacity
               style={styles.updateOrderButton}
-              onPress={() => console.log('Update order pressed')}
+              onPress={() => navigation.navigate('UpdateOrder', { course, modules })}
             >
               <Text style={styles.updateOrderText}>Update Order</Text>
             </TouchableOpacity>
@@ -709,7 +778,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // centra todo
     alignItems: 'center',
     marginHorizontal: 20,
-    marginVertical: -6,
+    marginVertical: 20,
     gap: 30, // espacio entre botones y texto
   },
   pageButton: {
@@ -838,5 +907,33 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 
+  moduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 5,
+  },
+
+  moduleActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: '#e6f3ff',
+    borderRadius: 4,
+  },
+  editText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+
+  resourcesScrollView: {
+  maxHeight: 60, // Altura para aproximadamente 3 recursos
+  marginBottom: 5,
+},
 
 });
