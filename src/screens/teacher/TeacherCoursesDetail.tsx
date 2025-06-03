@@ -253,9 +253,6 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-
-  console.log('Modules:', modules);
-
   return isLoading ? (
     <StatusOverlay
       loading={!saveChangueConfirmed}
@@ -461,11 +458,11 @@ export default function TeacherCourseDetail({ route }) {
 
             {/* Update order button */}
             <TouchableOpacity
-              style={styles.updateOrderButton}
-              onPress={() => console.log('Update order pressed')}
-            >
-              <Text style={styles.updateOrderText}>Update Order</Text>
-            </TouchableOpacity>
+  style={styles.updateOrderButton}
+  onPress={() => navigation.navigate('UpdateOrder', { course, modules })}
+>
+  <Text style={styles.updateOrderText}>Update Order</Text>
+</TouchableOpacity>
 
             {/* Botones paginación para Resources */}
             <View style={styles.paginationContainer}>

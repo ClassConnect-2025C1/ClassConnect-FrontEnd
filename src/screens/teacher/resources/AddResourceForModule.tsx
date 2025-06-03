@@ -45,7 +45,7 @@ const AddResourceForModule = () => {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        // NO pongas Content-Type aquí, fetch lo hará automáticamente
+            
                     },
                     body: formData,
                 }
