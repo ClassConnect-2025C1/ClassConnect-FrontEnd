@@ -73,6 +73,7 @@ const CoursesScreen = ({ route }) => {
           });
 
           const text = await response.text();
+  
 
           try {
             const json = JSON.parse(text);

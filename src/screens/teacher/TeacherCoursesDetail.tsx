@@ -253,6 +253,7 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
+
   return isLoading ? (
     <StatusOverlay
       loading={!saveChangueConfirmed}
@@ -408,12 +409,24 @@ export default function TeacherCourseDetail({ route }) {
                   <Text style={styles.moduleTitle}>
                     Module {startResourceIndex + moduleIndex + 1}: {module.title}
                   </Text>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteModule(module.module_id)}
-                    style={styles.deleteButton}
-                  >
-                    <Text style={styles.deleteText}> X </Text>
-                  </TouchableOpacity>
+                  <View style={styles.moduleActions}>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('EditModule', {
+                        token,
+                        course,
+                        module,
+                      })}
+                      style={styles.editButton}
+                    >
+                      <Text style={styles.editText}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteModule(module.module_id)}
+                      style={styles.deleteButton}
+                    >
+                      <Text style={styles.deleteText}> X </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {module.resources.map((resource, resourceIndex) => (
@@ -458,11 +471,11 @@ export default function TeacherCourseDetail({ route }) {
 
             {/* Update order button */}
             <TouchableOpacity
-  style={styles.updateOrderButton}
-  onPress={() => navigation.navigate('UpdateOrder', { course, modules })}
->
-  <Text style={styles.updateOrderText}>Update Order</Text>
-</TouchableOpacity>
+              style={styles.updateOrderButton}
+              onPress={() => navigation.navigate('UpdateOrder', { course, modules })}
+            >
+              <Text style={styles.updateOrderText}>Update Order</Text>
+            </TouchableOpacity>
 
             {/* Botones paginación para Resources */}
             <View style={styles.paginationContainer}>
@@ -759,7 +772,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // centra todo
     alignItems: 'center',
     marginHorizontal: 20,
-    marginVertical: -6,
+    marginVertical: 20,
     gap: 30, // espacio entre botones y texto
   },
   pageButton: {
@@ -889,14 +902,28 @@ const styles = StyleSheet.create({
   },
 
   moduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 5,
+  },
+
+  moduleActions: {
   flexDirection: 'row',
-  justifyContent: 'space-between',
   alignItems: 'center',
-  marginBottom: 10,
-  paddingHorizontal: 5,
+  gap: 8,
 },
-
-
+editButton: {
+  paddingHorizontal: 6,
+  paddingVertical: 2,
+  backgroundColor: '#e6f3ff',
+  borderRadius: 4,
+},
+editText: {
+  fontSize: 12,
+  fontWeight: 'bold',
+},
 
 
 
