@@ -7,42 +7,160 @@ import {
   StyleSheet,
 } from 'react-native';
 
-import { useNavigation } from '@react-navigation/native';
+import StatusOverlay from '@/components/StatusOverlay';
+import { useNavigation, useRoute} from '@react-navigation/native';
+import { API_URL } from '@env';
+
+interface RouteParams {
+  course_id: string;
+  assignment_id: string;
+  submission_id: string;
+  token: string;
+  currentFeedback?: string;
+  currentGrade?: number;
+}
 
 const TeacherQualifyAssignment = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [saveChangueConfirmed, setSaveChangueConfirmed] = useState(false);
   const [comment, setComment] = useState('');
   const [grade, setGrade] = useState('');
+  const [commentError, setCommentError] = useState('');
+  const [gradeError, setGradeError] = useState('');
+  
   const navigation = useNavigation();
+  const route = useRoute();
+  const { course_id, assignment_id, submission_id, token, currentFeedback, currentGrade } = route.params as RouteParams;
 
-  const handleSubmit = () => {
-    console.log('Submitted comment:', comment);
-    console.log('Submitted grade:', grade);
+  // Inicializar con los valores actuales si existen
+  React.useEffect(() => {
+    if (currentFeedback) {
+      setComment(currentFeedback);
+    }
+    if (currentGrade !== undefined && currentGrade !== null) {
+      setGrade(currentGrade.toString());
+    }
+  }, [currentFeedback, currentGrade]);
+
+  const validateFields = () => {
+    let isValid = true;
+    
+    // Validar comentario
+    if (!comment.trim()) {
+      setCommentError('This field is necessary');
+      isValid = false;
+    } else {
+      setCommentError('');
+    }
+
+    // Validar calificación
+    if (!grade.trim()) {
+      setGradeError('This field is necessary');
+      isValid = false;
+    } else if (isNaN(Number(grade)) || Number(grade) < 0) {
+      setGradeError('Grade must be a valid number');
+      isValid = false;
+    } else {
+      setGradeError('');
+    }
+
+    return isValid;
   };
 
-  return (
+  const handleSubmit = async () => {
+    if (!validateFields()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setSaveChangueConfirmed(false);
+    
+    try {
+      // Construir la URL del endpoint
+      const url = `${API_URL}/api/courses/${course_id}/assignment/${assignment_id}/submission/${submission_id}`;
+      
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          feedback: comment.trim(),
+          grade: Number(grade),
+        }),
+      });
+
+      if (response.ok) {
+        setSaveChangueConfirmed(true);
+        
+        // Esperar un poco para mostrar el mensaje de éxito y luego navegar hacia atrás
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      } else {
+        // En caso de error, volver al formulario
+        setIsLoading(false);
+        console.error('Failed to submit grade');
+      }
+    } catch (error) {
+      console.error('Error submitting grade:', error);
+      setIsLoading(false);
+    }
+  };
+
+  return isLoading ? (
+    <StatusOverlay
+      loading={!saveChangueConfirmed}
+      success={saveChangueConfirmed}
+      loadingMsg="Submitting grade..."
+      successMsg="Grade submitted successfully!"
+    />
+  ) : (
     <View style={styles.container}>
       <Text style={styles.title}>Submission From Student</Text>
+      
+
 
       <Text style={styles.label}>Comment</Text>
       <TextInput
-        style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+        style={[
+          styles.input, 
+          { height: 100, textAlignVertical: 'top' },
+          commentError ? styles.inputError : null
+        ]}
         multiline
         placeholder="Enter your comment"
         value={comment}
-        onChangeText={setComment}
+        onChangeText={(text) => {
+          setComment(text);
+          if (commentError) setCommentError('');
+        }}
       />
+      {commentError ? <Text style={styles.errorText}>{commentError}</Text> : null}
 
       <Text style={styles.label}>Grade</Text>
       <TextInput
-        style={[styles.input, { width: 80 }]}
+        style={[
+          styles.input, 
+          { width: 80 },
+          gradeError ? styles.inputError : null
+        ]}
         placeholder="e.g. 10"
         value={grade}
-        onChangeText={setGrade}
+        onChangeText={(text) => {
+          setGrade(text);
+          if (gradeError) setGradeError('');
+        }}
         keyboardType="numeric"
       />
+      {gradeError ? <Text style={styles.errorText}>{gradeError}</Text> : null}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.createButton} onPress={handleSubmit}>
+        <TouchableOpacity 
+          style={styles.createButton}
+          onPress={handleSubmit}
+        >
           <Text style={styles.buttonText}>Submit Grade</Text>
         </TouchableOpacity>
 
@@ -141,6 +259,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
+  inputError: {
+    borderColor: '#ff0000',
+    borderWidth: 1,
+  },
+  errorText: {
+    color: '#ff0000',
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+
+
 });
 
 export default TeacherQualifyAssignment;

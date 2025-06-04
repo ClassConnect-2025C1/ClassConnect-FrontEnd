@@ -8,9 +8,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { API_URL } from '@env';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, } from '@react-navigation/native';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
 import { useAuth } from '../../navigation/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+
 
 const DownloadFilesScreen = ({ route }) => {
   const [tasks, setTasks] = useState([]);
@@ -51,6 +54,7 @@ const DownloadFilesScreen = ({ route }) => {
           );
 
           const submissionsJson = await submissionsRes.json();
+          console.log("submissionsJson", submissionsJson);
 
           setTasks([
             {
@@ -82,9 +86,11 @@ const DownloadFilesScreen = ({ route }) => {
     }
   };
 
-  useEffect(() => {
-    fetchTasks();
-  }, [course.id]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchTasks(); // o como se llame tu función para obtener submissions
+    }, [course.id])
+  );
 
   const handleDownloadFile = async (file) => {
     try {
@@ -135,7 +141,14 @@ const DownloadFilesScreen = ({ route }) => {
                 <TouchableOpacity
                   style={styles.qualifyButton}
                   onPress={() => {
-                    navigation.navigate('TeacherQualifyAssignment');
+                    navigation.navigate('TeacherQualifyAssignment', {
+                      course_id: course.id,
+                      assignment_id: assignment.id,
+                      submission_id: submission.id,
+                      token,
+                      currentFeedback: submission.feedback, // Pasar el feedback actual
+                      currentGrade: submission.grade,
+                    })
                   }}
                 >
                   <Text style={styles.qualifyButtonText}>Qualify</Text>

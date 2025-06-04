@@ -13,9 +13,21 @@ export const downloadAndShareFile = async (file) => {
   try {
     const fileUri = FileSystem.documentDirectory + file.name;
 
-    await FileSystem.writeAsStringAsync(fileUri, file.content, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    // Si el archivo tiene contenido base64, usarlo directamente
+    if (file.content) {
+      await FileSystem.writeAsStringAsync(fileUri, file.content, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+    } 
+    // Si el archivo tiene URL, descargarlo primero
+    else if (file.url) {
+      const downloadResult = await FileSystem.downloadAsync(file.url, fileUri);
+      if (downloadResult.status !== 200) {
+        throw new Error('Failed to download file');
+      }
+    } else {
+      throw new Error('No content or URL provided');
+    }
 
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(fileUri);

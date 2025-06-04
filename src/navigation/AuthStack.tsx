@@ -39,6 +39,7 @@ import AddModuleScreen from '../screens/teacher/resources/AddModuleScreen';
 import UpdateOrder from '../screens/teacher/resources/UpdateOrder';
 import AddResourceForModule from '../screens/teacher/resources/AddResourceForModule';
 import EditModule from '../screens/teacher/resources/EditModule';
+import StudentShowGrade from '../screens/student/StudentShowGrade';
 
 const Stack = createNativeStackNavigator();
 
@@ -146,6 +147,12 @@ const AuthStack = () => (
     <Stack.Screen name="EditModule" component={EditModule} />
 
     <Stack.Screen name="TeacherStatistics" component={TeacherStatistics} />
+
+    <Stack.Screen 
+  name="StudentShowGrade"  
+  component={StudentShowGrade} 
+/>
+    
   </Stack.Navigator>
 );
 

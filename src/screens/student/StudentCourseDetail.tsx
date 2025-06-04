@@ -6,12 +6,11 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
+  Linking,
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
-import { FlatList } from 'react-native';
 import { useAuth } from '../../navigation/AuthContext';
 
 export default function CourseDetail({ route }) {
@@ -23,9 +22,10 @@ export default function CourseDetail({ route }) {
   const { token } = useAuth();
   const isFocused = useIsFocused();
   const [searchQuery, setSearchQuery] = useState('');
+  const [modules, setModules] = useState([]);
+  const [resourceCurrentPage, setResourceCurrentPage] = useState(1);
 
   const filteredAssignments = assignments.filter((assignment) => {
-    console.log('Assignment:', assignment.status);
     const titleMatch = assignment.title
       ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -51,6 +51,94 @@ export default function CourseDetail({ route }) {
     startIndex + ITEMS_PER_PAGE,
   );
 
+  // Fetch student submissions for an assignment
+const fetchStudentSubmissions = async (assignmentId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Si la respuesta tiene una estructura como { data: {...} }
+      if (data.data) {
+        return data.data;
+      }
+      
+      // Si la respuesta es directamente el objeto submission
+      if (data.id || data.grade !== undefined) {
+        return data;
+      }
+      
+      // Si es un array con un elemento
+      if (Array.isArray(data) && data.length > 0) {
+        return data[0];
+      }
+      
+      return null;
+    } else if (response.status === 404) {
+      // 404 significa que el estudiante no ha hecho submission aún
+      console.log('No submission found for this assignment');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching submission:', error);
+  }
+  return null;
+};
+
+  // Fetch modules/resources for the course
+  const fetchModules = async () => {
+    try {
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/resources`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch modules');
+      }
+      const data = await response.json();
+      if (data && Array.isArray(data.modules)) {
+        const formattedModules = data.modules.map((item) => ({
+          module_id: item['module_id'],
+          title: item['module_name'],
+          order: item['order'],
+          resources: item['resources'].map(r => ({
+            id: r['id'],
+            type: r['type'],
+            name: r['name'],
+            url: r['url'],
+          })),
+        }));
+        setModules(formattedModules);
+      } else {
+        console.error('Modules data is not in the expected format:', data);
+        setModules([]);
+      }
+    } catch (error) {
+      console.error('Error fetching modules:', error);
+      setModules([]);
+    }
+  };
+
+  // Fetch assignments for the course
   const fetchAssignments = async () => {
     try {
       if (!token) {
@@ -75,7 +163,18 @@ export default function CourseDetail({ route }) {
       const data = await response.json();
 
       if (data && Array.isArray(data.data)) {
-        setAssignments(data.data);
+        // Obtener submissions para cada assignment
+        const assignmentsWithSubmissions = await Promise.all(
+          data.data.map(async (assignment) => {
+            const submission = await fetchStudentSubmissions(assignment.id);
+            return {
+              ...assignment,
+              submission: submission
+            };
+          })
+        );
+
+        setAssignments(assignmentsWithSubmissions);
       } else {
         console.error('Assignments data is not in the expected format');
         setAssignments([]);
@@ -88,13 +187,18 @@ export default function CourseDetail({ route }) {
     }
   };
 
+  // Lógica de paginación para Resources
+  const totalResourcePages = Math.ceil(modules.length / ITEMS_PER_PAGE);
+  const startResourceIndex = (resourceCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedModules = modules.slice(startResourceIndex, startResourceIndex + ITEMS_PER_PAGE);
+
   useEffect(() => {
     if (isFocused) {
       fetchAssignments();
+      fetchModules();
     }
   }, [isFocused]);
 
-  console.log('course:', course);
   return (
     <View style={styles.mainContainer}>
       <TouchableOpacity
@@ -118,15 +222,15 @@ export default function CourseDetail({ route }) {
         </Text>
         <View style={styles.detailRow}>
           <Text style={styles.detail}>
-            Start date: {course.startDate || 'Not specified'}
+            Start date: {course.startDate || 'Not specified'}{' '}
             End date: {course.endDate || 'Not specified'}
           </Text>
         </View>
+        
         {Array.isArray(course.eligibilityCriteria) &&
         course.eligibilityCriteria.length > 0 ? (
           <View style={styles.eligibilityContainer}>
             <Text style={styles.detail}>Eligibility Criteria:</Text>
-
             <View style={styles.chipsWrapper}>
               {course.eligibilityCriteria.map((criteria, index) => (
                 <View key={index} style={styles.eligibilityChip}>
@@ -213,31 +317,51 @@ export default function CourseDetail({ route }) {
                   </View>
                 )}
 
-                <TouchableOpacity
-                  style={styles.submitButton}
-                  onPress={() =>
-                    navigation.navigate('StudentAssignmentScreen', {
-                      course,
-                      userId,
-                      assignment: item,
-                      onStarted: (startedAt) => {
-                        setAssignments((prevAssignments) =>
-                          prevAssignments.map((a) =>
-                            a.id === item.id
-                              ? { ...a, started_at: startedAt }
-                              : a,
-                          ),
-                        );
-                      },
-                    })
-                  }
-                >
-                  <Text style={styles.submitButtonText}>
-                    {item.status !== 'pending'
-                      ? 'Continue Assignment'
-                      : 'Start Assignment'}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={() =>
+                      navigation.navigate('StudentAssignmentScreen', {
+                        course,
+                        userId,
+                        assignment: item,
+                        onStarted: (startedAt) => {
+                          setAssignments((prevAssignments) =>
+                            prevAssignments.map((a) =>
+                              a.id === item.id
+                                ? { ...a, started_at: startedAt }
+                                : a,
+                            ),
+                          );
+                        },
+                      })
+                    }
+                  >
+                    <Text style={styles.submitButtonText}>
+                      {item.status !== 'pending'
+                        ? 'Continue Assignment'
+                        : 'Start Assignment'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Botón View Grade - solo si hay calificación */}
+                  {item.submission &&
+                    item.submission.grade !== null &&
+                    item.submission.grade !== undefined && (
+                      <TouchableOpacity
+                        style={styles.viewGradeButton}
+                        onPress={() =>
+                          navigation.navigate('StudentShowGrade', {
+                            feedback: item.submission.feedback,
+                            grade: item.submission.grade,
+                            assignmentTitle: item.title,
+                          })
+                        }
+                      >
+                        <Text style={styles.viewGradeButtonText}>View Grade</Text>
+                      </TouchableOpacity>
+                    )}
+                </View>
               </View>
             ))}
 
@@ -272,16 +396,79 @@ export default function CourseDetail({ route }) {
               </View>
             )}
           </View>
-        ) : (
-          <ScrollView contentContainerStyle={styles.contentContainer}>
-            <View style={styles.itemContainer}>
-              <Text style={styles.itemText}>Course Resources</Text>
-              <Text style={styles.itemDescription}>
-                Here you will find resources such as slides, books, and other
-                materials related to this course.
+        ) : activeTab === 'Resources' ? (
+          <View style={styles.resourcesContainer}>
+            {/* Mostrar módulos paginados */}
+            {paginatedModules.map((module, moduleIndex) => (
+              <View key={moduleIndex} style={styles.moduleContainer}>
+                {/* Header del módulo solo con título */}
+                <View style={styles.moduleHeader}>
+                  <Text style={styles.moduleTitle}>
+                    Module {startResourceIndex + moduleIndex + 1}: {module.title}
+                  </Text>
+                </View>
+
+                <ScrollView
+                  style={styles.resourcesScrollView}
+                  showsVerticalScrollIndicator={true}
+                  nestedScrollEnabled={true}
+                >
+                  {module.resources.map((resource, resourceIndex) => (
+                    <TouchableOpacity
+                      key={resourceIndex}
+                      style={styles.resourceItem}
+                      onPress={() => {
+                        if (resource.url) {
+                          console.log('Resource URL:', resource.url);
+                          Linking.openURL(resource.url);
+                        }
+                      }}
+                    >
+                      <View style={styles.resourceContent}>
+                        <Text style={styles.resourceText}>{resource.name}</Text>
+                        <Text style={styles.resourceType}>
+                          {resource.type === 'file' ? '📁' : '🔗'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            ))}
+
+            {/* Botones paginación para Resources */}
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                disabled={resourceCurrentPage === 1}
+                onPress={() => setResourceCurrentPage((prev) => Math.max(prev - 1, 1))}
+                style={[
+                  styles.pageButton,
+                  resourceCurrentPage === 1 && styles.pageButtonDisabled,
+                ]}
+              >
+                <Text style={styles.pageButtonText}>Prev</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.pageIndicator}>
+                Page {resourceCurrentPage} of {totalResourcePages}
               </Text>
+
+              <TouchableOpacity
+                disabled={resourceCurrentPage === totalResourcePages}
+                onPress={() =>
+                  setResourceCurrentPage((prev) => Math.min(prev + 1, totalResourcePages))
+                }
+                style={[
+                  styles.pageButton,
+                  resourceCurrentPage === totalResourcePages && styles.pageButtonDisabled,
+                ]}
+              >
+                <Text style={styles.pageButtonText}>Next</Text>
+              </TouchableOpacity>
             </View>
-          </ScrollView>
+          </View>
+        ) : (
+          <Text style={styles.detail}>No data available for this tab.</Text>
         )}
       </View>
 
@@ -349,6 +536,9 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 1.9,
   },
+  detailRow: {
+    marginTop: 1.9,
+  },
   eligibilityContainer: {
     marginVertical: 7.6,
   },
@@ -403,11 +593,6 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 1.9,
   },
-  itemDescription: {
-    fontSize: 11.4,
-    color: '#777',
-    marginBottom: 5.7,
-  },
   downloadButton: {
     marginTop: 3.8,
     backgroundColor: '#2196F3',
@@ -421,18 +606,36 @@ const styles = StyleSheet.create({
     fontSize: 11.4,
     fontWeight: '500',
   },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 5.7,
+  },
   submitButton: {
     borderWidth: 1,
     borderColor: '#D3D3D3',
     borderRadius: 7.6,
     paddingVertical: 4.8,
     paddingHorizontal: 11.4,
-    alignSelf: 'flex-end',
-    marginTop: 5.7,
+    flex: 1,
+    marginRight: 10,
   },
   submitButtonText: {
     color: '#000',
     fontSize: 12.4,
+    textAlign: 'center',
+  },
+  viewGradeButton: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 4.8,
+    paddingHorizontal: 9.5,
+    borderRadius: 7.6,
+  },
+  viewGradeButtonText: {
+    color: '#fff',
+    fontSize: 12.4,
+    fontWeight: 'bold',
   },
   feedbackContainer: {
     alignItems: 'center',
@@ -480,5 +683,55 @@ const styles = StyleSheet.create({
     borderRadius: 7.6,
     paddingHorizontal: 9.5,
     marginBottom: 11.4,
+  },
+  resourcesContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  moduleContainer: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  moduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  moduleTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+  },
+  resourcesScrollView: {
+    maxHeight: 100,
+    marginBottom: 12,
+  },
+  resourceItem: {
+    backgroundColor: '#fff',
+    padding: 12,
+    marginVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  resourceContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  resourceText: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
+  },
+  resourceType: {
+    fontSize: 18,
+    marginLeft: 8,
   },
 });
