@@ -87,7 +87,7 @@ export default function EditCourseScreen({ route }) {
 
   const fetchAuxTeachers = async () => {
     try {
-      const auxResponse = await fetch(`${API_URL}/users/teacher-emails`, {
+      const auxResponse = await fetch(`${API_URL}/api/users/teacher-emails`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -98,8 +98,9 @@ export default function EditCourseScreen({ route }) {
       }
 
       const auxEmails: string[] = await auxResponse.json();
+      const filteredEmails = auxEmails.filter(email => email !== course.createdBy);
 
-      const auxOptions = auxEmails.map((email) => ({
+      const auxOptions = filteredEmails.map((email) => ({
         id: email,
         name: email,
       }));
