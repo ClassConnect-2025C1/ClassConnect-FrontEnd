@@ -98,46 +98,6 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-  useEffect(() => {
-    if (isFocused) {
-      fetchAssignments();
-      fetchModules();
-    }
-  }, [isFocused]);
-
-  const handleDeleteAssignment = async (assignmentId) => {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to delete assignment');
-      }
-
-      setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
-
-      setIsLoading(true);
-
-      setTimeout(() => {
-        setChangueConfirmed(true);
-
-        setTimeout(() => {
-          setIsLoading(false);
-          setChangueConfirmed(false);
-        }, 1500);
-      }, 1000);
-    } catch (error) {
-      console.error('Error deleting assignment:', error);
-    }
-  };
 
   const fetchModules = async () => {
     try {
@@ -180,6 +140,48 @@ export default function TeacherCourseDetail({ route }) {
       setModules([]);
     }
   };
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchAssignments();
+      fetchModules();
+    }
+  }, [isFocused]);
+
+  const handleDeleteAssignment = async (assignmentId) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete assignment');
+      }
+
+      setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+
+      setIsLoading(true);
+
+      setTimeout(() => {
+        setChangueConfirmed(true);
+
+        setTimeout(() => {
+          setIsLoading(false);
+          setChangueConfirmed(false);
+        }, 1500);
+      }, 1000);
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+    }
+  };
+
 
   const handleDeleteResource = async (resource) => {
     try {

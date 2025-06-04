@@ -13,6 +13,8 @@ import { API_URL } from '@env';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
 import { FlatList } from 'react-native';
 import { useAuth } from '../../navigation/AuthContext';
+import { Linking } from 'react-native';
+
 
 export default function CourseDetail({ route }) {
   const { course, userId } = route.params;
@@ -23,6 +25,8 @@ export default function CourseDetail({ route }) {
   const { token } = useAuth();
   const isFocused = useIsFocused();
   const [searchQuery, setSearchQuery] = useState('');
+  const [modules, setModules] = useState([]);
+  const [resourceCurrentPage, setResourceCurrentPage] = useState(1);
 
   const filteredAssignments = assignments.filter((assignment) => {
     console.log('Assignment:', assignment.status);
@@ -88,9 +92,59 @@ export default function CourseDetail({ route }) {
     }
   };
 
+    // Lógica de paginación para Resources
+    const totalResourcePages = Math.ceil(modules.length / ITEMS_PER_PAGE);
+    const startResourceIndex = (resourceCurrentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedModules = modules.slice(startResourceIndex, startResourceIndex + ITEMS_PER_PAGE);
+
+      const fetchModules = async () => {
+        try {
+          if (!token) {
+            throw new Error('No token found');
+          }
+          const response = await fetch(
+            `${API_URL}/api/courses/${course.id}/resources`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          if (!response.ok) {
+            throw new Error('Failed to fetch modules');
+          }
+          const data = await response.json();
+          if (data && Array.isArray(data.modules)) {
+            const formattedModules = data.modules.map((item, index) => ({
+              module_id: item['module_id'],
+              title: item['module_name'],
+              order: item['order'],
+              resources: item['resources'].map(r => ({
+                id: r['id'],
+                type: r['type'],
+                name: r['name'],
+                url: r['url'],
+              })),
+            }));
+            setModules(formattedModules);
+          } else {
+            console.error('Modules data is not in the expected format:', data);
+            setModules([]);
+          }
+        } catch (error) {
+          console.error('Error fetching modules:', error);
+          setModules([]);
+        }
+      };
+  
+  
+
   useEffect(() => {
     if (isFocused) {
       fetchAssignments();
+      fetchModules();
     }
   }, [isFocused]);
 
@@ -272,16 +326,85 @@ export default function CourseDetail({ route }) {
               </View>
             )}
           </View>
-        ) : (
-          <ScrollView contentContainerStyle={styles.contentContainer}>
-            <View style={styles.itemContainer}>
-              <Text style={styles.itemText}>Course Resources</Text>
-              <Text style={styles.itemDescription}>
-                Here you will find resources such as slides, books, and other
-                materials related to this course.
+        ) : activeTab === 'Resources' ? (
+          <View style={styles.resourcesContainer}>
+            {/* Mostrar módulos paginados */}
+            {paginatedModules.map((module, moduleIndex) => (
+              <View key={moduleIndex} style={styles.moduleContainer}>
+                {/* Header del módulo solo con título */}
+                <View style={styles.moduleHeader}>
+                  <Text style={styles.moduleTitle}>
+                    Module {startResourceIndex + moduleIndex + 1}: {module.title}
+                  </Text>
+                </View>
+
+                <ScrollView
+                  style={styles.resourcesScrollView}
+                  showsVerticalScrollIndicator={true}
+                  nestedScrollEnabled={true}
+                >
+                  {module.resources.map((resource, resourceIndex) => (
+                    <TouchableOpacity 
+                      key={resourceIndex} 
+                      style={styles.resourceItem}
+                      onPress={() => {
+                        if (resource.url) {
+                          console.log('Resource URL:', resource.url);
+                          if (resource.type === 'file') {
+                            Linking.openURL(resource.url);
+                          } else {
+                            // Si es un link, abrirlo en el navegador
+                            Linking.openURL(resource.url);
+                          }
+                        }
+                      }}
+                    >
+                      <View style={styles.resourceContent}>
+                        <Text style={styles.resourceText}>{resource.name}</Text>
+                        <Text style={styles.resourceType}>
+                          {resource.type === 'file' ? '📁' : '🔗'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            ))}
+
+            {/* Botones paginación para Resources */}
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                disabled={resourceCurrentPage === 1}
+                onPress={() => setResourceCurrentPage((prev) => Math.max(prev - 1, 1))}
+                style={[
+                  styles.pageButton,
+                  resourceCurrentPage === 1 && styles.disabledButton,
+                ]}
+              >
+                <Text style={styles.pageButtonText}>Prev</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.pageInfo}>
+                Page {resourceCurrentPage} of {totalResourcePages}
               </Text>
+
+              <TouchableOpacity
+                disabled={resourceCurrentPage === totalResourcePages}
+                onPress={() =>
+                  setResourceCurrentPage((prev) => Math.min(prev + 1, totalResourcePages))
+                }
+                style={[
+                  styles.pageButton,
+                  resourceCurrentPage === totalResourcePages && styles.disabledButton,
+                ]}
+              >
+                <Text style={styles.pageButtonText}>Next</Text>
+              </TouchableOpacity>
             </View>
-          </ScrollView>
+          </View>
+        ) : (
+          <Text style={styles.detail}>No data available for this tab.</Text>
+
         )}
       </View>
 
@@ -481,4 +604,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9.5,
     marginBottom: 11.4,
   },
+
+  resourcesContainer: {
+  flex: 1,
+  paddingHorizontal: 20,
+},
+moduleContainer: {
+  backgroundColor: '#f8f9fa',
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 16,
+  borderWidth: 1,
+  borderColor: '#e0e0e0',
+},
+moduleHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 12,
+},
+moduleTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#333',
+  flex: 1,
+},
+resourcesScrollView: {
+  maxHeight: 100,
+  marginBottom: 12,
+},
+resourceItem: {
+  backgroundColor: '#fff',
+  padding: 12,
+  marginVertical: 4,
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: '#ddd',
+},
+resourceContent: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+},
+resourceText: {
+  fontSize: 16,
+  color: '#333',
+  flex: 1,
+},
+resourceType: {
+  fontSize: 18,
+  marginLeft: 8,
+},
 });
