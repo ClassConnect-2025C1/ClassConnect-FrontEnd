@@ -141,12 +141,16 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
+  
+
   useEffect(() => {
     if (isFocused) {
       fetchAssignments();
       fetchModules();
     }
   }, [isFocused]);
+
+
 
   const handleDeleteAssignment = async (assignmentId) => {
     try {
