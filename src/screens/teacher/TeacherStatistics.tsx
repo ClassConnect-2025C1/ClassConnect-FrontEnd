@@ -81,6 +81,7 @@ useEffect(() => {
     if (!response.ok) throw new Error('Failed to fetch statistics');
     
     const data = await response.json();
+    console.log("data", data);
     const newStats = data.statistics || [];
     
     // Solo actualizar si realmente cambió algo
@@ -156,54 +157,94 @@ useEffect(() => {
   };
 
   // Generate chart data
- // Generate chart data
+// Generate chart data
 const getChartData = () => {
-  const filteredCourses = getFilteredData().slice(0, 5);
+  const filteredCourses = getFilteredData();
   
-  // Datos para gráfico de calificaciones
-  const gradeValues = filteredCourses.map(c => c.period_avg_grade || c.global_average_grade || 0);
-  
-  // Grades bar chart - FORZAR que inicie en 0
-  const gradeData = {
-    labels: filteredCourses.map(c => c.course_name.substring(0, 8)),
-    datasets: [{
-      data: [...gradeValues, 0] // 🎯 Agregar 0 invisible para forzar escala
-    }]
-  };
+  if (selectedCourse === 'all') {
+    // 📊 MODO "ALL COURSES" - Solo una barra con promedio general
+    const globalStats = getGlobalStats();
+    
+    const gradeData = {
+      labels: ['All Courses'],
+      datasets: [{
+        data: [parseFloat(globalStats?.averageGrade || 0), 0] // Agregar 0 para forzar escala
+      }]
+    };
 
-  // Datos para submission rates
-  const submissionValues = filteredCourses.map(c => 
-    Math.round((c.period_submission_rate || c.global_submission_rate || 0) * 100)
-  );
+    const submissionData = {
+      labels: ['All Courses'],
+      datasets: [{
+        data: [parseFloat(globalStats?.submissionRate || 0), 0] // Agregar 0 para forzar escala
+      }]
+    };
 
-  // Submission rates bar chart - FORZAR que inicie en 0  
-  const submissionData = {
-    labels: filteredCourses.map(c => c.course_name.substring(0, 8)),
-    datasets: [{
-      data: [...submissionValues, 0] // 🎯 Agregar 0 invisible para forzar escala
-    }]
-  };
+    // Para trends, usar el curso con más datos
+    const allCoursesWithData = filteredCourses.filter(c => 
+      c.statistics_for_dates?.length > 1
+    );
+    
+    const courseWithMostData = allCoursesWithData.sort((a, b) => 
+      b.statistics_for_dates.length - a.statistics_for_dates.length
+    )[0];
+    
+    const trendData = courseWithMostData ? {
+      labels: courseWithMostData.statistics_for_dates.map(item => {
+        const date = new Date(item.date);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      }),
+      datasets: [{
+        data: courseWithMostData.statistics_for_dates.map(item => item.average_grade || 0),
+        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+        strokeWidth: 2
+      }]
+    } : null;
 
-  // Trend line chart (first course with data)
-  const courseWithTrend = filteredCourses.find(c => 
-    c.statistics_for_dates?.length > 1
-  );
-  
-  const trendData = courseWithTrend ? {
-    labels: courseWithTrend.statistics_for_dates.map(item => {
-      const date = new Date(item.date);
-      return `${date.getMonth() + 1}/${date.getDate()}`;
-    }),
-    datasets: [{
-      data: courseWithTrend.statistics_for_dates.map(item => item.average_grade || 0),
-      color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-      strokeWidth: 2
-    }]
-  } : null;
+    return { gradeData, submissionData, trendData };
+  } else {
+    // 📊 MODO "CURSO ESPECÍFICO" - Barras por curso como antes
+    const specificCourses = filteredCourses.slice(0, 5);
+    
+    const gradeValues = specificCourses.map(c => c.period_avg_grade || c.global_average_grade || 0);
+    
+    const gradeData = {
+      labels: specificCourses.map(c => c.course_name.substring(0, 8)),
+      datasets: [{
+        data: [...gradeValues, 0]
+      }]
+    };
 
-  return { gradeData, submissionData, trendData };
+    const submissionValues = specificCourses.map(c => 
+      Math.round((c.period_submission_rate || c.global_submission_rate || 0) * 100)
+    );
+
+    const submissionData = {
+      labels: specificCourses.map(c => c.course_name.substring(0, 8)),
+      datasets: [{
+        data: [...submissionValues, 0]
+      }]
+    };
+
+    // Trend para curso específico
+    const courseWithTrend = specificCourses.find(c => 
+      c.statistics_for_dates?.length > 1
+    );
+    
+    const trendData = courseWithTrend ? {
+      labels: courseWithTrend.statistics_for_dates.map(item => {
+        const date = new Date(item.date);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      }),
+      datasets: [{
+        data: courseWithTrend.statistics_for_dates.map(item => item.average_grade || 0),
+        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+        strokeWidth: 2
+      }]
+    } : null;
+
+    return { gradeData, submissionData, trendData };
+  }
 };
-
   // Date picker handlers
   const onStartDateChange = (event, selectedDate) => {
     setShowStartDatePicker(Platform.OS === 'ios');
