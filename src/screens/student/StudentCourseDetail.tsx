@@ -346,7 +346,7 @@ const fetchStudentSubmissions = async (assignmentId) => {
 
                   {/* Botón View Grade - solo si hay calificación */}
                   {item.submission &&
-                    item.submission.grade !== null &&
+                    item.submission.grade !== null  &&
                     item.submission.grade !== undefined && (
                       <TouchableOpacity
                         style={styles.viewGradeButton}

@@ -784,15 +784,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // centra todo
     alignItems: 'center',
     marginHorizontal: 20,
-    marginVertical: 20,
+    marginVertical: 12,
     gap: 30, // espacio entre botones y texto
   },
   pageButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 17,
+    paddingVertical: 5,
     backgroundColor: '#007AFF',
     borderRadius: 15,
-    marginBottom: 2,
+    marginBottom: 0,
   },
   disabledButton: {
     backgroundColor: '#ccc',
