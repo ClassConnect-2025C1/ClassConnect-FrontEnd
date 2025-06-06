@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -125,10 +125,10 @@ const TeacherStatistics = () => {
           statistics_for_dates: filteredDates,
           period_avg_grade: filteredDates.length > 0 ?
             filteredDates.reduce((sum, item) => sum + (item.average_grade || 0), 0) / filteredDates.length :
-            course.global_average_grade,
+            0, // ✅ Cambiar a 0 en lugar de global_average_grade
           period_submission_rate: filteredDates.length > 0 ?
             filteredDates.reduce((sum, item) => sum + (item.submission_rate || 0), 0) / filteredDates.length :
-            course.global_submission_rate,
+            0, // ✅ Cambiar a 0 en lugar de global_submission_rate
         };
       }
       return course;
@@ -136,30 +136,40 @@ const TeacherStatistics = () => {
   };
 
   // Calculate global stats
-  const getGlobalStats = () => {
-    const filteredCourses = getFilteredData();
-    const activeCourses = filteredCourses.filter(c =>
-      (c.period_avg_grade || c.global_average_grade) > 0
-    );
+const getGlobalStats = () => {
+  const filteredCourses = getFilteredData();
+  
+  // ✅ Incluir solo cursos que tienen datos para el período seleccionado
+  const coursesWithData = filteredCourses.filter(c => 
+    c.statistics_for_dates.length > 0 || c.period_avg_grade > 0
+  );
 
-    if (activeCourses.length === 0) return null;
-
-    const avgGrade = activeCourses.reduce((sum, c) =>
-      sum + (c.period_avg_grade || c.global_average_grade || 0), 0
-    ) / activeCourses.length;
-
-    const avgSubmissionRate = activeCourses.reduce((sum, c) =>
-      sum + (c.period_submission_rate || c.global_submission_rate || 0), 0
-    ) / activeCourses.length;
-
+  // ✅ Si no hay datos para el período, devolver stats en 0
+  if (coursesWithData.length === 0) {
     return {
-      averageGrade: avgGrade.toFixed(1),
-      submissionRate: (avgSubmissionRate * 100).toFixed(1),
-      activeCourses: activeCourses.length,
+      averageGrade: '0.0',
+      submissionRate: '0.0', 
+      activeCourses: 0,
       totalCourses: filteredCourses.length,
     };
-  };
+  }
 
+  // ✅ Calcular promedios usando solo datos del período (sin fallback a globales)
+  const avgGrade = coursesWithData.reduce((sum, c) =>
+    sum + (c.period_avg_grade || 0), 0
+  ) / coursesWithData.length;
+
+  const avgSubmissionRate = coursesWithData.reduce((sum, c) =>
+    sum + (c.period_submission_rate || 0), 0
+  ) / coursesWithData.length;
+
+  return {
+    averageGrade: avgGrade.toFixed(1),
+    submissionRate: (avgSubmissionRate * 100).toFixed(1),
+    activeCourses: coursesWithData.length,
+    totalCourses: filteredCourses.length,
+  };
+};
   // Generate chart data
   // Generate chart data
   const getChartData = () => {
@@ -519,43 +529,45 @@ const TeacherStatistics = () => {
 
       {/* Action Buttons */}
       <View style={selectedCourse !== 'all' ? styles.buttonContainerThree : styles.buttonContainer}>
-  <TouchableOpacity
-    style={[styles.exportButton, generatingPDF && { backgroundColor: '#6c757d' }]}
-    onPress={handleExportPDF}
-    disabled={generatingPDF}
-  >
-    {generatingPDF ? (
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <ActivityIndicator size="small" color="#fff" />
-        <Text style={[styles.buttonText, { marginLeft: 8 }]}>Generating...</Text>
+        <TouchableOpacity
+          style={[styles.exportButton, generatingPDF && { backgroundColor: '#6c757d' }]}
+          onPress={handleExportPDF}
+          disabled={generatingPDF}
+        >
+          {generatingPDF ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={[styles.buttonText, { marginLeft: 8 }]}>Generating...</Text>
+            </View>
+          ) : (
+            <Text style={styles.buttonText}>📄 Export </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* NUEVO BOTÓN - Solo aparece cuando hay curso específico */}
+        {selectedCourse !== 'all' && (
+          <TouchableOpacity
+            style={styles.individualStatsButton}
+            onPress={() => {
+              const courseData = statistics.find(c => c.course_id.toString() === selectedCourse);
+
+              // ✅ Mapear course_id a id
+              const course = {
+                ...courseData,
+                id: courseData.course_id  // Crear propiedad id desde course_id
+              };
+
+              navigation.navigate('TeacherMembersCourse', { course });
+            }}
+          >
+            <Text style={styles.buttonText}>👥 Students</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+          <Text style={styles.buttonText}>Close</Text>
+        </TouchableOpacity>
       </View>
-    ) : (
-      <Text style={styles.buttonText}>📄 Export </Text>
-    )}
-  </TouchableOpacity>
-  
-  {/* NUEVO BOTÓN - Solo aparece cuando hay curso específico */}
-  {selectedCourse !== 'all' && (
-    <TouchableOpacity 
-      style={styles.individualStatsButton} 
-      onPress={() => {
-        const course = statistics.find(c => c.course_id.toString() === selectedCourse);
-        navigation.navigate('StudentIndividualStatistics', { 
-          course: { 
-            id: selectedCourse, 
-            name: course?.course_name || 'Course' 
-          } 
-        });
-      }}
-    >
-      <Text style={styles.buttonText}>👥 Student</Text>
-    </TouchableOpacity>
-  )}
-  
-  <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-    <Text style={styles.buttonText}>Close</Text>
-  </TouchableOpacity>
-</View>
 
       {/* Course Selection Modal */}
       <Modal visible={showCourseModal} transparent animationType="slide">
@@ -765,19 +777,19 @@ const styles = StyleSheet.create({
     margin: 15,
   },
   exportButton: {
-  backgroundColor: '#28a745',
-  padding: 15,
-  borderRadius: 8,
-  flex: 0.48,
-  alignItems: 'center',
-},
-button: {
-  backgroundColor: '#6c757d',
-  padding: 15,
-  borderRadius: 8,
-  flex: 0.48,
-  alignItems: 'center',
-},
+    backgroundColor: '#28a745',
+    padding: 15,
+    borderRadius: 8,
+    flex: 0.48,
+    alignItems: 'center',
+  },
+  button: {
+    backgroundColor: '#6c757d',
+    padding: 15,
+    borderRadius: 8,
+    flex: 0.48,
+    alignItems: 'center',
+  },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
@@ -825,19 +837,19 @@ button: {
     color: '#333',
   },
   buttonContainerThree: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  margin: 15,
-  flexWrap: 'wrap',
-  gap: 8,
-},
-individualStatsButton: {
-  backgroundColor: '#22CAEC',
-  padding: 15,
-  borderRadius: 8,
-  flex: 0.3,
-  alignItems: 'center',
-},
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    margin: 15,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  individualStatsButton: {
+    backgroundColor: '#22CAEC',
+    padding: 15,
+    borderRadius: 8,
+    flex: 0.3,
+    alignItems: 'center',
+  },
 });
 
 export default TeacherStatistics;
