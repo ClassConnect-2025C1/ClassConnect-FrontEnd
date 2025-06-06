@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
+import StatusOverlay from '../../../components/StatusOverlay';
 
 const AddModuleScreen = () => {
   const [moduleName, setModuleName] = useState('');
@@ -16,6 +17,23 @@ const AddModuleScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { token, course } = route.params;
+
+  // Estados para el StatusOverlay
+  const [isLoading, setIsLoading] = useState(false);
+  const [operationSuccess, setOperationSuccess] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Auto-return después del éxito
+  useEffect(() => {
+    if (operationSuccess) {
+      const timer = setTimeout(() => {
+        navigation.goBack();
+      }, 2000); // Regresa después de 2 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [operationSuccess, navigation]);
 
   const handleCreate = async () => {
     const trimmedName = moduleName.trim();
@@ -27,6 +45,12 @@ const AddModuleScreen = () => {
 
     try {
       setError('');
+      
+      // Iniciar loading
+      setIsLoading(true);
+      setLoadingMessage('Creating module...');
+      setOperationSuccess(false);
+
       const formData = new FormData();
       formData.append('name', trimmedName);
 
@@ -45,13 +69,30 @@ const AddModuleScreen = () => {
         throw new Error('Failed to add module');
       }
 
-      Alert.alert('Success', 'Module added successfully');
-      navigation.goBack();
+      // Éxito
+      setIsLoading(false);
+      setOperationSuccess(true);
+      setSuccessMessage('Module created successfully!');
+
     } catch (error) {
       console.error('Error adding module:', error);
-      Alert.alert('Error', 'Failed to create module');
+      setIsLoading(false);
+      setOperationSuccess(false);
+      Alert.alert('Error', 'Failed to create module'); // Mantenemos Alert solo para errores
     }
   };
+
+  // Mostrar overlay si está loading o fue exitoso
+  if (isLoading || operationSuccess) {
+    return (
+      <StatusOverlay
+        loading={isLoading}
+        success={operationSuccess}
+        loadingMsg={loadingMessage}
+        successMsg={successMessage}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>
