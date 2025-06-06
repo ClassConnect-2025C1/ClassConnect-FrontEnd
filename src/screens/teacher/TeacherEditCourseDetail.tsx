@@ -39,10 +39,9 @@ export default function EditCourseScreen({ route }) {
   );
 
   const [auxTeachersOptions, setAuxTeachersOptions] = useState([]);
-  const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
-    course.auxTeachers || [],
-  );
-
+const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
+  course.teachingAssistants || [],
+);
   const [errors, setErrors] = useState({
     title: '',
     description: '',
@@ -82,8 +81,13 @@ export default function EditCourseScreen({ route }) {
       }
     };
 
-    fetchEligibilityOptions();
-  }, []);
+    const fetchData = async () => {
+      await fetchEligibilityOptions();
+      await fetchAuxTeachers();
+    };
+
+    fetchData();
+  }, [token]); 
 
   const fetchAuxTeachers = async () => {
     try {
@@ -108,10 +112,15 @@ export default function EditCourseScreen({ route }) {
       setAuxTeachersOptions(auxOptions);
     } catch (error) {
       console.error('Error fetching auxiliary teachers:', error);
+      // ✅ Si el endpoint no existe, usar array vacío
+      setAuxTeachersOptions([]);
     }
   };
 
-  fetchAuxTeachers();
+  const handleRemoveAuxTeacher = (teacherEmail: string) => {
+    setSelectedAuxTeachers((prev) => prev.filter((email) => email !== teacherEmail));
+  };
+
 
   const handleSaveChanges = async () => {
     const newErrors = validateFields(
@@ -120,6 +129,7 @@ export default function EditCourseScreen({ route }) {
       selectedCriteria,
       startDate,
       endDate,
+      
     );
     setErrors(newErrors);
     console.log('Errors:', newErrors);
@@ -194,7 +204,12 @@ export default function EditCourseScreen({ route }) {
       <Text style={styles.header}>Edit Course</Text>
 
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <View style={{ flex: 1, paddingHorizontal: 10 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Title */}
           <TextInput
             style={styles.input}
@@ -241,11 +256,12 @@ export default function EditCourseScreen({ route }) {
           {/* Selected Criteria */}
           {selectedCriteria.filter((criteria) => criteria.trim() !== '')
             .length === 0 && (
-            <Text style={styles.noCriteriaText}>
-              This course does not contain eligibility criteria.
-            </Text>
-          )}
+              <Text style={styles.noCriteriaText}>
+                This course does not contain eligibility criteria.
+              </Text>
+            )}
 
+          {/* Teaching Assistants */}
           {/* Teaching Assistants */}
           <Text style={{ marginBottom: 6 }}>Teaching Assistants</Text>
           <View style={{ maxHeight: 200, marginBottom: 16 }}>
@@ -269,6 +285,8 @@ export default function EditCourseScreen({ route }) {
             />
           </View>
 
+          
+
           {/* Start Date */}
           <TextInput
             style={styles.input}
@@ -291,21 +309,17 @@ export default function EditCourseScreen({ route }) {
             <Text style={styles.errorText}>{errors.endDate}</Text>
           )}
 
-          {/* Save Button */}
-          <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
-            <Text style={styles.buttonText}>Save Changes</Text>
-          </TouchableOpacity>
+          {/* Buttons Container */}
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
+              <Text style={styles.buttonText}>Save Changes</Text>
+            </TouchableOpacity>
 
-          {/* Back Button */}
-          <View style={styles.bottomButtonContainer}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
               <Text style={styles.backButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -348,21 +362,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 25,
     alignItems: 'center',
-    marginTop: 30,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
-    alignSelf: 'center',
-  },
-
-  bottomButtonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    width: width,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '80%',
   },
 
   backButton: {
@@ -375,8 +380,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
-    alignSelf: 'center',
-    marginRight: 23,
+    width: '60%',
+    alignItems: 'center',
   },
   buttonText: {
     color: '#FFFFFF',
@@ -428,4 +433,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
+  buttonsContainer: {
+    marginTop: 30,
+    marginBottom: 20,
+    alignItems: 'center',
+    gap: 15,
+  },
+
 });
