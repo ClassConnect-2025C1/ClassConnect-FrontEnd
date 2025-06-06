@@ -73,7 +73,7 @@ const TeacherCreateNewCourseScreen = () => {
         }));
         setAuxTeachersOptions(auxOptions);
       } catch (error) {
-        console.error('Error fetching data:', error);
+
         setModalMessage('Could not load data.');
         setShowModal(true);
       }

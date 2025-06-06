@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 const EditModule = ({ route }) => {
   const navigation = useNavigation();
   const { module, token, course } = route.params;
-  const [name, setName] = useState(module.name);
+  const [name, setName] = useState(module.title);
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [saveChangueConfirmed, setSaveChangueConfirmed] = useState(false);
