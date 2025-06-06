@@ -188,76 +188,73 @@ export default function TeacherCourseDetail({ route }) {
 
 
   const handleDeleteResource = async (resource) => {
-    try {
-      const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${module.id}/${resource.id}`;
+  try {
+    // Encontrar el módulo que contiene este recurso
+    const module = modules.find(m => 
+      m.resources.some(r => r.id === resource.id)
+    );
+    
+    if (!module) return;
+    
+    const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${module.module_id}/${resource.id}`;
 
-      // Mostrar loading state
-      setLoading(true);
+    setLoading(true);
 
-      // Hacer la petición DELETE
-      console.log("Vamos a eliminar el recurso:", resource);
-      const response = await fetch(deleteUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
+    const response = await fetch(deleteUrl, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        console.log('Resource deleted successfully');
-
-
-      } else {
-        // Manejar error de la API
-        const errorData = await response.json();
-        console.error('Error deleting resource:', errorData);
-        setLoading(false);
-
-        // Opcional: mostrar mensaje de error al usuario
-        console.log('Error', 'Failed to delete resource. Please try again.');
-      }
-
-    } catch (error) {
-      console.error('Network error deleting resource:', error);
-      setLoading(false);
-
-      // Manejar errores de red
-      console.log('Error', 'Network error. Please check your connection and try again.');
+    if (response.ok) {
+      console.log('Resource deleted successfully');
+      // ✅ RECARGAR RECURSOS DESPUÉS DEL ÉXITO
+      await fetchModules();
+    } else {
+      const errorData = await response.json();
+      console.error('Error deleting resource:', errorData);
+      console.log('Error', 'Failed to delete resource. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Network error deleting resource:', error);
+    console.log('Error', 'Network error. Please check your connection and try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleDeleteModule = async (moduleId: string | number) => {
-    try {
-      const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${moduleId}`;
+  const handleDeleteModule = async (moduleId) => {
+  try {
+    const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${moduleId}`;
 
-      // Mostrar loading state
-      setLoading(true);
+    setLoading(true);
 
-      // Hacer la petición DELETE
-      const response = await fetch(deleteUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+    const response = await fetch(deleteUrl, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-      if (response.ok) {
-        console.log('Module deleted successfully');
-      } else {
-        // Manejar error de la API
-        const errorData = await response.json();
-        console.error('Error deleting module:', errorData);
-        console.log('Error', 'Failed to delete module. Please try again.');
-      }
-    } catch (error) {
-      console.error('Network error deleting module:', error);
-      setLoading(false);
-      console.log('Error', 'Network error. Please check your connection and try again.');
+    if (response.ok) {
+      console.log('Module deleted successfully');
+      // ✅ RECARGAR RECURSOS DESPUÉS DEL ÉXITO
+      await fetchModules();
+    } else {
+      const errorData = await response.json();
+      console.error('Error deleting module:', errorData);
+      console.log('Error', 'Failed to delete module. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Network error deleting module:', error);
+    console.log('Error', 'Network error. Please check your connection and try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   return isLoading ? (
@@ -784,15 +781,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // centra todo
     alignItems: 'center',
     marginHorizontal: 20,
-    marginVertical: 20,
+    marginVertical: 12,
     gap: 30, // espacio entre botones y texto
   },
   pageButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 17,
+    paddingVertical: 5,
     backgroundColor: '#007AFF',
     borderRadius: 15,
-    marginBottom: 2,
+    marginBottom: 0,
   },
   disabledButton: {
     backgroundColor: '#ccc',

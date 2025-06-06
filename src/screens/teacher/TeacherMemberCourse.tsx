@@ -32,47 +32,54 @@ const MembersScreen = () => {
   const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
   const [showAcceptOnlyModal, setShowAcceptOnlyModal] = useState(false);
 
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const response = await fetch(
-          `${API_URL}/api/courses/${courseId}/members`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        if (!response.ok) throw new Error('Error al obtener los miembros');
-
-        const data = await response.json();
-
-        const enrichedMembers = await Promise.all(
-          data.data.map(async (member) => {
-            const profile = await getUserProfileData(token, member.user_id);
-            return {
-              ...member,
-              email: profile?.email || '',
-              name: profile?.name || '',
-              lastname: profile?.lastName || '',
-              photo: profile?.photo || '', // puede ser null
-            };
-          }),
-        );
-
-        setMembers(enrichedMembers);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
+  const fetchMembers = async () => {
+    try {
+      // ✅ OBTENER EMAIL DEL USUARIO ACTUAL
+      const userProfile = await getUserProfileData(token);
+      if (userProfile?.email) {
+        setCurrentUserEmail(userProfile.email);
       }
-    };
 
-    fetchMembers();
-  }, [courseId, token]);
+      const response = await fetch(
+        `${API_URL}/api/courses/${courseId}/members`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) throw new Error('Error al obtener los miembros');
+
+      const data = await response.json();
+
+      const enrichedMembers = await Promise.all(
+        data.data.map(async (member) => {
+          const profile = await getUserProfileData(token, member.user_id);
+          return {
+            ...member,
+            email: profile?.email || '',
+            name: profile?.name || '',
+            lastname: profile?.lastName || '',
+            photo: profile?.photo || '',
+          };
+        }),
+      );
+
+      setMembers(enrichedMembers);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchMembers();
+}, [courseId, token]);
 
   const handleApprove = async (userId) => {
     setIsLoading(true);
@@ -158,21 +165,7 @@ const MembersScreen = () => {
         />
       ) : (
         <>
-          <Text style={styles.sectionHeader}>Teachers</Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#bdc3c7',
-              padding: 10,
-              borderRadius: 8,
-              alignSelf: 'center',
-              marginVertical: 10,
-            }}
-            onPress={() => {}}
-          >
-            <Text style={{ color: '#2c3e50', fontWeight: 'bold' }}>
-              Add Assistant
-            </Text>
-          </TouchableOpacity>
+
 
           <Text style={styles.sectionHeader}>Students</Text>
 
@@ -203,14 +196,14 @@ const MembersScreen = () => {
                     <Text style={styles.memberEmail}>{item.email}</Text>
 
                     <View style={styles.buttonsContainer}>
-                      {!isApproved && (
-                        <TouchableOpacity
-                          style={styles.approveButton}
-                          onPress={() => handleApprove(item.user_id)}
-                        >
-                          <Text style={styles.approveButtonText}>Approve</Text>
-                        </TouchableOpacity>
-                      )}
+                      {!isApproved && currentUserEmail === course.createdBy && (
+  <TouchableOpacity
+    style={styles.approveButton}
+    onPress={() => handleApprove(item.user_id)}
+  >
+    <Text style={styles.approveButtonText}>Approve</Text>
+  </TouchableOpacity>
+)}
 
                       <TouchableOpacity
                         style={[

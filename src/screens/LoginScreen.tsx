@@ -116,10 +116,11 @@ const LoginScreen = () => {
       });
 
       const data = await response.json();
-      const decodeToken = jwtDecode(data.access_token);
-      console.log('Decoded token:', decodeToken);
 
       if (response.ok) {
+        const decodeToken = jwtDecode(data.access_token);
+        console.log('Decoded token:', decodeToken);
+
         await AsyncStorage.setItem('token', data.access_token);
         setToken(data.access_token);
 
@@ -155,10 +156,18 @@ const LoginScreen = () => {
           }
         } catch (profileError) {
           console.error('Error fetching user profile:', profileError);
-          setGeneralError('An error occurred. Please try again later.');
+          setGeneralError('This account is blocked for admin.');
           setShowGeneralErrorModal(true);
         }
       } else {
+        // Verificar específicamente si el usuario está bloqueado (401)
+        if (response.status === 401) {
+          setGeneralError('Your account has been blocked by an administrator.');
+          setShowGeneralErrorModal(true);
+          return;
+        }
+
+        // Manejo de otros errores (código original)
         console.log('la data detail', data.detail);
 
         const detailMsg = data.detail?.detail || data.detail;

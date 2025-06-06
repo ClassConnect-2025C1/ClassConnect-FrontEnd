@@ -55,11 +55,14 @@ const TeacherCreateNewCourseScreen = () => {
         setEligibilityOptions(options);
 
         // Traer auxiliares (emails)
-        const auxResponse = await fetch(`${API_URL}/users/teacher-emails`, {
+        const auxResponse = await fetch(`${API_URL}/api/users/teacher-emails`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+
+        console.log('Response status:', auxResponse.status);
+        console.log('Response statusText:', auxResponse.statusText)
 
         if (!auxResponse.ok) {
           throw new Error('Failed to fetch auxiliary teachers');
@@ -73,7 +76,7 @@ const TeacherCreateNewCourseScreen = () => {
         }));
         setAuxTeachersOptions(auxOptions);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching initial data:', error);
         setModalMessage('Could not load data.');
         setShowModal(true);
       }

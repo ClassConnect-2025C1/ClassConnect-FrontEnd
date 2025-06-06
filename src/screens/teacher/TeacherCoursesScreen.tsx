@@ -39,7 +39,9 @@ const CoursesScreen = ({ route }) => {
   const [searchText, setSearchText] = useState('');
   const { token } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 5;
+  const [teacherEmail, setTeacherEmail] = useState<string>('');
 
   const filteredCourses = courses.filter((course) => {
     const titleMatch = course.title
@@ -62,9 +64,13 @@ const CoursesScreen = ({ route }) => {
     const fetchUserCourses = async () => {
       try {
         const userProfile = await getUserProfileData(token);
-        const teacherEmail = userProfile?.email;
+        const userEmail = userProfile?.email;
 
-        if (token && teacherEmail) {
+        if (userEmail) {
+          setTeacherEmail(userEmail); // ✅ Guardar email
+        }
+
+        if (token && userEmail) {
           const response = await fetch(`${API_URL}/api/courses/`, {
             method: 'GET',
             headers: {
@@ -73,16 +79,22 @@ const CoursesScreen = ({ route }) => {
           });
 
           const text = await response.text();
-  
 
           try {
             const json = JSON.parse(text);
             console.log('Respuesta JSON:', json);
 
             if (Array.isArray(json.data)) {
-              const filteredCourses = json.data.filter(
-                (course) => course.createdBy === teacherEmail,
-              );
+              const filteredCourses = json.data.filter((course) => {
+                // Mostrar si es creador del curso
+                const isCreator = course.createdBy === userEmail;
+
+                // Mostrar si es asistente del curso
+                const isAssistant = course.teachingAssistants &&
+                  course.teachingAssistants.includes(userEmail);
+
+                return isCreator || isAssistant;
+              });
               setCourses(filteredCourses);
             } else {
               console.log('La respuesta no es un array:', json);
@@ -184,15 +196,22 @@ const CoursesScreen = ({ route }) => {
                 }
                 style={{ flex: 1 }}
               >
-                <Text style={styles.courseText}>{course.title}</Text>
+                <View>
+                  <Text style={styles.courseText}>{course.title}</Text>
+                  {course.createdBy !== teacherEmail && (
+                    <Text style={styles.assistantBadge}>Assistant</Text>
+                  )}
+                </View>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => confirmDelete(course.id)}
-                style={styles.deleteButton}
-              >
-                <Text style={styles.deleteButtonText}>✕</Text>
-              </TouchableOpacity>
+              {course.createdBy === teacherEmail && (
+                <TouchableOpacity
+                  onPress={() => confirmDelete(course.id)}
+                  style={styles.deleteButton}
+                >
+                  <Text style={styles.deleteButtonText}>✕</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))}
       </ScrollView>
@@ -428,6 +447,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  assistantBadge: {
+  fontSize: 12,
+  color: 'rgba(255,255,255,0.8)',
+  fontStyle: 'italic',
+  marginTop: 2,
+},
 });
 
 export default CoursesScreen;
