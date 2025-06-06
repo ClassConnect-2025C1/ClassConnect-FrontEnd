@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -10,6 +10,7 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
+import StatusOverlay from '../../../components/StatusOverlay';
 
 const AddResourceForModule = () => {
     const navigation = useNavigation();
@@ -17,6 +18,23 @@ const AddResourceForModule = () => {
     const { token, course, module } = route.params;
 
     const [link, setLink] = useState('');
+    
+    // Estados para el StatusOverlay
+    const [isLoading, setIsLoading] = useState(false);
+    const [operationSuccess, setOperationSuccess] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+
+    // Auto-return después del éxito
+    useEffect(() => {
+        if (operationSuccess) {
+            const timer = setTimeout(() => {
+                navigation.goBack();
+            }, 2000); // Regresa después de 2 segundos
+
+            return () => clearTimeout(timer);
+        }
+    }, [operationSuccess, navigation]);
 
     const uploadFile = async () => {
         try {
@@ -28,6 +46,11 @@ const AddResourceForModule = () => {
             const fileName = file.name;
             const fileUri = file.uri;
             const mimeType = file.mimeType || 'application/octet-stream';
+
+            // Iniciar loading
+            setIsLoading(true);
+            setLoadingMessage('Uploading file...');
+            setOperationSuccess(false);
        
             const formData = new FormData();
 
@@ -45,7 +68,6 @@ const AddResourceForModule = () => {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${token}`,
-            
                     },
                     body: formData,
                 }
@@ -58,11 +80,16 @@ const AddResourceForModule = () => {
                 throw new Error(`File upload failed: ${response.status} - ${responseBody}`);
             }
 
-            Alert.alert('Success', 'File uploaded successfully');
-            navigation.goBack();
+            // Éxito
+            setIsLoading(false);
+            setOperationSuccess(true);
+            setSuccessMessage('File uploaded successfully!');
+
         } catch (error) {
             console.error('File upload error:', error);
-            Alert.alert('Error', 'Failed to upload file');
+            setIsLoading(false);
+            setOperationSuccess(false);
+            Alert.alert('Error', 'Failed to upload file'); // Mantenemos Alert solo para errores
         }
     };
 
@@ -73,10 +100,15 @@ const AddResourceForModule = () => {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('link', trimmed);
-
         try {
+            // Iniciar loading
+            setIsLoading(true);
+            setLoadingMessage('Adding link...');
+            setOperationSuccess(false);
+
+            const formData = new FormData();
+            formData.append('link', trimmed);
+
             const response = await fetch(
                 `${API_URL}/api/courses/${course.id}/resource/module/${module.module_id}`,
                 {
@@ -89,13 +121,31 @@ const AddResourceForModule = () => {
             );
 
             if (!response.ok) throw new Error('Link upload failed');
-            Alert.alert('Success', 'Link added successfully');
-            navigation.goBack();
+            
+            // Éxito
+            setIsLoading(false);
+            setOperationSuccess(true);
+            setSuccessMessage('Link added successfully!');
+
         } catch (error) {
             console.error('Link upload error:', error);
-            Alert.alert('Error', 'Failed to add link');
+            setIsLoading(false);
+            setOperationSuccess(false);
+            Alert.alert('Error', 'Failed to add link'); // Mantenemos Alert solo para errores
         }
     };
+
+    // Mostrar overlay si está loading o fue exitoso
+    if (isLoading || operationSuccess) {
+        return (
+            <StatusOverlay
+                loading={isLoading}
+                success={operationSuccess}
+                loadingMsg={loadingMessage}
+                successMsg={successMessage}
+            />
+        );
+    }
 
     return (
         <View style={styles.container}>

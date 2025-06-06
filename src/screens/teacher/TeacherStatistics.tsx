@@ -117,17 +117,17 @@ const TeacherStatistics = () => {
 
       // Solo cursos con calificaciones > 0
       const activeCourses = statistics.filter(c => (c.global_average_grade || 0) > 0);
-      
+
       // Solo cursos con submission rate > 0 (cursos que tienen actividad real)
       const coursesWithActivity = statistics.filter(c => (c.global_submission_rate || 0) > 0);
-      
+
       if (activeCourses.length === 0 && coursesWithActivity.length === 0) return null;
 
-      const avgGrade = activeCourses.length > 0 ? 
+      const avgGrade = activeCourses.length > 0 ?
         activeCourses.reduce((sum, c) => sum + (c.global_average_grade || 0), 0) / activeCourses.length : 0;
-      
+
       // Solo calcular submission rate de cursos que tienen actividad real
-      const avgSubmissionRate = coursesWithActivity.length > 0 ? 
+      const avgSubmissionRate = coursesWithActivity.length > 0 ?
         coursesWithActivity.reduce((sum, c) => sum + (c.global_submission_rate || 0), 0) / coursesWithActivity.length : 0;
 
       return {
@@ -151,7 +151,7 @@ const TeacherStatistics = () => {
       if (filteredDates.length > 0) {
         // Usar datos filtrados por fecha
         const validGrades = filteredDates.filter(d => d.average_grade > 0);
-        avgGrade = validGrades.length > 0 ? 
+        avgGrade = validGrades.length > 0 ?
           validGrades.reduce((sum, d) => sum + d.average_grade, 0) / validGrades.length : 0;
         avgSubmissionRate = filteredDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) / filteredDates.length;
       } else {
@@ -173,7 +173,7 @@ const TeacherStatistics = () => {
   const getChartData = () => {
     if (selectedCourse === 'all') {
       // 📊 ALL COURSES: Mostrar datos globales sin filtros de fecha
-      
+
       // Usar todos los cursos sin filtro de fecha
       const courseData = statistics.slice(0, 6).map(course => ({
         name: course.course_name.substring(0, 8),
@@ -199,7 +199,7 @@ const TeacherStatistics = () => {
 
     } else {
       // 📊 CURSO ESPECÍFICO: Usar filtros de fecha y mostrar evolución temporal
-      
+
       const course = statistics.find(c => c.course_id.toString() === selectedCourse);
       if (!course) return { gradeData: null, submissionData: null, trendData: null };
 
@@ -259,18 +259,18 @@ const TeacherStatistics = () => {
       // Procesar las fechas para mantener el promedio anterior cuando no hay nuevas calificaciones
       let lastValidGrade = 0; // Empezar desde 0, no desde global_average_grade
       let lastValidSubmissionRate = 0; // También mantener el último submission rate válido
-      
+
       const processedDates = datesWithActivity.map(item => {
         // Si hay una nueva calificación (> 0), actualizar el lastValidGrade
         if (item.average_grade > 0) {
           lastValidGrade = item.average_grade;
         }
-        
+
         // Si hay nueva actividad de submission, actualizar el lastValidSubmissionRate
         if (item.submission_rate > 0) {
           lastValidSubmissionRate = item.submission_rate;
         }
-        
+
         // Devolver la fecha con los valores correctos (últimos válidos o 0 si nunca hubo)
         return {
           ...item,
@@ -281,13 +281,13 @@ const TeacherStatistics = () => {
 
       // Si tenemos menos de 4 fechas con actividad, agregar fechas con los últimos valores válidos
       const finalDates = [...processedDates];
-      
+
       // Agregar fechas adicionales para tener al menos 4 barras
       while (finalDates.length < 4 && finalDates.length < 8) {
         const lastDate = finalDates[finalDates.length - 1];
         const nextDate = new Date(lastDate.date);
         nextDate.setDate(nextDate.getDate() + 1);
-        
+
         // Solo agregar si la fecha está dentro del rango
         if (nextDate <= endDate) {
           finalDates.push({
@@ -307,7 +307,7 @@ const TeacherStatistics = () => {
 
       const gradeData = {
         labels,
-        datasets: [{ 
+        datasets: [{
           data: finalDates.map(item => item.average_grade || 0),
           // Forzar que haya al menos un 0 para establecer la escala
           color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
@@ -323,7 +323,7 @@ const TeacherStatistics = () => {
 
       const submissionData = {
         labels,
-        datasets: [{ 
+        datasets: [{
           data: finalDates.map(item => (item.submission_rate || 0) * 100),
           color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
         }]
@@ -612,25 +612,25 @@ const TeacherStatistics = () => {
         </TouchableOpacity>
 
         {selectedCourse !== 'all' && (
-      <TouchableOpacity
-  style={styles.individualStatsButton}
-  onPress={() => {
-    const foundCourse = statistics.find(c => c.course_id.toString() === selectedCourse);
-    
-    if (foundCourse) {
-      // Transformar el objeto para que tenga las propiedades esperadas
-      const course = {
-        id: foundCourse.course_id,
-        name: foundCourse.course_name || foundCourse.name || `Course ${foundCourse.course_id}`,
-        ...foundCourse // Incluir todas las demás propiedades
-      };
-      
-      navigation.navigate('TeacherMembersCourse', { course });
-    }
-  }}
->
-  <Text style={styles.buttonText}>👥 Students</Text>
-</TouchableOpacity>
+          <TouchableOpacity
+            style={styles.individualStatsButton}
+            onPress={() => {
+              const foundCourse = statistics.find(c => c.course_id.toString() === selectedCourse);
+
+              if (foundCourse) {
+                // Transformar el objeto para que tenga las propiedades esperadas
+                const course = {
+                  id: foundCourse.course_id,
+                  name: foundCourse.course_name || foundCourse.name || `Course ${foundCourse.course_id}`,
+                  ...foundCourse // Incluir todas las demás propiedades
+                };
+
+                navigation.navigate('TeacherMembersCourse', { course });
+              }
+            }}
+          >
+            <Text style={styles.buttonText}>👥 Students</Text>
+          </TouchableOpacity>
         )}
 
         <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
