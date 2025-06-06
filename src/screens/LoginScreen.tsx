@@ -21,6 +21,7 @@ import { API_URL } from '@env';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { AuthContext } from '../navigation/AuthContext';
+import * as LocalAuthentication from 'expo-local-authentication';
 /*
 //WebBrowser.maybeCompleteAuthSession();
 
@@ -147,7 +148,22 @@ const LoginScreen = () => {
           console.log('userId del login', user_id);
           const userProfile = await profileResponse.json();
           const userRole = userProfile.role;
-
+          // Local Authentication before proceeding 
+          const hasHardware = await LocalAuthentication.hasHardwareAsync();
+          const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+          if (hasHardware && isEnrolled) {
+            const result = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Authenticate to login',
+            fallbackLabel: 'Enter password',
+            });
+            if (!result.success) {
+            setGeneralError('Authentication failed. Please try again.');
+            setShowGeneralErrorModal(true);
+            return;
+            }
+          }
+          
+           
           if (userRole === 'teacher') {
             navigation.navigate('TeacherCourses');
           } else {
