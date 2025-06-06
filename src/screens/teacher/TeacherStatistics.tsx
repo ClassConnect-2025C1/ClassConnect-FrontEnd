@@ -170,114 +170,49 @@ const TeacherStatistics = () => {
 
   // Generar datos para gráficos simplificado
   const getChartData = () => {
-    const courses = getFilteredCourses();
-
     if (selectedCourse === 'all') {
-      // PARA ALL COURSES: Mostrar evolución temporal del promedio de todos los cursos
+      // 📊 ALL COURSES: Mostrar datos globales sin filtros de fecha
       
-      // Obtener todas las fechas únicas de todos los cursos
-      const allDates = new Set();
-      courses.forEach(course => {
-        const filteredDates = filterByDate(course.statistics_for_dates || []);
-        filteredDates.forEach(stat => {
-          const date = new Date(stat.date);
-          allDates.add(date.toISOString().split('T')[0]); // YYYY-MM-DD
-        });
-      });
+      // Usar todos los cursos sin filtro de fecha
+      const courseData = statistics.slice(0, 6).map(course => ({
+        name: course.course_name.substring(0, 8),
+        grade: course.global_average_grade || 0,
+        submission: (course.global_submission_rate || 0) * 100
+      }));
 
-      const sortedDates = Array.from(allDates).sort();
-
-      if (sortedDates.length === 0) {
-        // Sin datos temporales, usar datos globales
-        const gradeData = {
-          labels: ['Today'],
-          datasets: [{ data: [0] }] // Empezar desde 0
-        };
-
-        const submissionData = {
-          labels: ['Today'],
-          datasets: [{ data: [0] }] // Empezar desde 0
-        };
-
-        return { gradeData, submissionData, trendData: null };
+      if (courseData.length === 0) {
+        return { gradeData: null, submissionData: null, trendData: null };
       }
 
-      // Mostrar evolución temporal promedio de todos los cursos
-      const labels = sortedDates.map(dateStr => {
-        const d = new Date(dateStr);
-        return `${d.getDate()}/${d.getMonth() + 1}`;
-      });
-
       const gradeData = {
-        labels,
-        datasets: [{
-          data: sortedDates.map(currentDateStr => {
-            let totalGrade = 0;
-            let gradeCount = 0;
-
-            courses.forEach(course => {
-              const filteredDates = filterByDate(course.statistics_for_dates || []);
-              const statsForDate = filteredDates.filter(stat => {
-                const statDate = new Date(stat.date);
-                return statDate.toISOString().split('T')[0] === currentDateStr;
-              });
-              
-              if (statsForDate.length > 0) {
-                const latestStat = statsForDate[statsForDate.length - 1];
-                // NO contar grades = 0
-                if (latestStat.average_grade > 0) {
-                  totalGrade += latestStat.average_grade;
-                  gradeCount++;
-                }
-              }
-            });
-
-            return gradeCount > 0 ? totalGrade / gradeCount : 0;
-          })
-        }]
+        labels: courseData.map(c => c.name),
+        datasets: [{ data: courseData.map(c => c.grade) }]
       };
 
       const submissionData = {
-        labels,
-        datasets: [{
-          data: sortedDates.map(currentDateStr => {
-            let totalSubmissionRate = 0;
-            let submissionCount = 0;
-
-            courses.forEach(course => {
-              const filteredDates = filterByDate(course.statistics_for_dates || []);
-              const statsForDate = filteredDates.filter(stat => {
-                const statDate = new Date(stat.date);
-                return statDate.toISOString().split('T')[0] === currentDateStr;
-              });
-              
-              if (statsForDate.length > 0) {
-                const latestStat = statsForDate[statsForDate.length - 1];
-                // Los datos ya vienen en decimal (0-1), multiplicar por 100 para porcentaje
-                totalSubmissionRate += (latestStat.submission_rate || 0) * 100;
-                submissionCount++;
-              }
-            });
-
-            return submissionCount > 0 ? totalSubmissionRate / submissionCount : 0;
-          })
-        }]
+        labels: courseData.map(c => c.name),
+        datasets: [{ data: courseData.map(c => c.submission) }]
       };
 
       return { gradeData, submissionData, trendData: null };
 
     } else {
-      // PARA CURSO ESPECÍFICO: Mostrar evolución temporal del curso
-      const course = courses[0];
+      // 📊 CURSO ESPECÍFICO: Usar filtros de fecha y mostrar evolución temporal
+      
+      const course = statistics.find(c => c.course_id.toString() === selectedCourse);
       if (!course) return { gradeData: null, submissionData: null, trendData: null };
 
-      const filteredDates = filterByDate(course.statistics_for_dates || []);
-      
+      // Filtrar fechas según el rango seleccionado
+      const filteredDates = (course.statistics_for_dates || []).filter(item => {
+        const date = new Date(item.date);
+        return date >= startDate && date <= endDate;
+      });
+
       if (filteredDates.length === 0) {
-        // Sin datos temporales, mostrar con fechas
+        // Sin datos en el rango, mostrar datos globales
         const gradeData = {
           labels: ['Today'],
-          datasets: [{ data: [course.global_average_grade > 0 ? course.global_average_grade : 0] }]
+          datasets: [{ data: [course.global_average_grade || 0] }]
         };
 
         const submissionData = {
@@ -288,28 +223,105 @@ const TeacherStatistics = () => {
         return { gradeData, submissionData, trendData: null };
       }
 
-      // Ordenar por fecha
-      const sortedDates = filteredDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Eliminar fechas duplicadas y ordenar
+      const uniqueDatesMap = new Map();
+      filteredDates.forEach(item => {
+        const dateKey = new Date(item.date).toISOString().split('T')[0]; // YYYY-MM-DD
+        if (!uniqueDatesMap.has(dateKey) || new Date(item.date) > new Date(uniqueDatesMap.get(dateKey).date)) {
+          uniqueDatesMap.set(dateKey, item);
+        }
+      });
 
-      const labels = sortedDates.map(item => {
+      const uniqueDates = Array.from(uniqueDatesMap.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      // FILTRAR fechas que realmente tienen actividad (no son solo 0s)
+      const datesWithActivity = uniqueDates.filter(item => {
+        // Una fecha tiene actividad si tiene grades > 0 O submission_rate > 0
+        return (item.average_grade > 0) || (item.submission_rate > 0);
+      });
+
+      // Si no hay fechas con actividad real, mostrar datos globales una sola vez
+      if (datesWithActivity.length === 0) {
+        const gradeData = {
+          labels: ['Today'],
+          datasets: [{ data: [course.global_average_grade || 0] }]
+        };
+
+        const submissionData = {
+          labels: ['Today'],
+          datasets: [{ data: [(course.global_submission_rate || 0) * 100] }]
+        };
+
+        return { gradeData, submissionData, trendData: null };
+      }
+
+      // Procesar las fechas para mantener el promedio anterior cuando no hay nuevas calificaciones
+      let lastValidGrade = 0; // Empezar desde 0, no desde global_average_grade
+      const processedDates = datesWithActivity.map(item => {
+        // Si hay una nueva calificación (> 0), actualizar el lastValidGrade
+        if (item.average_grade > 0) {
+          lastValidGrade = item.average_grade;
+        }
+        
+        // Devolver la fecha con el grade correcto (último válido o 0 si nunca hubo)
+        return {
+          ...item,
+          average_grade: lastValidGrade, // Usar el último promedio válido (o 0 si nunca hubo)
+          submission_rate: item.submission_rate || 0 // Mantener submission rate real
+        };
+      });
+
+      // Si tenemos menos de 4 fechas con actividad, agregar fechas con el último promedio válido
+      const finalDates = [...processedDates];
+      
+      // Agregar fechas adicionales para tener al menos 4 barras
+      while (finalDates.length < 4 && finalDates.length < 8) {
+        const lastDate = finalDates[finalDates.length - 1];
+        const nextDate = new Date(lastDate.date);
+        nextDate.setDate(nextDate.getDate() + 1);
+        
+        // Solo agregar si la fecha está dentro del rango
+        if (nextDate <= endDate) {
+          finalDates.push({
+            date: nextDate.toISOString(),
+            average_grade: lastValidGrade, // Mantener el último promedio válido (o 0)
+            submission_rate: 0 // Sin actividad nueva
+          });
+        } else {
+          break;
+        }
+      }
+
+      const labels = finalDates.map(item => {
         const date = new Date(item.date);
         return `${date.getDate()}/${date.getMonth() + 1}`;
       });
 
       const gradeData = {
         labels,
-        datasets: [{ data: sortedDates.map(item => item.average_grade || 0) }]
+        datasets: [{ 
+          data: finalDates.map(item => item.average_grade || 0),
+          // Forzar que haya al menos un 0 para establecer la escala
+          color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
+        }]
       };
+
+      // Asegurar que el primer valor ayude a establecer la escala desde 0
+      if (gradeData.datasets[0].data.length > 0 && Math.min(...gradeData.datasets[0].data) > 0) {
+        // Si todos los valores son > 0, agregar un 0 invisible al inicio
+        gradeData.labels.unshift('');
+        gradeData.datasets[0].data.unshift(0);
+      }
 
       const submissionData = {
         labels,
-        datasets: [{ data: sortedDates.map(item => (item.submission_rate || 0) * 100) }]
+        datasets: [{ data: finalDates.map(item => (item.submission_rate || 0) * 100) }]
       };
 
-      const trendData = sortedDates.length > 1 ? {
+      const trendData = finalDates.length > 1 ? {
         labels,
         datasets: [{
-          data: sortedDates.map(item => item.average_grade || 0),
+          data: finalDates.map(item => item.average_grade || 0),
           color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
           strokeWidth: 2
         }]
@@ -676,12 +688,17 @@ const chartConfig = {
   propsForDots: {
     r: '0'
   },
-  // Configuraciones adicionales para mejor visualización
+  // Configuraciones adicionales para forzar que empiece desde 0
   propsForBackgroundLines: {
     strokeDasharray: '', // Líneas sólidas
     stroke: '#e3e3e3',
     strokeWidth: 1
   },
+  // Forzar escala desde 0
+  yAxisMinimum: 0,
+  // Configuración adicional para asegurar que las barras arranquen desde 0
+  fillShadowGradient: 'transparent',
+  fillShadowGradientOpacity: 0,
 };
 
 const styles = StyleSheet.create({
