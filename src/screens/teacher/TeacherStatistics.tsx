@@ -590,9 +590,9 @@ const getGlobalStats = () => {
                 </TouchableOpacity>
               )}
             />
-            <TouchableOpacity style={styles.button} onPress={() => setShowCourseModal(false)}>
-              <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity>
+           <TouchableOpacity style={styles.modalButton} onPress={() => setShowCourseModal(false)}>
+  <Text style={styles.modalButtonText}>Close</Text>
+</TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -850,6 +850,19 @@ const styles = StyleSheet.create({
     flex: 0.3,
     alignItems: 'center',
   },
+  modalButton: {
+  backgroundColor: '#007AFF',
+  padding: 15,
+  borderRadius: 8,
+  alignItems: 'center',
+  marginTop: 20,
+},
+modalButtonText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
 });
 
 export default TeacherStatistics;
