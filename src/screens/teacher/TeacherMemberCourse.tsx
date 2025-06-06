@@ -210,6 +210,13 @@ const MembersScreen = () => {
                           styles.approveButton,
                           { backgroundColor: '#95a5a6', marginLeft: 5 },
                         ]}
+                        onPress={() => {
+                          navigation.navigate('StudentIndividualStatistics', {
+                            course,
+                            userId: item.user_id,
+                            studentName:item.name,
+                          });
+                        }}
                       >
                         <Text style={styles.approveButtonText}>Statistics</Text>
                       </TouchableOpacity>

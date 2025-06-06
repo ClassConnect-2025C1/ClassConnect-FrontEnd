@@ -41,10 +41,10 @@ const ProfileScreen = () => {
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [savingNotifications, setSavingNotifications] = useState(false);
   
-  // Estados para configuraciones de notificaciones
+  // Estados para configuraciones de notificaciones - CORREGIDOS PARA COINCIDIR CON EL BACKEND
   const [courseApprove, setCourseApprove] = useState('none');
   const [feedback, setFeedback] = useState('none');
-  const [inscription, setInscription] = useState('none');
+  const [enrollment, setEnrollment] = useState('none'); // CAMBIADO de inscription a enrollment
 
   // Opciones de notificación
   const notificationOptions = [
@@ -53,7 +53,7 @@ const ProfileScreen = () => {
     { value: 'push', label: 'Push', icon: '📱', color: '#28a745' },
   ];
 
-  // Tipos de notificación
+  // Tipos de notificación - ACTUALIZADOS
   const notificationTypes = [
     {
       key: 'course_approve',
@@ -63,18 +63,18 @@ const ProfileScreen = () => {
       setState: setCourseApprove,
     },
     {
-      key: 'feedback_',
+      key: 'feedback', // CORREGIDO: removido el underscore
       title: 'Feedback Received',
       description: 'When you receive feedback or comments',
       state: feedback,
       setState: setFeedback,
     },
     {
-      key: 'inscripcion',
+      key: 'enrollment', // CORREGIDO: cambiado de inscripcion a enrollment
       title: 'New Enrollment',
       description: 'When students enroll in your courses',
-      state: inscription,
-      setState: setInscription,
+      state: enrollment,
+      setState: setEnrollment,
     },
   ];
 
@@ -144,9 +144,10 @@ const ProfileScreen = () => {
 
       if (response.ok) {
         const settings = await response.json();
+        // CORREGIDO: ahora usa los nombres correctos del backend
         setCourseApprove(settings.course_approve || 'none');
-        setFeedback(settings.feedback_ || 'none');
-        setInscription(settings.inscripcion || 'none');
+        setFeedback(settings.feedback || 'none'); // Sin underscore
+        setEnrollment(settings.enrollment || 'none'); // Cambiado de inscripcion
       } else {
         console.log('No previous settings found, using defaults');
       }
@@ -167,11 +168,14 @@ const ProfileScreen = () => {
     try {
       setSavingNotifications(true);
       
+      // CORREGIDO: estructura que coincide exactamente con el backend Go
       const settings = {
         course_approve: courseApprove,
-        feedback_: feedback,
-        inscripcion: inscription,
+        feedback: feedback, // Sin underscore
+        enrollment: enrollment, // Cambiado de inscripcion
       };
+
+      console.log('Sending notification settings:', settings); // Para debug
 
       const response = await fetch(
         `${API_URL}/api/notification/${userId}/config`,
@@ -494,6 +498,9 @@ const ProfileScreen = () => {
               </View>
             ) : (
               <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                <Text style={styles.modalDescription}>
+                  Choose how you want to receive notifications for different events.
+                </Text>
     
                 {notificationTypes.map(renderNotificationType)}
 

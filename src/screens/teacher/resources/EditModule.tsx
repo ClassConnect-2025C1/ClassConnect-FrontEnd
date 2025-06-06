@@ -75,16 +75,7 @@ const EditModule = ({ route }) => {
         placeholder="Enter module name"
       />
 
-      <Text style={styles.label}>Description</Text>
-      <TextInput
-        style={styles.input}
-        value={description}
-        onChangeText={setDescription}
-        placeholder="Enter module description (optional)"
-        multiline={true}
-        numberOfLines={3}
-      />
-
+    
       <TouchableOpacity style={styles.sendButton} onPress={handleSave}>
         <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>

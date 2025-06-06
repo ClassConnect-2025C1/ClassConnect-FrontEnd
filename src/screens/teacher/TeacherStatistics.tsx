@@ -77,6 +77,7 @@ const TeacherStatistics = () => {
       if (!response.ok) throw new Error('Failed to fetch statistics');
 
       const data = await response.json();
+      console.log('Fetched statistics:', data);
       const newStats = data.statistics || [];
 
       // Solo actualizar si cambió algo
@@ -257,21 +258,28 @@ const TeacherStatistics = () => {
 
       // Procesar las fechas para mantener el promedio anterior cuando no hay nuevas calificaciones
       let lastValidGrade = 0; // Empezar desde 0, no desde global_average_grade
+      let lastValidSubmissionRate = 0; // También mantener el último submission rate válido
+      
       const processedDates = datesWithActivity.map(item => {
         // Si hay una nueva calificación (> 0), actualizar el lastValidGrade
         if (item.average_grade > 0) {
           lastValidGrade = item.average_grade;
         }
         
-        // Devolver la fecha con el grade correcto (último válido o 0 si nunca hubo)
+        // Si hay nueva actividad de submission, actualizar el lastValidSubmissionRate
+        if (item.submission_rate > 0) {
+          lastValidSubmissionRate = item.submission_rate;
+        }
+        
+        // Devolver la fecha con los valores correctos (últimos válidos o 0 si nunca hubo)
         return {
           ...item,
           average_grade: lastValidGrade, // Usar el último promedio válido (o 0 si nunca hubo)
-          submission_rate: item.submission_rate || 0 // Mantener submission rate real
+          submission_rate: lastValidSubmissionRate // Usar el último submission rate válido
         };
       });
 
-      // Si tenemos menos de 4 fechas con actividad, agregar fechas con el último promedio válido
+      // Si tenemos menos de 4 fechas con actividad, agregar fechas con los últimos valores válidos
       const finalDates = [...processedDates];
       
       // Agregar fechas adicionales para tener al menos 4 barras
@@ -285,7 +293,7 @@ const TeacherStatistics = () => {
           finalDates.push({
             date: nextDate.toISOString(),
             average_grade: lastValidGrade, // Mantener el último promedio válido (o 0)
-            submission_rate: 0 // Sin actividad nueva
+            submission_rate: lastValidSubmissionRate // Mantener el último submission rate válido
           });
         } else {
           break;
@@ -315,8 +323,18 @@ const TeacherStatistics = () => {
 
       const submissionData = {
         labels,
-        datasets: [{ data: finalDates.map(item => (item.submission_rate || 0) * 100) }]
+        datasets: [{ 
+          data: finalDates.map(item => (item.submission_rate || 0) * 100),
+          color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
+        }]
       };
+
+      // Asegurar que el submission chart también tenga escala desde 0
+      if (submissionData.datasets[0].data.length > 0 && Math.min(...submissionData.datasets[0].data) > 0) {
+        // Si todos los valores son > 0, agregar un 0 invisible al inicio
+        submissionData.labels.unshift('');
+        submissionData.datasets[0].data.unshift(0);
+      }
 
       const trendData = finalDates.length > 1 ? {
         labels,
@@ -594,20 +612,25 @@ const TeacherStatistics = () => {
         </TouchableOpacity>
 
         {selectedCourse !== 'all' && (
-          <TouchableOpacity
-            style={styles.individualStatsButton}
-            onPress={() => {
-              const course = statistics.find(c => c.course_id.toString() === selectedCourse);
-              navigation.navigate('StudentIndividualStatistics', {
-                course: {
-                  id: selectedCourse,
-                  name: course?.course_name || 'Course'
-                }
-              });
-            }}
-          >
-            <Text style={styles.buttonText}>👥 Students</Text>
-          </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.individualStatsButton}
+  onPress={() => {
+    const foundCourse = statistics.find(c => c.course_id.toString() === selectedCourse);
+    
+    if (foundCourse) {
+      // Transformar el objeto para que tenga las propiedades esperadas
+      const course = {
+        id: foundCourse.course_id,
+        name: foundCourse.course_name || foundCourse.name || `Course ${foundCourse.course_id}`,
+        ...foundCourse // Incluir todas las demás propiedades
+      };
+      
+      navigation.navigate('TeacherMembersCourse', { course });
+    }
+  }}
+>
+  <Text style={styles.buttonText}>👥 Students</Text>
+</TouchableOpacity>
         )}
 
         <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
