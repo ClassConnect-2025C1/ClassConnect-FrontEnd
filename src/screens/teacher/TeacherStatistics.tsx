@@ -518,25 +518,44 @@ const TeacherStatistics = () => {
       </View>
 
       {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.exportButton, generatingPDF && { backgroundColor: '#6c757d' }]}
-          onPress={handleExportPDF}
-          disabled={generatingPDF}
-        >
-          {generatingPDF ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <ActivityIndicator size="small" color="#fff" />
-              <Text style={[styles.buttonText, { marginLeft: 8 }]}>Generating...</Text>
-            </View>
-          ) : (
-            <Text style={styles.buttonText}>📄 Export PDF</Text>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-          <Text style={styles.buttonText}>Close</Text>
-        </TouchableOpacity>
+      <View style={selectedCourse !== 'all' ? styles.buttonContainerThree : styles.buttonContainer}>
+  <TouchableOpacity
+    style={[styles.exportButton, generatingPDF && { backgroundColor: '#6c757d' }]}
+    onPress={handleExportPDF}
+    disabled={generatingPDF}
+  >
+    {generatingPDF ? (
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <ActivityIndicator size="small" color="#fff" />
+        <Text style={[styles.buttonText, { marginLeft: 8 }]}>Generating...</Text>
       </View>
+    ) : (
+      <Text style={styles.buttonText}>📄 Export </Text>
+    )}
+  </TouchableOpacity>
+  
+  {/* NUEVO BOTÓN - Solo aparece cuando hay curso específico */}
+  {selectedCourse !== 'all' && (
+    <TouchableOpacity 
+      style={styles.individualStatsButton} 
+      onPress={() => {
+        const course = statistics.find(c => c.course_id.toString() === selectedCourse);
+        navigation.navigate('StudentIndividualStatistics', { 
+          course: { 
+            id: selectedCourse, 
+            name: course?.course_name || 'Course' 
+          } 
+        });
+      }}
+    >
+      <Text style={styles.buttonText}>👥 Student</Text>
+    </TouchableOpacity>
+  )}
+  
+  <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+    <Text style={styles.buttonText}>Close</Text>
+  </TouchableOpacity>
+</View>
 
       {/* Course Selection Modal */}
       <Modal visible={showCourseModal} transparent animationType="slide">
@@ -746,19 +765,19 @@ const styles = StyleSheet.create({
     margin: 15,
   },
   exportButton: {
-    backgroundColor: '#28a745',
-    padding: 15,
-    borderRadius: 8,
-    flex: 0.48,
-    alignItems: 'center',
-  },
-  button: {
-    backgroundColor: '#6c757d',
-    padding: 15,
-    borderRadius: 8,
-    flex: 0.48,
-    alignItems: 'center',
-  },
+  backgroundColor: '#28a745',
+  padding: 15,
+  borderRadius: 8,
+  flex: 0.48,
+  alignItems: 'center',
+},
+button: {
+  backgroundColor: '#6c757d',
+  padding: 15,
+  borderRadius: 8,
+  flex: 0.48,
+  alignItems: 'center',
+},
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
@@ -805,6 +824,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  buttonContainerThree: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  margin: 15,
+  flexWrap: 'wrap',
+  gap: 8,
+},
+individualStatsButton: {
+  backgroundColor: '#22CAEC',
+  padding: 15,
+  borderRadius: 8,
+  flex: 0.3,
+  alignItems: 'center',
+},
 });
 
 export default TeacherStatistics;
