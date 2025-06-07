@@ -101,8 +101,23 @@ const TeacherQualifyAssignment = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setAiResponse(data);
+        const responseData = await response.json();
+        console.log('AI Grade Response:', responseData);
+        
+        // Extraer los datos desde la estructura: { data: { feedback, grade } }
+        const aiGradeData = responseData.data || responseData;
+        let gradeValue = Number(aiGradeData.grade) || 0;
+        
+        // Normalizar la calificación: si es mayor a 10, dividir por 10
+        // Esto convierte escalas 0-100 a 0-10
+        if (gradeValue > 10) {
+          gradeValue = gradeValue / 10;
+        }
+        
+        setAiResponse({
+          feedback: aiGradeData.feedback || 'No feedback provided',
+          grade: gradeValue
+        });
       } else {
         setAiError('Failed to generate AI grade. Please try again.');
       }
