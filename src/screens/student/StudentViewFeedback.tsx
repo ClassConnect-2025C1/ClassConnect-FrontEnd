@@ -7,6 +7,9 @@ import {
   SafeAreaView,
   Dimensions,
   TextInput,
+  Modal,
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -26,12 +29,19 @@ const StudentViewFeedback = () => {
 
   const [feedbacks, setFeedbacks] = useState([]);
   const { token } = useAuth();
-  console.log('route params:', route.params);
+
   const { userId } = route.params;
   const ITEMS_PER_PAGE = 3;
   const [currentPage, setCurrentPage] = useState(1);
-  console.log('este ess User ID:', userId);
-  console.log('holasasdasdasdassa');
+  
+  // Estados para el modal de resumen IA
+  const [showAISummaryModal, setShowAISummaryModal] = useState(false);
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiSummaryError, setAiSummaryError] = useState('');
+
+
+  
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
@@ -120,6 +130,108 @@ const StudentViewFeedback = () => {
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
+
+  // Función para generar resumen con IA
+  const handleGenerateAISummary = async () => {
+    // Verificar si hay feedbacks
+    if (!feedbacks?.data || feedbacks.data.length === 0) {
+      setAiSummaryError('No feedbacks available to generate a summary.');
+      setShowAISummaryModal(true);
+      return;
+    }
+
+    setShowAISummaryModal(true);
+    setAiSummaryLoading(true);
+    setAiSummaryError('');
+    setAiSummary('');
+    
+    try {
+      const response = await fetch(
+        `${API_URL}/api/courses/user/${userId}/ai-feedback-analysis`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Asumiendo que el endpoint retorna un objeto con la propiedad 'summary' o 'analysis'
+        setAiSummary(data.summary || data.analysis || data.message || 'Summary generated successfully');
+      } else {
+        setAiSummaryError('Failed to generate AI summary. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error generating AI summary:', error);
+      setAiSummaryError('Network error. Please check your connection and try again.');
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
+
+  const handleCloseAISummaryModal = () => {
+    setShowAISummaryModal(false);
+    setAiSummary('');
+    setAiSummaryError('');
+  };
+
+  // Renderizar el modal de resumen IA
+  const renderAISummaryModal = () => (
+    <Modal
+      visible={showAISummaryModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={handleCloseAISummaryModal}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>AI Feedback Summary</Text>
+            <TouchableOpacity onPress={handleCloseAISummaryModal}>
+              <MaterialIcons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          {aiSummaryLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#5B6799" />
+              <Text style={styles.loadingText}>Generating your feedback summary...</Text>
+            </View>
+          ) : aiSummaryError ? (
+            <View style={styles.errorContainer}>
+              <MaterialIcons name="info" size={48} color="#ff9800" />
+              <Text style={styles.errorTitle}>No Summary Available</Text>
+              <Text style={styles.errorMessage}>{aiSummaryError}</Text>
+              {feedbacks?.data && feedbacks.data.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.retryButton} 
+                  onPress={handleGenerateAISummary}
+                >
+                  <Text style={styles.retryButtonText}>Try Again</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : aiSummary ? (
+            <ScrollView style={styles.summaryContainer}>
+              <View style={styles.summaryContent}>
+                <Text style={styles.summaryText}>{aiSummary}</Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={handleCloseAISummaryModal}
+              >
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          ) : null}
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -253,7 +365,7 @@ const StudentViewFeedback = () => {
       <View style={{ marginTop: 11, marginBottom: 20, alignItems: 'center' }}>
         <TouchableOpacity
           style={[styles.generateButton, { marginBottom: 15 }]}
-          onPress={() => console.log('Generate AI summary button pressed')}
+          onPress={handleGenerateAISummary}
         >
           <MaterialIcons
             name="star"
@@ -304,6 +416,8 @@ const StudentViewFeedback = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {renderAISummaryModal()}
     </SafeAreaView>
   );
 };
@@ -531,7 +645,6 @@ const styles = StyleSheet.create({
   singleDateFilter: {
     flexDirection: 'column',
     width: 100,
-
     marginTop: -15,
   },
 
@@ -549,6 +662,97 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     fontSize: 14,
     backgroundColor: '#fff',
+  },
+
+  // Estilos del Modal de IA
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ff9800',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#5B6799',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  summaryContainer: {
+    maxHeight: 400,
+  },
+  summaryContent: {
+    marginBottom: 20,
+  },
+  summaryText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+    backgroundColor: '#f8f9ff',
+    padding: 16,
+    borderRadius: 12,
+    textAlign: 'justify',
+  },
+  closeButton: {
+    backgroundColor: '#5B6799',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

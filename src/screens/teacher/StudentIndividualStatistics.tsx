@@ -1,220 +1,331 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
   Dimensions,
-  ActivityIndicator,
-  Image,
-  ScrollView,
+  TouchableOpacity,
   Alert,
+  ActivityIndicator,
+  ScrollView,
+  Platform,
 } from 'react-native';
+import { BarChart, LineChart } from 'react-native-chart-kit';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
-import { BarChart, LineChart } from 'react-native-chart-kit';
 import { useAuth } from '../../navigation/AuthContext';
-import { getUserProfileData } from '../../utils/GetUserProfile';
 import * as Print from 'expo-print';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
-import { captureRef } from 'react-native-view-shot';
-
-const { width } = Dimensions.get('window');
+import { AppState } from 'react-native';
+// import { captureRef } from 'react-native-view-shot'; // No funciona en Expo Go
 
 const StudentIndividualStatistics = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { studentId, courseId } = route.params;
-
-  // Estados
-  const [studentProfile, setStudentProfile] = useState(null);
-  const [statistics, setStatistics] = useState(null);
+  const { course, userId, studentName } = route.params; // Agregamos studentName opcional
+  
+  const [studentStats, setStudentStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [generatingPDF, setGeneratingPDF] = useState(false);
-  const { token } = useAuth();
 
-  // Referencias para PDF
-  const gradeChartRef = useRef();
-  const trendChartRef = useRef();
+  // Date filters
+  const [startDate, setStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+  const [endDate, setEndDate] = useState(new Date());
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
+  const { token } = useAuth();
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  // Refs removidos para compatibilidad con Expo Go
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+    fetchStatistics(true);
 
-        // Obtener perfil del estudiante
-        const profile = await getUserProfileData(token, studentId);
-        setStudentProfile(profile);
+    const interval = setInterval(() => {
+      fetchStatistics(false);
+    }, 30000);
 
-        // Obtener estadísticas del estudiante
-        const response = await fetch(
-          `${API_URL}/api/courses/${courseId}/statistics/course/1/user/${studentId}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) throw new Error('Error al obtener estadísticas');
-
-        const data = await response.json();
-        setStatistics(data.statistics);
-      } catch (error) {
-        console.error('Error:', error);
-        Alert.alert('Error', 'Failed to load student statistics');
-      } finally {
-        setLoading(false);
+    const handleAppStateChange = (nextAppState) => {
+      if (nextAppState === 'active') {
+        fetchStatistics(false);
       }
     };
 
-    fetchData();
-  }, [studentId, courseId, token]);
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      clearInterval(interval);
+      subscription?.remove();
+    };
+  }, []);
+
+  const fetchStatistics = async (showLoading = false) => {
+    try {
+      if (showLoading) setLoading(true);
+
+      const response = await fetch(`${API_URL}/api/courses/statistics/course/${course.id}/user/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch student statistics');
+
+      const data = await response.json();
+      console.log('Response data:', data);
+      console.log('Fetched student statistics:', data);
+      
+      // Los datos vienen como un objeto 'statistics', no como un array
+      const newStats = data.statistics;
+
+      // Solo actualizar si cambió algo
+      if (JSON.stringify(newStats) !== JSON.stringify(studentStats)) {
+        setStudentStats(newStats);
+      }
+    } catch (error) {
+      if (showLoading) {
+        Alert.alert('Error', 'Failed to load student statistics');
+      }
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
+  // Función para filtrar datos por fecha
+  const filterByDate = (dataArray) => {
+    if (!dataArray || !Array.isArray(dataArray)) return [];
+    return dataArray.filter(item => {
+      const date = new Date(item.date);
+      return date >= startDate && date <= endDate;
+    });
+  };
+
+  // Calcular estadísticas del estudiante
+  const getStudentStats = () => {
+    if (!studentStats) return null;
+
+    const filteredDates = filterByDate(studentStats.statistics_for_dates || []);
+    
+    let avgGrade, avgSubmissionRate, totalActiveDays;
+    
+    if (filteredDates.length > 0) {
+      // Usar datos del período seleccionado
+      const validGrades = filteredDates.filter(d => d.average_grade > 0);
+      avgGrade = validGrades.length > 0 ? 
+        validGrades.reduce((sum, d) => sum + d.average_grade, 0) / validGrades.length : 0;
+      avgSubmissionRate = filteredDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) / filteredDates.length;
+      totalActiveDays = filteredDates.length;
+    } else {
+      // Usar datos globales del estudiante
+      avgGrade = studentStats.average_grade || 0;
+      avgSubmissionRate = studentStats.submission_rate || 0;
+      totalActiveDays = studentStats.statistics_for_dates?.length || 0;
+    }
+
+    return {
+      averageGrade: avgGrade.toFixed(1),
+      submissionRate: (avgSubmissionRate * 100).toFixed(1),
+      activeDays: totalActiveDays,
+      totalDates: studentStats.statistics_for_dates?.length || 0,
+    };
+  };
 
   // Generar datos para gráficos
   const getChartData = () => {
-    if (!statistics) return null;
+    if (!studentStats || !studentStats.statistics_for_dates) {
+      return { gradeData: null, submissionData: null, trendData: null };
+    }
 
-    // Datos generales
-    const gradeData = {
-      labels: ['Average'],
-      datasets: [{
-        data: [statistics.average_grade || 0, 0] // Agregar 0 para escala
-      }]
-    };
+    const filteredDates = filterByDate(studentStats.statistics_for_dates);
+    
+    if (filteredDates.length === 0) {
+      return { gradeData: null, submissionData: null, trendData: null };
+    }
 
-    const submissionData = {
-      labels: ['Completion'],
-      datasets: [{
-        data: [(statistics.submission_rate * 100) || 0, 0] // Convertir a porcentaje
-      }]
-    };
+    const sortedDates = filteredDates.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Datos de tendencia si existen
-    let trendData = null;
-    if (statistics.statistics_for_dates && statistics.statistics_for_dates.length > 1) {
-      // Filtrar fechas válidas
-      const validDates = statistics.statistics_for_dates.filter(item => {
+    // Datos para gráfico de línea de evolución de notas
+    const trendData = {
+      labels: sortedDates.map(item => {
         const date = new Date(item.date);
-        return date.getFullYear() > 1900; // Filtrar fechas "0001-01-01"
-      });
+        return `${date.getDate()}/${date.getMonth() + 1}`;
+      }),
+      datasets: [{
+        data: sortedDates.map(item => item.average_grade || 0),
+        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+        strokeWidth: 2
+      }]
+    };
 
-      if (validDates.length > 0) {
-        trendData = {
-          labels: validDates.map(item => {
-            const date = new Date(item.date);
-            return `${date.getMonth() + 1}/${date.getDate()}`;
-          }),
+    // Datos para gráfico de barras de tasa de envío
+    const submissionData = {
+      labels: sortedDates.map(item => {
+        const date = new Date(item.date);
+        return `${date.getDate()}/${date.getMonth() + 1}`;
+      }),
+      datasets: [{
+        data: sortedDates.map(item => (item.submission_rate || 0) * 100)
+      }]
+    };
+
+    // Datos comparativos por semana (si hay suficientes datos)
+    let weeklyData = null;
+    if (sortedDates.length > 7) {
+      const weeklyStats = [];
+      for (let i = 0; i < sortedDates.length; i += 7) {
+        const weekDates = sortedDates.slice(i, i + 7);
+        const weekAvgGrade = weekDates.reduce((sum, d) => sum + (d.average_grade || 0), 0) / weekDates.length;
+        const weekAvgSubmission = weekDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) / weekDates.length;
+        
+        weeklyStats.push({
+          week: `W${Math.floor(i/7) + 1}`,
+          grade: weekAvgGrade,
+          submission: weekAvgSubmission * 100
+        });
+      }
+
+      if (weeklyStats.length > 1) {
+        weeklyData = {
+          labels: weeklyStats.map(w => w.week),
           datasets: [{
-            data: validDates.map(item => item.average_grade || 0),
-            color: (opacity = 1) => `rgba(34, 202, 236, ${opacity})`,
-            strokeWidth: 2
+            data: weeklyStats.map(w => w.grade)
           }]
         };
       }
     }
 
-    return { gradeData, submissionData, trendData };
+    return { gradeData: weeklyData, submissionData, trendData };
   };
 
-  // Exportar PDF
+  // Date picker handlers
+  const onStartDateChange = (event, selectedDate) => {
+    setShowStartDatePicker(Platform.OS === 'ios');
+    if (selectedDate && selectedDate <= endDate) {
+      setStartDate(selectedDate);
+    }
+  };
+
+  const onEndDateChange = (event, selectedDate) => {
+    setShowEndDatePicker(Platform.OS === 'ios');
+    if (selectedDate && selectedDate >= startDate) {
+      setEndDate(selectedDate);
+    }
+  };
+
+  // PDF Export
   const handleExportPDF = async () => {
     setGeneratingPDF(true);
-    
+
     try {
-      const chartData = getChartData();
-      
-      // Capturar gráficos
-      let gradeChartImage = '';
-      let trendChartImage = '';
-      
-      if (gradeChartRef.current) {
-        try {
-          gradeChartImage = await captureRef(gradeChartRef.current, {
-            format: 'png',
-            quality: 0.8,
-            result: 'base64'
-          });
-        } catch (error) {
-          console.log('Error capturing grade chart:', error);
-        }
-      }
-      
-      if (trendChartRef.current && chartData?.trendData) {
-        try {
-          trendChartImage = await captureRef(trendChartRef.current, {
-            format: 'png',
-            quality: 0.8,
-            result: 'base64'
-          });
-        } catch (error) {
-          console.log('Error capturing trend chart:', error);
-        }
-      }
+      const stats = getStudentStats();
+      const studentDisplayName = studentName || `Student ${userId}`;
+      const { gradeData, submissionData, trendData } = getChartData();
+
+      // En Expo Go no podemos capturar gráficos, así que generamos datos en texto
+
+      // Preparar datos para mostrar en el PDF
+      const filteredDates = filterByDate(studentStats?.statistics_for_dates || []);
+      const sortedDates = filteredDates.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       const htmlContent = `
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-              .header { text-align: center; border-bottom: 2px solid #22CAEC; padding: 20px; background: #f0f8ff; margin-bottom: 20px; }
-              .student-info { background: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #22CAEC; }
-              .stats { background: #e8f5e8; padding: 15px; margin: 15px 0; border-radius: 8px; }
-              .metric { margin: 10px 0; padding: 8px; background: white; border-radius: 5px; }
-              .chart-section { margin: 20px 0; page-break-inside: avoid; }
-              .chart-title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
-              .chart-image { width: 100%; max-width: 500px; height: auto; border: 1px solid #ddd; margin: 10px 0; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1>📊 Student Performance Report</h1>
-              <p>Generated: ${new Date().toLocaleDateString()}</p>
-            </div>
-            
-            <div class="student-info">
-              <h2>👤 Student Information</h2>
-              <div class="metric"><strong>Name:</strong> ${studentProfile?.name || ''} ${studentProfile?.lastName || ''}</div>
-              <div class="metric"><strong>Email:</strong> ${studentProfile?.email || ''}</div>
-            </div>
-            
-            <div class="stats">
-              <h2>📈 Performance Summary</h2>
-              <div class="metric"><strong>Average Grade:</strong> ${statistics?.average_grade?.toFixed(1) || 'N/A'}</div>
-              <div class="metric"><strong>Completion Rate:</strong> ${((statistics?.submission_rate || 0) * 100).toFixed(1)}%</div>
-            </div>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; }
+            .header { text-align: center; border-bottom: 3px solid #007AFF; padding: 20px; margin-bottom: 30px; }
+            .stats { background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 10px; }
+            .metric { margin: 15px 0; padding: 10px; background: white; border-radius: 5px; display: flex; justify-content: space-between; }
+            .data-section { margin: 30px 0; page-break-inside: avoid; }
+            .data-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #007AFF; }
+            .data-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            .data-table th, .data-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+            .data-table th { background-color: #f8f9fa; font-weight: bold; }
+            .data-table tr:nth-child(even) { background-color: #f9f9f9; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>📊 Individual Student Report</h1>
+            <h2>${studentDisplayName}</h2>
+            <h3>Course: ${course.name}</h3>
+            <p>Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+          </div>
+          
+          <div class="stats">
+            <h2>📈 Performance Summary</h2>
+            <div class="metric"><span>Average Grade:</span><span>${stats?.averageGrade || 'N/A'}</span></div>
+            <div class="metric"><span>Submission Rate:</span><span>${stats?.submissionRate || 'N/A'}%</span></div>
+            <div class="metric"><span>Active Days:</span><span>${stats?.activeDays || 0} / ${stats?.totalDates || 0}</span></div>
+            <div class="metric"><span>Period:</span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
+          </div>
 
-            ${gradeChartImage ? `
-              <div class="chart-section">
-                <h2 class="chart-title">📊 Grade Overview</h2>
-                <img src="data:image/png;base64,${gradeChartImage}" class="chart-image" alt="Grade Chart" />
-              </div>
-            ` : ''}
+          ${sortedDates.length > 0 ? `
+            <div class="data-section">
+              <h2 class="data-title">📅 Daily Performance Data</h2>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Average Grade</th>
+                    <th>Submission Rate (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${sortedDates.map(item => `
+                    <tr>
+                      <td>${new Date(item.date).toLocaleDateString()}</td>
+                      <td>${(item.average_grade || 0).toFixed(1)}</td>
+                      <td>${((item.submission_rate || 0) * 100).toFixed(1)}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
 
-            ${trendChartImage ? `
-              <div class="chart-section">
-                <h2 class="chart-title">📈 Performance Trends</h2>
-                <img src="data:image/png;base64,${trendChartImage}" class="chart-image" alt="Trend Chart" />
+          ${sortedDates.length > 1 ? `
+            <div class="data-section">
+              <h2 class="data-title">📈 Performance Analysis</h2>
+              <div class="metric">
+                <span>Best Grade:</span>
+                <span>${Math.max(...sortedDates.map(d => d.average_grade || 0)).toFixed(1)}</span>
               </div>
-            ` : ''}
-          </body>
-        </html>
-      `;
+              <div class="metric">
+                <span>Lowest Grade:</span>
+                <span>${Math.min(...sortedDates.filter(d => d.average_grade > 0).map(d => d.average_grade || 0)).toFixed(1)}</span>
+              </div>
+              <div class="metric">
+                <span>Best Submission Rate:</span>
+                <span>${(Math.max(...sortedDates.map(d => d.submission_rate || 0)) * 100).toFixed(1)}%</span>
+              </div>
+              <div class="metric">
+                <span>Grade Trend:</span>
+                <span>${sortedDates.length > 1 && sortedDates[sortedDates.length - 1].average_grade > sortedDates[0].average_grade ? '📈 Improving' : sortedDates.length > 1 && sortedDates[sortedDates.length - 1].average_grade < sortedDates[0].average_grade ? '📉 Declining' : '➡️ Stable'}</span>
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="data-section">
+            <h2 class="data-title">ℹ️ Report Information</h2>
+            <p>This report shows the performance data for the selected student within the specified date range. The data includes daily grades and submission rates, providing insights into the student's academic progress.</p>
+            <p><strong>Note:</strong> Charts are available in the mobile application. This PDF contains the raw data and summary statistics.</p>
+          </div>
+        </body>
+      </html>`;
 
       const { base64 } = await Print.printToFileAsync({
         html: htmlContent,
-        base64: true
+        base64: true,
       });
 
-      const fileName = `student_${studentProfile?.name || 'report'}_${Date.now()}.pdf`;
+      const fileName = `student_${studentDisplayName.replace(/[^a-zA-Z0-9]/g, '_')}_${course.name.replace(/[^a-zA-Z0-9]/g, '_')}_${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}.pdf`;
+
       await downloadAndShareFile({ name: fileName, content: base64 });
-      
       Alert.alert('Success', 'PDF exported successfully!');
-      
+
     } catch (error) {
       console.error('PDF Export Error:', error);
       Alert.alert('Error', 'Failed to generate PDF');
@@ -225,324 +336,368 @@ const StudentIndividualStatistics = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#22CAEC" style={{ marginTop: 100 }} />
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Loading student statistics...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
-  if (!statistics || !studentProfile) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>No statistics available for this student</Text>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.closeButtonText}>Close</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
-
-  const chartData = getChartData();
+  const stats = getStudentStats();
+  const { gradeData, submissionData, trendData } = getChartData();
   const screenWidth = Dimensions.get('window').width;
+  const studentDisplayName = studentName || `Student ${userId}`;
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={{ flex: 1 }}>
-        {/* Header */}
-        <Text style={styles.header}>Student Statistics</Text>
-
-        {/* Student Info Card */}
-        <View style={styles.studentCard}>
-          <Image
-            source={
-              studentProfile.photo
-                ? { uri: studentProfile.photo }
-                : { uri: 'https://www.w3schools.com/howto/img_avatar.png' }
-            }
-            style={styles.studentImage}
-          />
-          <View style={styles.studentInfo}>
-            <Text style={styles.studentName}>
-              {studentProfile.name} {studentProfile.lastName}
-            </Text>
-            <Text style={styles.studentEmail}>{studentProfile.email}</Text>
-          </View>
-        </View>
-
-        {/* Statistics Summary */}
-        <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>📈 Performance Overview</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{statistics.average_grade?.toFixed(1) || '0'}</Text>
-              <Text style={styles.statLabel}>Average Grade</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>
-                {((statistics.submission_rate || 0) * 100).toFixed(1)}%
-              </Text>
-              <Text style={styles.statLabel}>Completion Rate</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Charts */}
-        {chartData && (
-          <View style={styles.chartsContainer}>
-            {/* Grade Chart */}
-            <View style={styles.chartSection}>
-              <Text style={styles.chartTitle}>📊 Grade Overview</Text>
-              <View ref={gradeChartRef} style={{ backgroundColor: 'white', alignItems: 'center' }}>
-                <BarChart
-                  data={chartData.gradeData}
-                  width={screenWidth - 40}
-                  height={200}
-                  chartConfig={chartConfig}
-                  style={styles.chart}
-                />
-              </View>
-            </View>
-
-            {/* Trend Chart */}
-            {chartData.trendData && (
-              <View style={styles.chartSection}>
-                <Text style={styles.chartTitle}>📈 Performance Trends</Text>
-                <View ref={trendChartRef} style={{ backgroundColor: 'white', alignItems: 'center' }}>
-                  <LineChart
-                    data={chartData.trendData}
-                    width={screenWidth - 40}
-                    height={200}
-                    chartConfig={chartConfig}
-                    style={styles.chart}
-                    bezier
-                  />
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.exportButton, generatingPDF && styles.disabledButton]} 
-            onPress={handleExportPDF}
-            disabled={generatingPDF}
-          >
-            {generatingPDF ? (
-              <View style={styles.loadingButton}>
-                <ActivityIndicator size="small" color="#fff" />
-                <Text style={[styles.buttonText, { marginLeft: 8 }]}>Generating...</Text>
-              </View>
-            ) : (
-              <Text style={styles.buttonText}>📄 Export PDF</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      {/* Close Button */}
-      <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.closeButtonText}>Close</Text>
+  if (!stats) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.noDataText}>No statistics available for this student</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+          <Text style={styles.buttonText}>Back</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>📊 Student Performance</Text>
+          <Text style={styles.subtitle}>{studentDisplayName}</Text>
+          <Text style={styles.courseText}>{course.name}</Text>
+        </View>
+        <TouchableOpacity style={styles.refreshButton} onPress={() => fetchStatistics(true)}>
+          <Text style={styles.refreshText}>🔄</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Student Stats */}
+      <View style={styles.statsContainer}>
+        <Text style={styles.sectionTitle}>📈 Performance Overview</Text>
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.averageGrade}</Text>
+            <Text style={styles.statLabel}>Avg Grade</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.submissionRate}%</Text>
+            <Text style={styles.statLabel}>Completion Rate</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.activeDays}</Text>
+            <Text style={styles.statLabel}>Active Days</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Date Filters */}
+      <View style={styles.filtersContainer}>
+        <Text style={styles.sectionTitle}>🔍 Date Range</Text>
+        <View style={styles.dateRow}>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
+            <Text style={styles.dateText}>From: {startDate.toLocaleDateString()}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndDatePicker(true)}>
+            <Text style={styles.dateText}>To: {endDate.toLocaleDateString()}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Charts */}
+      {(trendData || submissionData || gradeData) && (
+        <View style={styles.chartsContainer}>
+          {trendData && (
+            <View style={styles.chartSection}>
+              <Text style={styles.chartTitle}>📈 Grade Evolution</Text>
+              <LineChart
+                data={trendData}
+                width={screenWidth - 40}
+                height={200}
+                chartConfig={chartConfig}
+                style={styles.chart}
+                bezier
+              />
+            </View>
+          )}
+
+          {submissionData && (
+            <View style={styles.chartSection}>
+              <Text style={styles.chartTitle}>📊 Task Completion Rate (%)</Text>
+              <BarChart
+                data={submissionData}
+                width={screenWidth - 40}
+                height={200}
+                chartConfig={chartConfig}
+                style={styles.chart}
+              />
+            </View>
+          )}
+
+          {gradeData && (
+            <View style={styles.chartSection}>
+              <Text style={styles.chartTitle}>📊 Weekly Performance</Text>
+              <BarChart
+                data={gradeData}
+                width={screenWidth - 40}
+                height={200}
+                chartConfig={chartConfig}
+                style={styles.chart}
+              />
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Action Buttons */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.exportButton, generatingPDF && { backgroundColor: '#6c757d' }]}
+          onPress={handleExportPDF}
+          disabled={generatingPDF}
+        >
+          {generatingPDF ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>📄 Export PDF</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+          <Text style={styles.buttonText}>Back</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Date Pickers */}
+      {showStartDatePicker && (
+        <DateTimePicker
+          value={startDate}
+          mode="date"
+          display="default"
+          onChange={onStartDateChange}
+          maximumDate={endDate}
+        />
+      )}
+
+      {showEndDatePicker && (
+        <DateTimePicker
+          value={endDate}
+          mode="date"
+          display="default"
+          onChange={onEndDateChange}
+          minimumDate={startDate}
+          maximumDate={new Date()}
+        />
+      )}
+    </ScrollView>
   );
 };
 
-// Configuración de gráficos
 const chartConfig = {
-  backgroundColor: '#ffffff',
   backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#f8f9fa',
-  decimalPlaces: 1,
-  color: (opacity = 1) => `rgba(34, 202, 236, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  style: {
-    borderRadius: 16,
+  backgroundGradientTo: '#ffffff',
+  color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(51, 51, 51, ${opacity})`,
+  strokeWidth: 2,
+  barPercentage: 0.6,
+  fromZero: true,
+  segments: 5,
+  formatYLabel: (yValue) => {
+    if (yValue >= 1000) {
+      return Math.round(yValue).toString();
+    }
+    return parseFloat(yValue).toFixed(1);
   },
+  decimalPlaces: 1,
   propsForDots: {
-    r: '6',
+    r: '4',
     strokeWidth: '2',
-    stroke: '#22CAEC',
+    stroke: '#3b82f6'
   },
   propsForBackgroundLines: {
     strokeDasharray: '',
     stroke: '#e3e3e3',
-    strokeWidth: 1,
+    strokeWidth: 1
   },
+  yAxisMinimum: 0,
+  fillShadowGradient: 'transparent',
+  fillShadowGradientOpacity: 0,
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f4f7',
-    paddingHorizontal: 16,
-    paddingTop: 40,
+    backgroundColor: '#f5f5f5',
   },
-  header: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#2c3e50',
-  },
-  studentCard: {
-    backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    flexDirection: 'row',
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  studentImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
+  header: {
+    backgroundColor: '#fff',
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  studentInfo: {
+  headerContent: {
     flex: 1,
   },
-  studentName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 4,
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  studentEmail: {
+  subtitle: {
+    fontSize: 18,
+    color: '#007AFF',
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  courseText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  refreshButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  refreshText: {
+    color: 'white',
     fontSize: 16,
-    color: '#7f8c8d',
   },
   statsContainer: {
     backgroundColor: '#fff',
-    margin: 0,
-    marginBottom: 16,
+    margin: 15,
     padding: 20,
-    borderRadius: 12,
-    elevation: 2,
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 15,
-    textAlign: 'center',
   },
   statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
   statCard: {
     backgroundColor: '#f8f9fa',
-    padding: 20,
+    padding: 15,
     borderRadius: 8,
     alignItems: 'center',
     flex: 1,
-    marginHorizontal: 8,
+    marginHorizontal: 5,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#22CAEC',
+    color: '#007AFF',
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
     marginTop: 5,
     textAlign: 'center',
   },
-  chartsContainer: {
-    marginBottom: 80,
-  },
-  chartSection: {
+  filtersContainer: {
     backgroundColor: '#fff',
-    marginBottom: 16,
-    padding: 20,
-    borderRadius: 12,
-    elevation: 2,
+    margin: 15,
+    padding: 15,
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 3,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dateButton: {
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    flex: 0.48,
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#333',
+    textAlign: 'center',
+  },
+  chartsContainer: {
+    paddingHorizontal: 15,
+  },
+  chartSection: {
+    backgroundColor: '#fff',
+    marginBottom: 15,
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   chartTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 15,
-    textAlign: 'center',
+    marginBottom: 10,
   },
   chart: {
     borderRadius: 8,
   },
   buttonContainer: {
-    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    margin: 15,
   },
   exportButton: {
-    backgroundColor: '#22CAEC',
+    backgroundColor: '#28a745',
     padding: 15,
     borderRadius: 8,
+    flex: 0.48,
     alignItems: 'center',
-    marginHorizontal: 20,
   },
-  disabledButton: {
+  button: {
     backgroundColor: '#6c757d',
+    padding: 15,
+    borderRadius: 8,
+    flex: 0.48,
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  loadingButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  bottomButtonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    width: width - 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeButton: {
-    backgroundColor: '#E0E0E0',
-    borderRadius: 30,
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  closeButtonText: {
-    color: '#000000',
+    color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 14,
   },
   loadingText: {
-    textAlign: 'center',
-    marginTop: 20,
+    marginTop: 10,
     fontSize: 16,
     color: '#666',
   },
-  errorText: {
+  noDataText: {
+    fontSize: 16,
+    color: '#666',
     textAlign: 'center',
-    marginTop: 100,
-    fontSize: 18,
-    color: '#e74c3c',
+    marginBottom: 20,
   },
 });
 
