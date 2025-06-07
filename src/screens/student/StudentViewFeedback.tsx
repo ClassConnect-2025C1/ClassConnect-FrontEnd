@@ -40,7 +40,6 @@ const StudentViewFeedback = () => {
   const [aiSummary, setAiSummary] = useState('');
   const [aiSummaryError, setAiSummaryError] = useState('');
 
-
   
   useEffect(() => {
     const fetchFeedbacks = async () => {
@@ -145,31 +144,62 @@ const StudentViewFeedback = () => {
     setAiSummaryError('');
     setAiSummary('');
     
-    try {
-      const response = await fetch(
-        `${API_URL}/api/courses/user/${userId}/ai-feedback-analysis`,
-        {
+    // Probar diferentes endpoints hasta encontrar el correcto
+    const endpointsToTry = [
+      `${API_URL}/api/courses/user/${userId}/ai-feedback-analysis`,
+      `${API_URL}/api/courses/user/${userId}/feedback-analysis`, 
+      `${API_URL}/api/courses/user/${userId}/feedbacks/ai-analysis`,
+      `${API_URL}/api/ai/feedback-analysis/${userId}`,
+    ];
+    
+    let lastError = '';
+    
+    for (const endpoint of endpointsToTry) {
+      console.log(`🔍 Trying endpoint: ${endpoint}`);
+      
+      try {
+        const response = await fetch(endpoint, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-        },
-      );
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        // Asumiendo que el endpoint retorna un objeto con la propiedad 'summary' o 'analysis'
-        setAiSummary(data.summary || data.analysis || data.message || 'Summary generated successfully');
-      } else {
-        setAiSummaryError('Failed to generate AI summary. Please try again.');
+        console.log(`📊 Response status: ${response.status}`);
+        
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log('✅ Success! Data received:', responseData);
+          
+          // Extraer SOLO el contenido de responseData.data
+          if (responseData && responseData.data) {
+            // Procesar saltos de línea para que se muestren correctamente
+            const cleanText = responseData.data.replace(/\\n/g, '\n').trim();
+            setAiSummary(cleanText);
+          } else {
+            // Si no hay data, intentar otras propiedades
+            setAiSummary(responseData.summary || responseData.analysis || responseData.message || 'No content available');
+          }
+          
+          setAiSummaryLoading(false);
+          return; // Salir del bucle si encuentra un endpoint que funciona
+        } else if (response.status !== 404) {
+          // Si no es 404, podría ser el endpoint correcto pero con otro error
+          const errorText = await response.text();
+          console.log(`⚠️ Non-404 error on ${endpoint}:`, errorText);
+          lastError = `Error ${response.status}: ${errorText}`;
+          break; // Salir del bucle si no es 404
+        }
+      } catch (error) {
+        console.error(`❌ Network error on ${endpoint}:`, error);
+        lastError = `Network error: ${error.message}`;
       }
-    } catch (error) {
-      console.error('Error generating AI summary:', error);
-      setAiSummaryError('Network error. Please check your connection and try again.');
-    } finally {
-      setAiSummaryLoading(false);
     }
+    
+    // Si llegamos aquí, ningún endpoint funcionó
+    setAiSummaryError(lastError || 'No working endpoint found. Please check with your backend team.');
+    setAiSummaryLoading(false);
   };
 
   const handleCloseAISummaryModal = () => {
