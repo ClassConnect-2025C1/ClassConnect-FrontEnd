@@ -5,7 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Modal,
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 import StatusOverlay from '@/components/StatusOverlay';
 import { useNavigation, useRoute} from '@react-navigation/native';
@@ -20,6 +24,11 @@ interface RouteParams {
   currentGrade?: number;
 }
 
+interface AIGradeResponse {
+  feedback: string;
+  grade: number;
+}
+
 const TeacherQualifyAssignment = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [saveChangueConfirmed, setSaveChangueConfirmed] = useState(false);
@@ -27,6 +36,12 @@ const TeacherQualifyAssignment = () => {
   const [grade, setGrade] = useState('');
   const [commentError, setCommentError] = useState('');
   const [gradeError, setGradeError] = useState('');
+  
+  // Estados para el modal de IA
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState<AIGradeResponse | null>(null);
+  const [aiError, setAiError] = useState('');
   
   const navigation = useNavigation();
   const route = useRoute();
@@ -65,6 +80,54 @@ const TeacherQualifyAssignment = () => {
     }
 
     return isValid;
+  };
+
+  const handleAIGrade = async () => {
+    setShowAIModal(true);
+    setAiLoading(true);
+    setAiError('');
+    setAiResponse(null);
+    
+    try {
+      // URL del endpoint que mostraste en la imagen
+      const url = `${API_URL}/api/courses/${course_id}/assignment/${assignment_id}/submission/${submission_id}/ai-grade`;
+      
+      const response = await fetch(url, {
+        method: 'GET', // Asumiendo que es GET según la imagen
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAiResponse(data);
+      } else {
+        setAiError('Failed to generate AI grade. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error getting AI grade:', error);
+      setAiError('Network error. Please check your connection.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleUseAIGrade = () => {
+    if (aiResponse) {
+      setComment(aiResponse.feedback);
+      setGrade(aiResponse.grade.toString());
+      setCommentError('');
+      setGradeError('');
+    }
+    setShowAIModal(false);
+  };
+
+  const handleCloseAIModal = () => {
+    setShowAIModal(false);
+    setAiResponse(null);
+    setAiError('');
   };
 
   const handleSubmit = async () => {
@@ -109,6 +172,70 @@ const TeacherQualifyAssignment = () => {
     }
   };
 
+  const renderAIModal = () => (
+    <Modal
+      visible={showAIModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={handleCloseAIModal}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>AI Generated Grade</Text>
+            <TouchableOpacity onPress={handleCloseAIModal}>
+              <MaterialIcons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          {aiLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#5B6799" />
+              <Text style={styles.loadingText}>Generating grade with AI...</Text>
+            </View>
+          ) : aiError ? (
+            <View style={styles.errorContainer}>
+              <MaterialIcons name="error" size={48} color="#ff4444" />
+              <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
+              <Text style={styles.errorMessage}>{aiError}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={handleAIGrade}>
+                <Text style={styles.retryButtonText}>Try Again</Text>
+              </TouchableOpacity>
+            </View>
+          ) : aiResponse ? (
+            <ScrollView style={styles.responseContainer}>
+              <View style={styles.responseSection}>
+                <Text style={styles.responseLabel}>Suggested Comment:</Text>
+                <Text style={styles.responseText}>{aiResponse.feedback}</Text>
+              </View>
+              
+              <View style={styles.responseSection}>
+                <Text style={styles.responseLabel}>Suggested Grade:</Text>
+                <Text style={styles.responseGrade}>{aiResponse.grade}</Text>
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity 
+                  style={styles.useGradeButton}
+                  onPress={handleUseAIGrade}
+                >
+                  <Text style={styles.useGradeButtonText}>Use This Grade</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.cancelModalButton}
+                  onPress={handleCloseAIModal}
+                >
+                  <Text style={styles.cancelModalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          ) : null}
+        </View>
+      </View>
+    </Modal>
+  );
+
   return isLoading ? (
     <StatusOverlay
       loading={!saveChangueConfirmed}
@@ -120,7 +247,16 @@ const TeacherQualifyAssignment = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Submission From Student</Text>
       
-
+      {/* Botón de Grade with AI */}
+      <TouchableOpacity style={styles.aiButton} onPress={handleAIGrade}>
+        <MaterialIcons 
+          name="star" 
+          size={20} 
+          color="#5B6799" 
+          style={{ marginRight: 6 }} 
+        />
+        <Text style={styles.generateButtonText}>Grade with AI</Text>
+      </TouchableOpacity>
 
       <Text style={styles.label}>Comment</Text>
       <TextInput
@@ -171,6 +307,8 @@ const TeacherQualifyAssignment = () => {
           <Text style={styles.buttonText}>Close</Text>
         </TouchableOpacity>
       </View>
+
+      {renderAIModal()}
     </View>
   );
 };
@@ -188,6 +326,23 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 20,
   },
+  aiButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8f9ff',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#5B6799',
+    marginBottom: 20,
+  },
+  generateButtonText: {
+    color: '#5B6799',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   label: {
     fontSize: 14,
     marginTop: 10,
@@ -200,41 +355,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 14,
     marginBottom: 10,
-  },
-  addFileButton: {
-    backgroundColor: '#eee',
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  filesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 10,
-  },
-  fileItem: {
-    backgroundColor: '#ddd',
-    padding: 8,
-    margin: 5,
-    borderRadius: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  fileName: {
-    fontSize: 12,
-    color: '#333',
-    marginRight: 5,
-  },
-  removeButton: {
-    backgroundColor: '#ff4d4d',
-    borderRadius: 50,
-    padding: 5,
-  },
-  removeButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -269,11 +389,128 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 8,
   },
-  disabledButton: {
-    opacity: 0.6,
+  
+  // Estilos del Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
-
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ff4444',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#5B6799',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  responseContainer: {
+    maxHeight: 400,
+  },
+  responseSection: {
+    marginBottom: 20,
+  },
+  responseLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  responseText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    backgroundColor: '#f8f9ff',
+    padding: 12,
+    borderRadius: 8,
+  },
+  responseGrade: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#5B6799',
+    textAlign: 'center',
+    backgroundColor: '#f8f9ff',
+    padding: 16,
+    borderRadius: 8,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  useGradeButton: {
+    backgroundColor: '#5B6799',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    flex: 0.48,
+    alignItems: 'center',
+  },
+  useGradeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelModalButton: {
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    flex: 0.48,
+    alignItems: 'center',
+  },
+  cancelModalButtonText: {
+    color: '#666',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });
 
 export default TeacherQualifyAssignment;

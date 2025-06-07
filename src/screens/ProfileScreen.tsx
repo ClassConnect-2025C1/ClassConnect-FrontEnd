@@ -144,6 +144,7 @@ const ProfileScreen = () => {
 
       if (response.ok) {
         const settings = await response.json();
+        console.log('Notification settings fetched:', settings);
         // CORREGIDO: ahora usa los nombres correctos del backend
         setCourseApprove(settings.course_approve || 'none');
         setFeedback(settings.feedback || 'none'); // Sin underscore
