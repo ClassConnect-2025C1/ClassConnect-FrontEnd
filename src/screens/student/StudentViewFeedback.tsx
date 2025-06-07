@@ -29,7 +29,7 @@ const StudentViewFeedback = () => {
 
   const [feedbacks, setFeedbacks] = useState([]);
   const { token } = useAuth();
-  console.log('route params:', route.params);
+
   const { userId } = route.params;
   const ITEMS_PER_PAGE = 3;
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,8 +40,6 @@ const StudentViewFeedback = () => {
   const [aiSummary, setAiSummary] = useState('');
   const [aiSummaryError, setAiSummaryError] = useState('');
 
-  console.log('este ess User ID:', userId);
-  console.log('holasasdasdasdassa');
   
   useEffect(() => {
     const fetchFeedbacks = async () => {
