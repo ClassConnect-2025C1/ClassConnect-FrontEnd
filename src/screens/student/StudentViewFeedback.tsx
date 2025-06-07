@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
-  TextInput,
   Modal,
   ActivityIndicator,
   ScrollView,
@@ -23,52 +22,76 @@ const { width } = Dimensions.get('window');
 const StudentViewFeedback = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const { token } = useAuth();
+  const { userId } = route.params;
+
+  // ===============================================
+  // ESTADOS PRINCIPALES
+  // ===============================================
+  const [feedbacks, setFeedbacks] = useState([]);
   const [selectedRating, setSelectedRating] = useState('Any');
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
-
-  const [feedbacks, setFeedbacks] = useState([]);
-  const { token } = useAuth();
-
-  const { userId } = route.params;
-  const ITEMS_PER_PAGE = 3;
   const [currentPage, setCurrentPage] = useState(1);
-  
-  // Estados para el modal de resumen IA
+
+  // Estados del modal de IA
   const [showAISummaryModal, setShowAISummaryModal] = useState(false);
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [aiSummary, setAiSummary] = useState('');
   const [aiSummaryError, setAiSummaryError] = useState('');
 
-  
+  // ===============================================
+  // CONSTANTES
+  // ===============================================
+  const ITEMS_PER_PAGE = 2;
+
+  // ===============================================
+  // EFECTOS
+  // ===============================================
   useEffect(() => {
-    const fetchFeedbacks = async () => {
-      try {
-        const response = await fetch(
-          `${API_URL}/api/courses/user/${userId}/feedbacks`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch feedbacks');
-        }
-        const data = await response.json();
-        setFeedbacks(data);
-        setCurrentPage(1);
-      } catch (error) {
-        console.error(error);
-        alert('Failed to load feedbacks.');
-      }
-    };
-
     fetchFeedbacks();
   }, [userId, token]);
+
+  // ===============================================
+  // FUNCIONES DE API
+  // ===============================================
+  const fetchFeedbacks = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/courses/user/${userId}/feedbacks`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch feedbacks');
+      }
+      
+      const data = await response.json();
+      setFeedbacks(data);
+      setCurrentPage(1);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to load feedbacks.');
+    }
+  };
+
+  // ===============================================
+  // FUNCIONES DE UTILIDAD
+  // ===============================================
+  const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const month = `${d.getMonth() + 1}`.padStart(2, '0');
+    const day = `${d.getDate()}`.padStart(2, '0');
+    const year = d.getFullYear();
+    return `${year}-${month}-${day}`;
+  };
 
   const showDatePicker = (currentDate, onChangeDate) => {
     DateTimePickerAndroid.open({
@@ -84,44 +107,43 @@ const StudentViewFeedback = () => {
     });
   };
 
-  // Función para formatear fechas a YYYY-MM-DD
-  const formatDate = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    const month = `${d.getMonth() + 1}`.padStart(2, '0');
-    const day = `${d.getDate()}`.padStart(2, '0');
-    const year = d.getFullYear();
-    return `${year}-${month}-${day}`;
+  // ===============================================
+  // FUNCIONES DE FILTRADO Y PAGINACIÓN
+  // ===============================================
+  const getFilteredFeedbacks = () => {
+    return (feedbacks?.data || []).filter((f) => {
+      if (selectedRating !== 'Any' && f.rating !== parseInt(selectedRating)) {
+        return false;
+      }
+
+      const createdAt = new Date(f.created_at);
+
+      if (fromDate) {
+        const from = new Date(fromDate);
+        if (isNaN(from.getTime())) return false;
+        if (createdAt < from) return false;
+      }
+
+      if (toDate) {
+        const to = new Date(toDate);
+        if (isNaN(to.getTime())) return false;
+        if (createdAt > to) return false;
+      }
+      
+      return true;
+    });
   };
 
-  const filteredFeedbacks = (feedbacks?.data || []).filter((f) => {
-    if (selectedRating !== 'Any' && f.rating !== parseInt(selectedRating)) {
-      return false;
-    }
-
-    const createdAt = new Date(f.created_at);
-
-    if (fromDate) {
-      const from = new Date(fromDate);
-      if (isNaN(from.getTime())) return false;
-      if (createdAt < from) return false;
-    }
-
-    if (toDate) {
-      const to = new Date(toDate);
-      if (isNaN(to.getTime())) return false;
-      if (createdAt > to) return false;
-    }
-    return true;
-  });
-
+  const filteredFeedbacks = getFilteredFeedbacks();
   const totalPages = Math.ceil(filteredFeedbacks.length / ITEMS_PER_PAGE);
-
   const paginatedFeedbacks = filteredFeedbacks.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE,
   );
 
+  // ===============================================
+  // FUNCIONES DE PAGINACIÓN
+  // ===============================================
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
@@ -130,9 +152,10 @@ const StudentViewFeedback = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  // Función para generar resumen con IA
+  // ===============================================
+  // FUNCIONES DE IA
+  // ===============================================
   const handleGenerateAISummary = async () => {
-    // Verificar si hay feedbacks
     if (!feedbacks?.data || feedbacks.data.length === 0) {
       setAiSummaryError('No feedbacks available to generate a summary.');
       setShowAISummaryModal(true);
@@ -143,20 +166,17 @@ const StudentViewFeedback = () => {
     setAiSummaryLoading(true);
     setAiSummaryError('');
     setAiSummary('');
-    
-    // Probar diferentes endpoints hasta encontrar el correcto
+
     const endpointsToTry = [
       `${API_URL}/api/courses/user/${userId}/ai-feedback-analysis`,
-      `${API_URL}/api/courses/user/${userId}/feedback-analysis`, 
+      `${API_URL}/api/courses/user/${userId}/feedback-analysis`,
       `${API_URL}/api/courses/user/${userId}/feedbacks/ai-analysis`,
       `${API_URL}/api/ai/feedback-analysis/${userId}`,
     ];
-    
+
     let lastError = '';
-    
+
     for (const endpoint of endpointsToTry) {
-      console.log(`🔍 Trying endpoint: ${endpoint}`);
-      
       try {
         const response = await fetch(endpoint, {
           method: 'GET',
@@ -166,39 +186,37 @@ const StudentViewFeedback = () => {
           },
         });
 
-        console.log(`📊 Response status: ${response.status}`);
-        
         if (response.ok) {
           const responseData = await response.json();
-          console.log('✅ Success! Data received:', responseData);
-          
-          // Extraer SOLO el contenido de responseData.data
+
           if (responseData && responseData.data) {
-            // Procesar saltos de línea para que se muestren correctamente
             const cleanText = responseData.data.replace(/\\n/g, '\n').trim();
             setAiSummary(cleanText);
           } else {
-            // Si no hay data, intentar otras propiedades
-            setAiSummary(responseData.summary || responseData.analysis || responseData.message || 'No content available');
+            setAiSummary(
+              responseData.summary ||
+              responseData.analysis ||
+              responseData.message ||
+              'No content available'
+            );
           }
-          
+
           setAiSummaryLoading(false);
-          return; // Salir del bucle si encuentra un endpoint que funciona
+          return;
         } else if (response.status !== 404) {
-          // Si no es 404, podría ser el endpoint correcto pero con otro error
           const errorText = await response.text();
-          console.log(`⚠️ Non-404 error on ${endpoint}:`, errorText);
           lastError = `Error ${response.status}: ${errorText}`;
-          break; // Salir del bucle si no es 404
+          break;
         }
       } catch (error) {
         console.error(`❌ Network error on ${endpoint}:`, error);
         lastError = `Network error: ${error.message}`;
       }
     }
-    
-    // Si llegamos aquí, ningún endpoint funcionó
-    setAiSummaryError(lastError || 'No working endpoint found. Please check with your backend team.');
+
+    setAiSummaryError(
+      lastError || 'No working endpoint found. Please check with your backend team.'
+    );
     setAiSummaryLoading(false);
   };
 
@@ -208,7 +226,125 @@ const StudentViewFeedback = () => {
     setAiSummaryError('');
   };
 
-  // Renderizar el modal de resumen IA
+  // ===============================================
+  // COMPONENTES DE RENDERIZADO
+  // ===============================================
+  const renderHeader = () => (
+    <View style={styles.headerContainer}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Text style={styles.backButtonText}>Back</Text>
+      </TouchableOpacity>
+      <Text style={styles.header}>My Reviews</Text>
+    </View>
+  );
+
+  const renderFilters = () => (
+    <View style={styles.filterContainer}>
+      {/* Rating Filter */}
+      <View style={styles.ratingCompactBox}>
+        <Text style={styles.ratingLabel}>Rating:</Text>
+        <Picker
+          selectedValue={selectedRating}
+          style={styles.ratingCompactPicker}
+          onValueChange={(itemValue) => {
+            setSelectedRating(itemValue);
+            setCurrentPage(1);
+          }}
+          dropdownIconColor="#2c3e50"
+        >
+          <Picker.Item label="Any" value="Any" />
+          <Picker.Item label="5" value="5" />
+          <Picker.Item label="4" value="4" />
+          <Picker.Item label="3" value="3" />
+          <Picker.Item label="2" value="2" />
+          <Picker.Item label="1" value="1" />
+        </Picker>
+      </View>
+
+      {/* Date Filters */}
+      <View style={styles.dateFiltersContainer}>
+        <View style={styles.singleDateFilter}>
+          <Text style={styles.dateLabel}>From:</Text>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => showDatePicker(fromDate ? new Date(fromDate) : null, setFromDate)}
+          >
+            <Text style={{ color: fromDate ? '#000' : '#999' }}>
+              {fromDate ? formatDate(fromDate) : 'Select date'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.singleDateFilter}>
+          <Text style={styles.dateLabel}>To:</Text>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => showDatePicker(toDate ? new Date(toDate) : null, setToDate)}
+          >
+            <Text style={{ color: toDate ? '#000' : '#999' }}>
+              {toDate ? formatDate(toDate) : 'Select date'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderFeedbackItem = (item) => (
+    <View key={item.id.toString()} style={styles.feedbackItem}>
+      <Text style={styles.courseTitle}>{item.course_title}</Text>
+      
+      <View style={styles.feedbackHeader}>
+        <Text style={styles.feedbackContent}>{item.comment}</Text>
+      </View>
+
+      <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
+      <Text style={styles.dateText}>
+        {new Date(item.created_at)
+          .toLocaleDateString('es-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          })
+          .replace(/(\d+)\/(\d+)\/(\d+)/, '$3/$1/$2')}
+      </Text>
+    </View>
+  );
+
+  const renderPaginationControls = () => (
+    <View style={styles.paginationContainer}>
+      <TouchableOpacity
+        style={styles.generateButton}
+        onPress={handleGenerateAISummary}
+      >
+        <MaterialIcons name="star" size={20} color="#5B6799" style={{ marginRight: 6 }} />
+        <Text style={styles.generateButtonText}>Generate AI summary</Text>
+      </TouchableOpacity>
+
+      <View style={styles.paginationButtons}>
+        <TouchableOpacity
+          style={[styles.paginationButton, currentPage === 1 && styles.disabledButton]}
+          onPress={handlePrevPage}
+          disabled={currentPage === 1}
+        >
+          <Text style={styles.paginationButtonText}>Prev</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.pageIndicator}>
+          Page {currentPage} of {totalPages || 1}
+        </Text>
+
+        <TouchableOpacity
+          style={[styles.paginationButton, currentPage === totalPages && styles.disabledButton]}
+          onPress={handleNextPage}
+          disabled={currentPage === totalPages}
+        >
+          <Text style={styles.paginationButtonText}>Next</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   const renderAISummaryModal = () => (
     <Modal
       visible={showAISummaryModal}
@@ -219,7 +355,7 @@ const StudentViewFeedback = () => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>AI Feedback Summary</Text>
+            <Text style={styles.modalTitle}>AI Summary</Text>
             <TouchableOpacity onPress={handleCloseAISummaryModal}>
               <MaterialIcons name="close" size={24} color="#666" />
             </TouchableOpacity>
@@ -228,7 +364,7 @@ const StudentViewFeedback = () => {
           {aiSummaryLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#5B6799" />
-              <Text style={styles.loadingText}>Generating your feedback summary...</Text>
+              <Text style={styles.loadingText}>Generating your summary...</Text>
             </View>
           ) : aiSummaryError ? (
             <View style={styles.errorContainer}>
@@ -236,10 +372,7 @@ const StudentViewFeedback = () => {
               <Text style={styles.errorTitle}>No Summary Available</Text>
               <Text style={styles.errorMessage}>{aiSummaryError}</Text>
               {feedbacks?.data && feedbacks.data.length > 0 && (
-                <TouchableOpacity 
-                  style={styles.retryButton} 
-                  onPress={handleGenerateAISummary}
-                >
+                <TouchableOpacity style={styles.retryButton} onPress={handleGenerateAISummary}>
                   <Text style={styles.retryButtonText}>Try Again</Text>
                 </TouchableOpacity>
               )}
@@ -249,11 +382,8 @@ const StudentViewFeedback = () => {
               <View style={styles.summaryContent}>
                 <Text style={styles.summaryText}>{aiSummary}</Text>
               </View>
-              
-              <TouchableOpacity 
-                style={styles.closeButton}
-                onPress={handleCloseAISummaryModal}
-              >
+
+              <TouchableOpacity style={styles.closeButton} onPress={handleCloseAISummaryModal}>
                 <Text style={styles.closeButtonText}>Close</Text>
               </TouchableOpacity>
             </ScrollView>
@@ -263,195 +393,31 @@ const StudentViewFeedback = () => {
     </Modal>
   );
 
+  // ===============================================
+  // RENDER PRINCIPAL
+  // ===============================================
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header y back button */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 20,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{
-            paddingVertical: 6,
-            paddingHorizontal: 12,
-            backgroundColor: '#F0F0F0',
-            borderRadius: 8,
-            marginLeft: -1,
-            marginTop: -11,
-          }}
-        >
-          <Text
-            style={[styles.backButtonText, { fontSize: 16, color: '#2c3e50' }]}
-          >
-            Back
-          </Text>
-        </TouchableOpacity>
-        <Text
-          style={[
-            styles.header,
-            { flex: 1, textAlign: 'center', marginLeft: -40 },
-          ]}
-        >
-          Course Feedbacks
-        </Text>
-      </View>
-
-      {/* Filters */}
-      <View style={styles.filterContainer}>
-        {/* Rating */}
-        <View style={styles.ratingCompactBox}>
-          <Text style={styles.ratingLabel}>Rating:</Text>
-          <Picker
-            selectedValue={selectedRating}
-            style={styles.ratingCompactPicker}
-            onValueChange={(itemValue) => {
-              setSelectedRating(itemValue);
-              setCurrentPage(1);
-            }}
-            dropdownIconColor="#2c3e50"
-          >
-            <Picker.Item label="Any" value="Any" />
-            <Picker.Item label="5" value="5" />
-            <Picker.Item label="4" value="4" />
-            <Picker.Item label="3" value="3" />
-            <Picker.Item label="2" value="2" />
-            <Picker.Item label="1" value="1" />
-          </Picker>
-        </View>
-
-        {/* Fecha desde / hasta - botones que abren el DateTimePicker */}
-        <View style={styles.dateFiltersContainer}>
-          <View style={styles.singleDateFilter}>
-            <Text style={styles.dateLabel}>From:</Text>
-            <TouchableOpacity
-              style={styles.dateInput}
-              onPress={() =>
-                showDatePicker(
-                  fromDate ? new Date(fromDate) : null,
-                  setFromDate,
-                )
-              }
-            >
-              <Text style={{ color: fromDate ? '#000' : '#999' }}>
-                {fromDate ? formatDate(fromDate) : 'Select date'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.singleDateFilter}>
-            <Text style={styles.dateLabel}>To:</Text>
-            <TouchableOpacity
-              style={styles.dateInput}
-              onPress={() =>
-                showDatePicker(toDate ? new Date(toDate) : null, setToDate)
-              }
-            >
-              <Text style={{ color: toDate ? '#000' : '#999' }}>
-                {toDate ? formatDate(toDate) : 'Select date'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
+      {renderHeader()}
+      {renderFilters()}
+      
       <View style={styles.divider} />
 
-      <Text style={styles.sectionHeader}>Feedbacks</Text>
+      <Text style={styles.sectionHeader}>Reviews</Text>
+      
       <View style={styles.feedbackList}>
-        {paginatedFeedbacks.map((item) => (
-          <View key={item.id.toString()} style={styles.feedbackItem}>
-            <Text
-              style={[
-                styles.backButtonText,
-                { fontSize: 18, color: '#2c3e50' },
-              ]}
-            >
-              {item.course_title}
-            </Text>
-
-            <View style={styles.feedbackHeader}>
-              <Text style={styles.feedbackContent}>{item.comment}</Text>
-            </View>
-
-            <Text style={styles.feedbackRating}>Rating: {item.rating}</Text>
-            <Text style={[styles.dateText, { marginTop: 10 }]}>
-              {new Date(item.created_at)
-                .toLocaleDateString('es-US', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                })
-                .replace(/(\d+)\/(\d+)\/(\d+)/, '$3/$1/$2')}
-            </Text>
-          </View>
-        ))}
+        {paginatedFeedbacks.map(renderFeedbackItem)}
       </View>
 
-      <View style={{ marginTop: 11, marginBottom: 20, alignItems: 'center' }}>
-        <TouchableOpacity
-          style={[styles.generateButton, { marginBottom: 15 }]}
-          onPress={handleGenerateAISummary}
-        >
-          <MaterialIcons
-            name="star"
-            size={20}
-            color="#5B6799"
-            style={{ marginRight: 6 }}
-          />
-          <Text style={styles.generateButtonText}>Generate AI summary</Text>
-        </TouchableOpacity>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-          }}
-        >
-          <TouchableOpacity
-            style={[
-              styles.backButton,
-              currentPage === 1 && styles.disabledButton,
-            ]}
-            onPress={handlePrevPage}
-            disabled={currentPage === 1}
-          >
-            <Text style={styles.backButtonText}>Prev</Text>
-          </TouchableOpacity>
-
-          <Text
-            style={[
-              styles.backButtonText,
-              { marginHorizontal: 15, fontWeight: 'bold' },
-            ]}
-          >
-            Page {currentPage} of {totalPages || 1}
-          </Text>
-
-          <TouchableOpacity
-            style={[
-              styles.backButton,
-              currentPage === totalPages && styles.disabledButton,
-            ]}
-            onPress={handleNextPage}
-            disabled={currentPage === totalPages}
-          >
-            <Text style={styles.backButtonText}>Next</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
+      {renderPaginationControls()}
       {renderAISummaryModal()}
     </SafeAreaView>
   );
 };
 
+// ===============================================
+// ESTILOS
+// ===============================================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -459,67 +425,92 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 40,
   },
-  header: {
-    fontSize: 28,
-    fontWeight: 'bold',
+
+  // Header
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
+  },
+  backButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#2c3e50',
+    fontWeight: 'bold',
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
     textAlign: 'center',
     color: '#2c3e50',
-  },
-  dateFilter: {
     flex: 1,
-    marginRight: 8,
+    marginLeft: -60, // Compensar el botón back para centrar
   },
-  ratingFilter: {
-    flex: 1,
+
+  // Filters
+  filterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
   },
-  filterLabel: {
-    fontSize: 14,
-    color: '#2c3e50',
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  dateBox: {
+  ratingCompactBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
+    width: 120,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
     elevation: 2,
   },
-  dateText: {
-    fontSize: 14,
+  ratingLabel: {
+    fontSize: 13,
     color: '#2c3e50',
-    marginRight: 8,
+    marginRight: 6,
   },
-  ratingBox: {
+  ratingCompactPicker: {
+    height: 30,
+    width: 70,
+  },
+  dateFiltersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginLeft: 12,
+  },
+  singleDateFilter: {
+    flexDirection: 'column',
+    width: 100,
+    marginTop: -15,
+  },
+  dateLabel: {
+    fontSize: 13,
+    color: '#2c3e50',
+    marginBottom: 2,
+  },
+  dateInput: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  ratingText: {
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     fontSize: 14,
-    color: '#2c3e50',
+    backgroundColor: '#fff',
   },
+
+  // Content
   divider: {
     height: 1,
     backgroundColor: '#dcdde1',
@@ -534,71 +525,58 @@ const styles = StyleSheet.create({
   feedbackList: {
     flex: 1,
   },
+
+  // Feedback Items
   feedbackItem: {
     backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 20,
-    marginBottom: 16,
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  courseTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 4,
   },
   feedbackHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  feedbackTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    flex: 1,
-    color: '#2c3e50',
-    marginRight: 10,
-  },
-  feedbackRating: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#27ae60',
+    marginBottom: 6,
   },
   feedbackContent: {
-    fontSize: 15,
+    fontSize: 12,
     color: '#7f8c8d',
-    lineHeight: 22,
+    lineHeight: 16,
   },
-  bottomButtonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    width: width,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backButton: {
-    backgroundColor: '#E0E0E0',
-    borderRadius: 30,
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  backButtonText: {
-    color: '#000000',
+  feedbackRating: {
+    fontSize: 13,
     fontWeight: 'bold',
-    fontSize: 16,
+    color: '#27ae60',
+    marginBottom: 4,
+  },
+  dateText: {
+    fontSize: 11,
+    color: '#95a5a6',
+  },
+
+  // Pagination
+  paginationContainer: {
+    marginTop: 11,
+    marginBottom: 20,
+    alignItems: 'center',
   },
   generateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
     backgroundColor: '#fff',
     borderRadius: 30,
     paddingVertical: 12,
     paddingHorizontal: 24,
+    marginBottom: 15,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -610,91 +588,41 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  ratingLabel: {
-    fontSize: 13,
-    color: '#2c3e50',
-    marginRight: 6,
-  },
-  ratingCompactPicker: {
-    height: 30,
-    width: 70,
-  },
-  dateFilterRow: {
+  paginationButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-    marginHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
-  dateButton: {
-    flex: 1,
-    paddingVertical: 10,
+  paginationButton: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  paginationButtonText: {
+    color: '#000000',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  pageIndicator: {
+    marginHorizontal: 15,
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#2c3e50',
   },
   disabledButton: {
     opacity: 0.5,
     elevation: 0,
     shadowOpacity: 0,
   },
-  dateButtonText: {
-    color: '#2c3e50',
-    fontSize: 14,
-  },
 
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 20,
-  },
-
-  ratingCompactBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    backgroundColor: '#fff',
-    width: 120,
-    minWidth: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-
-  dateFiltersContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginLeft: 12,
-  },
-
-  singleDateFilter: {
-    flexDirection: 'column',
-    width: 100,
-    marginTop: -15,
-  },
-
-  dateLabel: {
-    fontSize: 13,
-    color: '#2c3e50',
-    marginBottom: 2,
-  },
-
-  dateInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    fontSize: 14,
-    backgroundColor: '#fff',
-  },
-
-  // Estilos del Modal de IA
+  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -704,85 +632,86 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: '75%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#2c3e50',
   },
   loadingContainer: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: 30,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    marginTop: 12,
+    fontSize: 15,
     color: '#666',
     textAlign: 'center',
   },
   errorContainer: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: 30,
   },
   errorTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#ff9800',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 12,
+    marginBottom: 6,
   },
   errorMessage: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   retryButton: {
     backgroundColor: '#5B6799',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 8,
   },
   retryButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 14,
   },
   summaryContainer: {
-    maxHeight: 400,
+    maxHeight: 320,
   },
   summaryContent: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   summaryText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-    lineHeight: 24,
+    lineHeight: 20,
     backgroundColor: '#f8f9ff',
-    padding: 16,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 10,
     textAlign: 'justify',
   },
   closeButton: {
     backgroundColor: '#5B6799',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
   },
   closeButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 15,
   },
 });
 

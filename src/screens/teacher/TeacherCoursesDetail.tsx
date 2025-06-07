@@ -240,7 +240,7 @@ export default function TeacherCourseDetail({ route }) {
     });
 
     if (response.ok) {
-      console.log('Module deleted successfully');
+  
       // ✅ RECARGAR RECURSOS DESPUÉS DEL ÉXITO
       await fetchModules();
     } else {
