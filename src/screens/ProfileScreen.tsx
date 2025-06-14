@@ -327,7 +327,9 @@ const ProfileScreen = () => {
 
         if (response.ok) {
           console.log('Perfil actualizado con éxito');
-
+          // ===============================================
+          // TAMBIÉN PUEDES USAR EL OVERLAY AQUÍ SI QUIERES
+          // ===============================================
           showSuccessMessage('✅ Profile updated successfully!');
 
         } else {

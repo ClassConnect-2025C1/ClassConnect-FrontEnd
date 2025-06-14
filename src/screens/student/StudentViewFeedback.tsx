@@ -231,9 +231,7 @@ const StudentViewFeedback = () => {
   // ===============================================
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
+
       <Text style={styles.header}>My Reviews</Text>
     </View>
   );
@@ -449,7 +447,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#2c3e50',
     flex: 1,
-    marginLeft: -60, // Compensar el botón back para centrar
+    marginLeft: -3, // Compensar el botón back para centrar
   },
 
   // Filters
