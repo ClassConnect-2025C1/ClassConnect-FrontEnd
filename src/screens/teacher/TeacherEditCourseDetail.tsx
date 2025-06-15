@@ -257,7 +257,7 @@ const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
           {selectedCriteria.filter((criteria) => criteria.trim() !== '')
             .length === 0 && (
               <Text style={styles.noCriteriaText}>
-                This course does not contain eligibility criteria.
+                .
               </Text>
             )}
 

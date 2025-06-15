@@ -10,6 +10,7 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
@@ -41,10 +42,17 @@ const ProfileScreen = () => {
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [savingNotifications, setSavingNotifications] = useState(false);
   
-  // Estados para configuraciones de notificaciones - CORREGIDOS PARA COINCIDIR CON EL BACKEND
+  // Estados para configuraciones de notificaciones
   const [courseApprove, setCourseApprove] = useState('none');
   const [feedback, setFeedback] = useState('none');
-  const [enrollment, setEnrollment] = useState('none'); // CAMBIADO de inscription a enrollment
+  const [enrollment, setEnrollment] = useState('none');
+
+  // ===============================================
+  // NUEVOS ESTADOS PARA OVERLAY DE ÉXITO
+  // ===============================================
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [overlayAnimation] = useState(new Animated.Value(0));
 
   // Opciones de notificación
   const notificationOptions = [
@@ -53,7 +61,7 @@ const ProfileScreen = () => {
     { value: 'push', label: 'Push', icon: '📱', color: '#28a745' },
   ];
 
-  // Tipos de notificación - ACTUALIZADOS
+  // Tipos de notificación
   const notificationTypes = [
     {
       key: 'course_approve',
@@ -63,20 +71,56 @@ const ProfileScreen = () => {
       setState: setCourseApprove,
     },
     {
-      key: 'feedback', // CORREGIDO: removido el underscore
+      key: 'feedback',
       title: 'Feedback Received',
       description: 'When you receive feedback or comments',
       state: feedback,
       setState: setFeedback,
     },
     {
-      key: 'enrollment', // CORREGIDO: cambiado de inscripcion a enrollment
+      key: 'enrollment',
       title: 'New Enrollment',
       description: 'When students enroll in your courses',
       state: enrollment,
       setState: setEnrollment,
     },
   ];
+
+  // ===============================================
+  // FUNCIONES DEL OVERLAY DE ÉXITO
+  // ===============================================
+
+  const showSuccessMessage = (message) => {
+    setSuccessMessage(message);
+    setShowSuccessOverlay(true);
+    
+    // Animación de entrada
+    Animated.sequence([
+      Animated.timing(overlayAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2500), // Mostrar por 2.5 segundos
+      Animated.timing(overlayAnimation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowSuccessOverlay(false);
+    });
+  };
+
+  const dismissSuccessOverlay = () => {
+    Animated.timing(overlayAnimation, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowSuccessOverlay(false);
+    });
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -145,10 +189,9 @@ const ProfileScreen = () => {
       if (response.ok) {
         const settings = await response.json();
         console.log('Notification settings fetched:', settings);
-        // CORREGIDO: ahora usa los nombres correctos del backend
         setCourseApprove(settings.course_approve || 'none');
-        setFeedback(settings.feedback || 'none'); // Sin underscore
-        setEnrollment(settings.enrollment || 'none'); // Cambiado de inscripcion
+        setFeedback(settings.feedback || 'none');
+        setEnrollment(settings.enrollment || 'none');
       } else {
         console.log('No previous settings found, using defaults');
       }
@@ -159,7 +202,6 @@ const ProfileScreen = () => {
       setLoadingNotifications(false);
     }
   };
-
   const saveNotificationSettings = async () => {
     if (!userId) {
       Alert.alert('Error', 'User ID not found');
@@ -169,15 +211,14 @@ const ProfileScreen = () => {
     try {
       setSavingNotifications(true);
       
-      // CORREGIDO: estructura que coincide exactamente con el backend Go
       const settings = {
         course_approve: courseApprove,
-        feedback: feedback, // Sin underscore
-        enrollment: enrollment, // Cambiado de inscripcion
+        feedback: feedback,
+        enrollment: enrollment,
       };
 
-      console.log('Sending notification settings:', settings); // Para debug
-
+   
+      console.log('User ID:', userId);
       const response = await fetch(
         `${API_URL}/api/notification/${userId}/config`,
         {
@@ -191,8 +232,16 @@ const ProfileScreen = () => {
       );
 
       if (response.ok) {
-        Alert.alert('Success', 'Notification settings updated successfully!');
+        // ===============================================
+        // REEMPLAZAR Alert.alert CON OVERLAY PERSONALIZADO
+        // ===============================================
         setShowNotificationModal(false);
+        
+        // Pequeño delay para que se cierre el modal primero
+        setTimeout(() => {
+          showSuccessMessage('Notification settings updated successfully!');
+        }, 300);
+        
       } else {
         const errorData = await response.text();
         console.error('Error saving settings:', errorData);
@@ -278,8 +327,11 @@ const ProfileScreen = () => {
 
         if (response.ok) {
           console.log('Perfil actualizado con éxito');
-          setModalMessage('Profile updated successfully');
-          setShowModal(true);
+          // ===============================================
+          // TAMBIÉN PUEDES USAR EL OVERLAY AQUÍ SI QUIERES
+          // ===============================================
+          showSuccessMessage('✅ Profile updated successfully!');
+
         } else {
           console.error('Error al actualizar el perfil:', result);
           setModalMessage('Error updating profile');
@@ -345,7 +397,45 @@ const ProfileScreen = () => {
         onClose={() => setShowModal(false)}
       />
 
-      {/* Header mejorado */}
+      {/* =============================================== */}
+      {/* OVERLAY DE ÉXITO PERSONALIZADO */}
+      {/* =============================================== */}
+      {showSuccessOverlay && (
+        <Animated.View 
+          style={[
+            styles.successOverlay,
+            {
+              opacity: overlayAnimation,
+              transform: [{
+                translateY: overlayAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-100, 0],
+                })
+              }]
+            }
+          ]}
+        >
+          <TouchableOpacity 
+            style={styles.successContainer}
+            onPress={dismissSuccessOverlay}
+            activeOpacity={0.9}
+          >
+            <View style={styles.successContent}>
+              <View style={styles.successIcon}>
+                <Text style={styles.successIconText}>✅</Text>
+              </View>
+              <View style={styles.successTextContainer}>
+                <Text style={styles.successTitle}>Success!</Text>
+                <Text style={styles.successMessage}>{successMessage}</Text>
+              </View>
+            </View>
+            <View style={styles.dismissIndicator}>
+              <Text style={styles.dismissText}>Tap to dismiss</Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -365,7 +455,6 @@ const ProfileScreen = () => {
       >
         <Text style={styles.title}>My Profile</Text>
 
-        {/* Profile Image Section */}
         <TouchableOpacity onPress={handleSelectImage} style={styles.imageSection}>
           <View style={styles.imageContainer}>
             <Image
@@ -381,7 +470,6 @@ const ProfileScreen = () => {
           <Text style={styles.changeText}>Tap to change profile picture</Text>
         </TouchableOpacity>
 
-        {/* Form Section */}
         <View style={styles.formSection}>
           <View style={styles.inputRow}>
             <View style={styles.inputHalf}>
@@ -452,7 +540,6 @@ const ProfileScreen = () => {
           />
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.buttonSection}>
           <TouchableOpacity 
             style={styles.notificationButton} 
@@ -708,7 +795,77 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   
-  // Estilos del Modal
+  // ===============================================
+  // ESTILOS DEL OVERLAY DE ÉXITO
+  // ===============================================
+  successOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  successContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    marginHorizontal: 20,
+    maxWidth: 320,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  successContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  successIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#d4edda',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  successIconText: {
+    fontSize: 24,
+  },
+  successTextContainer: {
+    flex: 1,
+  },
+  successTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#155724',
+    marginBottom: 4,
+  },
+  successMessage: {
+    fontSize: 14,
+    color: '#495057',
+    lineHeight: 20,
+  },
+  dismissIndicator: {
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
+  },
+  dismissText: {
+    fontSize: 12,
+    color: '#6c757d',
+    fontStyle: 'italic',
+  },
+  
+  // Estilos del Modal (sin cambios)
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

@@ -14,6 +14,7 @@ import { API_URL } from '@env';
 import MultiSelect from 'react-native-multiple-select';
 import StatusOverlay from '../../components/StatusOverlay';
 import { useAuth } from '../../navigation/AuthContext';
+
 const TeacherCreateNewCourseScreen = () => {
   const navigation = useNavigation();
 
@@ -26,7 +27,7 @@ const TeacherCreateNewCourseScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const { token } = useAuth();
   const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>([]);
   const [auxTeachersOptions, setAuxTeachersOptions] = useState([]);
@@ -86,12 +87,12 @@ const TeacherCreateNewCourseScreen = () => {
   }, []);
 
   const handleCreateCourse = async () => {
+    // Validación inicial - sin setIsLoading(true) todavía
     if (!title || !description || !capacity) {
       setModalMessage('All fields must be filled.');
       setShowModal(true);
       return;
     }
-    setIsLoading(true);
 
     const capacityNumber = parseInt(capacity, 10);
     if (isNaN(capacityNumber) || capacityNumber <= 0) {
@@ -99,6 +100,10 @@ const TeacherCreateNewCourseScreen = () => {
       setShowModal(true);
       return;
     }
+
+    // Solo aquí empezamos el loading después de validaciones exitosas
+    setIsLoading(true);
+    setIsSuccess(false);
 
     try {
       if (!token) throw new Error('No token found');
@@ -122,7 +127,9 @@ const TeacherCreateNewCourseScreen = () => {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
-
+        
+        // Error en la petición
+        setIsLoading(false);
         setModalMessage('Failed to create course. Please try again.');
         setShowModal(true);
         return;
@@ -130,32 +137,35 @@ const TeacherCreateNewCourseScreen = () => {
 
       const data = await response.json();
 
+      // ✅ Operación exitosa
       setIsLoading(false);
+      setIsSuccess(true);
 
+      // Después de 1.5 segundos, navegar
       setTimeout(() => {
-        setChangueConfirmed(true);
+        navigation.navigate('TeacherCourses', { newCourse: data });
+      }, 1500);
 
-        setTimeout(() => {
-          setIsLoading(false);
-          setChangueConfirmed(false);
-          navigation.navigate('TeacherCourses', { newCourse: data });
-        }, 1500);
-      }, 1000);
     } catch (error) {
+      console.error('Network error creating course:', error);
       setIsLoading(false);
+      setIsSuccess(false);
       setModalMessage('An unexpected error occurred.');
       setShowModal(true);
     }
   };
 
+  // Mostrar overlay cuando está loading o cuando es success
+  const showOverlay = isLoading || isSuccess;
+
   return (
     <View style={styles.container}>
-      {isLoading ? (
+      {showOverlay ? (
         <StatusOverlay
-          loading={!saveChangueConfirmed}
-          success={saveChangueConfirmed}
-          loadingMsg="Changing course..."
-          successMsg="Course changed successfully!"
+          loading={isLoading}
+          success={isSuccess}
+          loadingMsg="Creating course..."
+          successMsg="Course created successfully!"
         />
       ) : (
         <>
@@ -252,6 +262,7 @@ const TeacherCreateNewCourseScreen = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
