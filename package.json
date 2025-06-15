@@ -29,6 +29,7 @@
     "expo-dev-client": "~5.0.20",
     "expo-document-picker": "~13.0.3",
     "expo-location": "~18.0.10",
+    "expo-module-scripts": "^4.1.7",
     "expo-random": "^14.0.1",
     "expo-router": "~4.0.21",
     "expo-sharing": "~13.0.1",
