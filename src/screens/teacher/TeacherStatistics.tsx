@@ -79,7 +79,7 @@ const TeacherStatistics = () => {
       if (!response.ok) throw new Error('Failed to fetch statistics');
 
       const data = await response.json();
-      console.log('Fetched statistics:', data);
+
       const newStats = data.statistics || [];
 
       // Solo actualizar si cambió algo
@@ -93,14 +93,6 @@ const TeacherStatistics = () => {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
-
-  // Función simplificada para filtrar datos por fecha
-  const filterByDate = (dataArray) => {
-    return dataArray.filter(item => {
-      const date = new Date(item.date);
-      return date >= startDate && date <= endDate;
-    });
   };
 
   // Función para obtener cursos filtrados
@@ -188,13 +180,17 @@ const TeacherStatistics = () => {
       }
 
       const gradeData = {
-        labels: courseData.map(c => c.name),
-        datasets: [{ data: courseData.map(c => c.grade) }]
+        labels: ['', ...courseData.map(c => c.name)],
+        datasets: [{
+          data: [0, ...courseData.map(c => c.grade)]
+        }]
       };
 
       const submissionData = {
         labels: courseData.map(c => c.name),
-        datasets: [{ data: courseData.map(c => c.submission) }]
+        datasets: [{
+          data: courseData.map(c => c.submission)
+        }]
       };
 
       return { gradeData, submissionData, trendData: null };
@@ -273,15 +269,15 @@ const TeacherStatistics = () => {
           lastValidSubmissionRate = item.submission_rate;
         }
 
-        // Devolver la fecha con los valores correctos (últimos válidos o 0 si nunca hubo)
+
         return {
           ...item,
-          average_grade: lastValidGrade, // Usar el último promedio válido (o 0 si nunca hubo)
-          submission_rate: lastValidSubmissionRate // Usar el último submission rate válido
+          average_grade: lastValidGrade,
+          submission_rate: lastValidSubmissionRate
         };
       });
 
-      // Si tenemos menos de 4 fechas con actividad, agregar fechas con los últimos valores válidos
+
       const finalDates = [...processedDates];
 
       // Agregar fechas adicionales para tener al menos 4 barras
@@ -290,12 +286,12 @@ const TeacherStatistics = () => {
         const nextDate = new Date(lastDate.date);
         nextDate.setDate(nextDate.getDate() + 1);
 
-        // Solo agregar si la fecha está dentro del rango
+
         if (nextDate <= endDate) {
           finalDates.push({
             date: nextDate.toISOString(),
-            average_grade: lastValidGrade, // Mantener el último promedio válido (o 0)
-            submission_rate: lastValidSubmissionRate // Mantener el último submission rate válido
+            average_grade: lastValidGrade,
+            submission_rate: lastValidSubmissionRate
           });
         } else {
           break;
@@ -308,35 +304,24 @@ const TeacherStatistics = () => {
       });
 
       const gradeData = {
-        labels,
+        labels: ['', ...labels], // ✅ Igual que en "All Courses"
         datasets: [{
-          data: finalDates.map(item => item.average_grade || 0),
-          // Forzar que haya al menos un 0 para establecer la escala
+          data: [0, ...finalDates.map(item => item.average_grade || 0)], // ✅ Igual que en "All Courses"
           color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
         }]
       };
 
-      // Asegurar que el primer valor ayude a establecer la escala desde 0
-      if (gradeData.datasets[0].data.length > 0 && Math.min(...gradeData.datasets[0].data) > 0) {
-        // Si todos los valores son > 0, agregar un 0 invisible al inicio
-        gradeData.labels.unshift('');
-        gradeData.datasets[0].data.unshift(0);
-      }
+
 
       const submissionData = {
-        labels,
+        labels: ['', ...labels], // ✅ Igual que en "All Courses"
         datasets: [{
-          data: finalDates.map(item => (item.submission_rate || 0) * 100),
+          data: [0, ...finalDates.map(item => (item.submission_rate || 0) * 100)], // ✅ Igual que en "All Courses"
           color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
         }]
       };
 
-      // Asegurar que el submission chart también tenga escala desde 0
-      if (submissionData.datasets[0].data.length > 0 && Math.min(...submissionData.datasets[0].data) > 0) {
-        // Si todos los valores son > 0, agregar un 0 invisible al inicio
-        submissionData.labels.unshift('');
-        submissionData.datasets[0].data.unshift(0);
-      }
+    
 
       const trendData = finalDates.length > 1 ? {
         labels,
@@ -365,73 +350,61 @@ const TeacherStatistics = () => {
       setEndDate(selectedDate);
     }
   };
-const handleExportPDF = async () => {
-  setGeneratingPDF(true);
-
-  try {
-    const globalStats = getGlobalStats();
-    const { gradeData, submissionData, trendData } = getChartData(); 
-
-    // Esperar a que los gráficos se rendericen completamente
-    console.log('Waiting for charts to render...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    let gradeChartImage = '';
-    let submissionChartImage = '';
-    let trendChartImage = '';
-
-    console.log('Starting chart capture...');
+  const handleExportPDF = async () => {
+    setGeneratingPDF(true);
 
     try {
-      // Verificar que los refs existan antes de capturar
-      console.log('Grade ref exists:', !!gradeChartRef.current);
-      console.log('Submission ref exists:', !!submissionChartRef.current);
-      console.log('Trend ref exists:', !!trendChartRef.current);
+      const globalStats = getGlobalStats();
+      const { gradeData, submissionData, trendData } = getChartData();
 
-      // Capturar gráfico de calificaciones
-      if (gradeChartRef.current) {
-        console.log('Capturing grade chart...');
-        gradeChartImage = await captureRef(gradeChartRef.current, {
-          format: 'png',
-          quality: 0.8,
-          result: 'base64'
-        });
-        console.log('Grade chart captured successfully, length:', gradeChartImage.length);
+
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      let gradeChartImage = '';
+      let submissionChartImage = '';
+      let trendChartImage = '';
+
+      try {
+
+        // Capturar gráfico de calificaciones
+        if (gradeChartRef.current) {
+          gradeChartImage = await captureRef(gradeChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64'
+          });
+        }
+
+        // Capturar gráfico de submission
+        if (submissionChartRef.current) {
+
+          submissionChartImage = await captureRef(submissionChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64'
+          });
+
+        }
+
+        // Capturar gráfico de tendencias
+        if (trendChartRef.current && trendData) {
+
+          trendChartImage = await captureRef(trendChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64'
+          });
+
+        }
+
+      } catch (error) {
+
       }
 
-      // Capturar gráfico de submission
-      if (submissionChartRef.current) {
-        console.log('Capturing submission chart...');
-        submissionChartImage = await captureRef(submissionChartRef.current, {
-          format: 'png',
-          quality: 0.8,
-          result: 'base64'
-        });
-        console.log('Submission chart captured successfully, length:', submissionChartImage.length);
-      }
 
-      // Capturar gráfico de tendencias
-      if (trendChartRef.current && trendData) {
-        console.log('Capturing trend chart...');
-        trendChartImage = await captureRef(trendChartRef.current, {
-          format: 'png',
-          quality: 0.8,
-          result: 'base64'
-        });
-        console.log('Trend chart captured successfully, length:', trendChartImage.length);
-      }
 
-    } catch (error) {
-      console.log('Error capturing charts:', error);
-    }
-
-    console.log('Charts summary:');
-    console.log('- Grade chart:', gradeChartImage ? 'Available' : 'Missing');
-    console.log('- Submission chart:', submissionChartImage ? 'Available' : 'Missing');
-    console.log('- Trend chart:', trendChartImage ? 'Available' : 'Missing');
-
-    // HTML Content
-    const htmlContent = `
+      const htmlContent = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -453,8 +426,8 @@ const handleExportPDF = async () => {
         <div class="header">
           <h1>📊 Teacher Statistics Report</h1>
           <p>Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-          <p>Course: ${selectedCourse === 'all' ? 'All Courses' : 
-            statistics.find(c => c.course_id.toString() === selectedCourse)?.course_name || 'Selected Course'}</p>
+          <p>Course: ${selectedCourse === 'all' ? 'All Courses' :
+          statistics.find(c => c.course_id.toString() === selectedCourse)?.course_name || 'Selected Course'}</p>
         </div>
         
         <div class="stats">
@@ -492,39 +465,37 @@ const handleExportPDF = async () => {
       </body>
     </html>`;
 
-    const fileName = `teacher_stats_${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}.pdf`;
+      const fileName = `teacher_stats_${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}.pdf`;
 
-    // Configuración del PDF
-    const options = {
-      html: htmlContent,
-      fileName: fileName,
-      directory: 'Documents',
-      base64: true,
-      width: 612,
-      height: 792,
-      padding: 24,
-      bgColor: '#FFFFFF',
-    };
+      // Configuración del PDF
+      const options = {
+        html: htmlContent,
+        fileName: fileName,
+        directory: 'Documents',
+        base64: true,
+        width: 612,
+        height: 792,
+        padding: 24,
+        bgColor: '#FFFFFF',
+      };
 
-    console.log('Generating PDF...');
-    const pdf = await RNHTMLtoPDF.convert(options);
-    console.log('PDF generated successfully');
 
-    // 📄 Usar tu downloadAndShareFile con el base64 que viene del PDF
-    await downloadAndShareFile({ 
-      name: fileName, 
-      content: pdf.base64 
-    });
+      const pdf = await RNHTMLtoPDF.convert(options);
 
-    Alert.alert('Success', 'PDF exported successfully!');
+      await downloadAndShareFile({
+        name: fileName,
+        content: pdf.base64
+      });
 
-  } catch (error) {
-    console.error('PDF Export Error:', error);
-    Alert.alert('Error', `Failed to generate PDF: ${error.message || 'Unknown error'}`);
-  } finally {
-    setGeneratingPDF(false);
-  }
-};
+      Alert.alert('Success', 'PDF exported successfully!');
+
+    } catch (error) {
+      console.error('PDF Export Error:', error);
+      Alert.alert('Error', `Failed to generate PDF: ${error.message || 'Unknown error'}`);
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -608,61 +579,61 @@ const handleExportPDF = async () => {
 
       {/* Charts */}
       {gradeData && (
-  <View style={styles.chartsContainer}>
-    <View style={styles.chartSection}>
-      <Text style={styles.chartTitle}>📊 Average Grades</Text>
-      <View 
-        ref={gradeChartRef} 
-        collapsable={false}
-        style={{ backgroundColor: 'white' }}
-      >
-        <BarChart
-          data={gradeData}
-          width={screenWidth - 40}
-          height={200}
-          chartConfig={chartConfig}
-          style={styles.chart}
-        />
-      </View>
-    </View>
+        <View style={styles.chartsContainer}>
+          <View style={styles.chartSection}>
+            <Text style={styles.chartTitle}>📊 Average Grades</Text>
+            <View
+              ref={gradeChartRef}
+              collapsable={false}
+              style={{ backgroundColor: 'white' }}
+            >
+              <BarChart
+                data={gradeData}
+                width={screenWidth - 40}
+                height={200}
+                chartConfig={chartConfig}
+                style={styles.chart}
+              />
+            </View>
+          </View>
 
-    <View style={styles.chartSection}>
-      <Text style={styles.chartTitle}>📈 Task Completion (%)</Text>
-      <View 
-        ref={submissionChartRef} 
-        collapsable={false}
-        style={{ backgroundColor: 'white' }}
-      >
-        <BarChart
-          data={submissionData}
-          width={screenWidth - 40}
-          height={200}
-          chartConfig={chartConfig}
-          style={styles.chart}
-        />
-      </View>
-    </View>
+          <View style={styles.chartSection}>
+            <Text style={styles.chartTitle}>📈 Task Completion (%)</Text>
+            <View
+              ref={submissionChartRef}
+              collapsable={false}
+              style={{ backgroundColor: 'white' }}
+            >
+              <BarChart
+                data={submissionData}
+                width={screenWidth - 40}
+                height={200}
+                chartConfig={chartConfig}
+                style={styles.chart}
+              />
+            </View>
+          </View>
 
-    {trendData && (
-      <View style={styles.chartSection}>
-        <Text style={styles.chartTitle}>📈 Grade Trends</Text>
-        <View 
-          ref={trendChartRef} 
-          collapsable={false}
-          style={{ backgroundColor: 'white' }}
-        >
-          <LineChart
-            data={trendData}
-            width={screenWidth - 40}
-            height={200}
-            chartConfig={chartConfig}
-            style={styles.chart}
-          />
+          {trendData && (
+            <View style={styles.chartSection}>
+              <Text style={styles.chartTitle}>📈 Grade Trends</Text>
+              <View
+                ref={trendChartRef}
+                collapsable={false}
+                style={{ backgroundColor: 'white' }}
+              >
+                <LineChart
+                  data={trendData}
+                  width={screenWidth - 40}
+                  height={200}
+                  chartConfig={chartConfig}
+                  style={styles.chart}
+                />
+              </View>
+            </View>
+          )}
         </View>
-      </View>
-    )}
-  </View>
-)}
+      )}
 
       {/* Action Buttons */}
       <View style={selectedCourse !== 'all' ? styles.buttonContainerThree : styles.buttonContainer}>
@@ -765,28 +736,28 @@ const chartConfig = {
   labelColor: (opacity = 1) => `rgba(51, 51, 51, ${opacity})`,
   strokeWidth: 2,
   barPercentage: 0.6,
-  fromZero: true, // Asegurar que empiece desde 0
-  segments: 5, // Más segmentos para mejor escala
+  fromZero: true,
+  segments: 5,
   formatYLabel: (yValue) => {
-    // Formatear los valores para que se vean bien
+
     if (yValue >= 1000) {
       return Math.round(yValue).toString();
     }
     return parseFloat(yValue).toFixed(1);
   },
-  decimalPlaces: 1, // Permitir 1 decimal para mejor precisión
+  decimalPlaces: 1,
   propsForDots: {
     r: '0'
   },
-  // Configuraciones adicionales para forzar que empiece desde 0
+
   propsForBackgroundLines: {
-    strokeDasharray: '', // Líneas sólidas
+    strokeDasharray: '',
     stroke: '#e3e3e3',
     strokeWidth: 1
   },
-  // Forzar escala desde 0
+
   yAxisMinimum: 0,
-  // Configuración adicional para asegurar que las barras arranquen desde 0
+
   fillShadowGradient: 'transparent',
   fillShadowGradientOpacity: 0,
 };

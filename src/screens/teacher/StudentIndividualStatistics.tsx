@@ -15,7 +15,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
-import * as Print from 'expo-print';
 import { downloadAndShareFile } from '../../utils/FileDowloader';
 import { AppState } from 'react-native';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
@@ -217,7 +216,7 @@ const StudentIndividualStatistics = () => {
     }
   };
 
-  // PDF Export
+
   const handleExportPDF = async () => {
   setGeneratingPDF(true);
 
