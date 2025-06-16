@@ -29,7 +29,9 @@ const StudentIndividualStatistics = () => {
   const [loading, setLoading] = useState(true);
 
   // Date filters
-  const [startDate, setStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+  const [startDate, setStartDate] = useState(
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+  );
   const [endDate, setEndDate] = useState(new Date());
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -53,7 +55,10 @@ const StudentIndividualStatistics = () => {
       }
     };
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
 
     return () => {
       clearInterval(interval);
@@ -65,13 +70,16 @@ const StudentIndividualStatistics = () => {
     try {
       if (showLoading) setLoading(true);
 
-      const response = await fetch(`${API_URL}/api/courses/statistics/course/${course.id}/user/${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_URL}/api/courses/statistics/course/${course.id}/user/${userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) throw new Error('Failed to fetch student statistics');
 
@@ -98,7 +106,7 @@ const StudentIndividualStatistics = () => {
   // Función para filtrar datos por fecha
   const filterByDate = (dataArray) => {
     if (!dataArray || !Array.isArray(dataArray)) return [];
-    return dataArray.filter(item => {
+    return dataArray.filter((item) => {
       const date = new Date(item.date);
       return date >= startDate && date <= endDate;
     });
@@ -114,10 +122,15 @@ const StudentIndividualStatistics = () => {
 
     if (filteredDates.length > 0) {
       // Usar datos del período seleccionado
-      const validGrades = filteredDates.filter(d => d.average_grade > 0);
-      avgGrade = validGrades.length > 0 ?
-        validGrades.reduce((sum, d) => sum + d.average_grade, 0) / validGrades.length : 0;
-      avgSubmissionRate = filteredDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) / filteredDates.length;
+      const validGrades = filteredDates.filter((d) => d.average_grade > 0);
+      avgGrade =
+        validGrades.length > 0
+          ? validGrades.reduce((sum, d) => sum + d.average_grade, 0) /
+            validGrades.length
+          : 0;
+      avgSubmissionRate =
+        filteredDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) /
+        filteredDates.length;
       totalActiveDays = filteredDates.length;
     } else {
       // Usar datos globales del estudiante
@@ -146,30 +159,36 @@ const StudentIndividualStatistics = () => {
       return { gradeData: null, submissionData: null, trendData: null };
     }
 
-    const sortedDates = filteredDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedDates = filteredDates.sort(
+      (a, b) => new Date(a.date) - new Date(b.date),
+    );
 
     // Datos para gráfico de línea de evolución de notas
     const trendData = {
-      labels: sortedDates.map(item => {
+      labels: sortedDates.map((item) => {
         const date = new Date(item.date);
         return `${date.getDate()}/${date.getMonth() + 1}`;
       }),
-      datasets: [{
-        data: sortedDates.map(item => item.average_grade || 0),
-        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-        strokeWidth: 2
-      }]
+      datasets: [
+        {
+          data: sortedDates.map((item) => item.average_grade || 0),
+          color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+          strokeWidth: 2,
+        },
+      ],
     };
 
     // Datos para gráfico de barras de tasa de envío
     const submissionData = {
-      labels: sortedDates.map(item => {
+      labels: sortedDates.map((item) => {
         const date = new Date(item.date);
         return `${date.getDate()}/${date.getMonth() + 1}`;
       }),
-      datasets: [{
-        data: sortedDates.map(item => (item.submission_rate || 0) * 100)
-      }]
+      datasets: [
+        {
+          data: sortedDates.map((item) => (item.submission_rate || 0) * 100),
+        },
+      ],
     };
 
     // Datos comparativos por semana (si hay suficientes datos)
@@ -178,22 +197,28 @@ const StudentIndividualStatistics = () => {
       const weeklyStats = [];
       for (let i = 0; i < sortedDates.length; i += 7) {
         const weekDates = sortedDates.slice(i, i + 7);
-        const weekAvgGrade = weekDates.reduce((sum, d) => sum + (d.average_grade || 0), 0) / weekDates.length;
-        const weekAvgSubmission = weekDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) / weekDates.length;
+        const weekAvgGrade =
+          weekDates.reduce((sum, d) => sum + (d.average_grade || 0), 0) /
+          weekDates.length;
+        const weekAvgSubmission =
+          weekDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) /
+          weekDates.length;
 
         weeklyStats.push({
           week: `W${Math.floor(i / 7) + 1}`,
           grade: weekAvgGrade,
-          submission: weekAvgSubmission * 100
+          submission: weekAvgSubmission * 100,
         });
       }
 
       if (weeklyStats.length > 1) {
         weeklyData = {
-          labels: weeklyStats.map(w => w.week),
-          datasets: [{
-            data: weeklyStats.map(w => w.grade)
-          }]
+          labels: weeklyStats.map((w) => w.week),
+          datasets: [
+            {
+              data: weeklyStats.map((w) => w.grade),
+            },
+          ],
         };
       }
     }
@@ -216,68 +241,79 @@ const StudentIndividualStatistics = () => {
     }
   };
 
-
   const handleExportPDF = async () => {
-  setGeneratingPDF(true);
-
-  try {
-    const stats = getStudentStats();
-    const studentDisplayName = studentName || `Student ${userId}`;
-    const { gradeData, submissionData, trendData } = getChartData();
-
-    // Esperar a que los gráficos se rendericen
-    console.log('Waiting for charts to render...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    let gradeChartImage = '';
-    let submissionChartImage = '';
-    let trendChartImage = '';
-
-    console.log('Starting chart capture...');
+    setGeneratingPDF(true);
 
     try {
-      // Capturar gráfico de tendencias
-      if (trendChartRef.current && trendData) {
-        console.log('Capturing trend chart...');
-        trendChartImage = await captureRef(trendChartRef.current, {
-          format: 'png',
-          quality: 0.8,
-          result: 'base64'
-        });
-        console.log('Trend chart captured successfully, length:', trendChartImage.length);
+      const stats = getStudentStats();
+      const studentDisplayName = studentName || `Student ${userId}`;
+      const { gradeData, submissionData, trendData } = getChartData();
+
+      // Esperar a que los gráficos se rendericen
+      console.log('Waiting for charts to render...');
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      let gradeChartImage = '';
+      let submissionChartImage = '';
+      let trendChartImage = '';
+
+      console.log('Starting chart capture...');
+
+      try {
+        // Capturar gráfico de tendencias
+        if (trendChartRef.current && trendData) {
+          console.log('Capturing trend chart...');
+          trendChartImage = await captureRef(trendChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64',
+          });
+          console.log(
+            'Trend chart captured successfully, length:',
+            trendChartImage.length,
+          );
+        }
+
+        // Capturar gráfico de submission
+        if (submissionChartRef.current && submissionData) {
+          console.log('Capturing submission chart...');
+          submissionChartImage = await captureRef(submissionChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64',
+          });
+          console.log(
+            'Submission chart captured successfully, length:',
+            submissionChartImage.length,
+          );
+        }
+
+        // Capturar gráfico de calificaciones semanales
+        if (gradeChartRef.current && gradeData) {
+          console.log('Capturing grade chart...');
+          gradeChartImage = await captureRef(gradeChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64',
+          });
+          console.log(
+            'Grade chart captured successfully, length:',
+            gradeChartImage.length,
+          );
+        }
+      } catch (error) {
+        console.log('Error capturing charts:', error);
       }
 
-      // Capturar gráfico de submission
-      if (submissionChartRef.current && submissionData) {
-        console.log('Capturing submission chart...');
-        submissionChartImage = await captureRef(submissionChartRef.current, {
-          format: 'png',
-          quality: 0.8,
-          result: 'base64'
-        });
-        console.log('Submission chart captured successfully, length:', submissionChartImage.length);
-      }
+      // Preparar datos para mostrar en el PDF
+      const filteredDates = filterByDate(
+        studentStats?.statistics_for_dates || [],
+      );
+      const sortedDates = filteredDates.sort(
+        (a, b) => new Date(a.date) - new Date(b.date),
+      );
 
-      // Capturar gráfico de calificaciones semanales
-      if (gradeChartRef.current && gradeData) {
-        console.log('Capturing grade chart...');
-        gradeChartImage = await captureRef(gradeChartRef.current, {
-          format: 'png',
-          quality: 0.8,
-          result: 'base64'
-        });
-        console.log('Grade chart captured successfully, length:', gradeChartImage.length);
-      }
-
-    } catch (error) {
-      console.log('Error capturing charts:', error);
-    }
-
-    // Preparar datos para mostrar en el PDF
-    const filteredDates = filterByDate(studentStats?.statistics_for_dates || []);
-    const sortedDates = filteredDates.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    const htmlContent = `
+      const htmlContent = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -317,28 +353,42 @@ const StudentIndividualStatistics = () => {
           <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
         </div>
 
-        ${trendChartImage ? `
+        ${
+          trendChartImage
+            ? `
           <div class="chart-section">
             <h2 class="chart-title">📈 Grade Evolution</h2>
             <img src="data:image/png;base64,${trendChartImage}" class="chart-image" alt="Trend Chart" />
           </div>
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${submissionChartImage ? `
+        ${
+          submissionChartImage
+            ? `
           <div class="chart-section">
             <h2 class="chart-title">📊 Task Completion Rate</h2>
             <img src="data:image/png;base64,${submissionChartImage}" class="chart-image" alt="Submission Chart" />
           </div>
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${gradeChartImage ? `
+        ${
+          gradeChartImage
+            ? `
           <div class="chart-section">
             <h2 class="chart-title">📊 Weekly Performance</h2>
             <img src="data:image/png;base64,${gradeChartImage}" class="chart-image" alt="Grade Chart" />
           </div>
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${sortedDates.length > 0 ? `
+        ${
+          sortedDates.length > 0
+            ? `
           <div class="data-section">
             <h2 class="data-title">📅 Daily Performance Data</h2>
             <table class="data-table">
@@ -350,39 +400,49 @@ const StudentIndividualStatistics = () => {
                 </tr>
               </thead>
               <tbody>
-                ${sortedDates.map(item => `
+                ${sortedDates
+                  .map(
+                    (item) => `
                   <tr>
                     <td>${new Date(item.date).toLocaleDateString()}</td>
                     <td>${(item.average_grade || 0).toFixed(1)}</td>
                     <td>${((item.submission_rate || 0) * 100).toFixed(1)}%</td>
                   </tr>
-                `).join('')}
+                `,
+                  )
+                  .join('')}
               </tbody>
             </table>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${sortedDates.length > 1 ? `
+        ${
+          sortedDates.length > 1
+            ? `
           <div class="data-section">
             <h2 class="data-title">📈 Performance Analysis</h2>
             <div class="metric">
               <span><strong>Best Grade:</strong></span>
-              <span>${Math.max(...sortedDates.map(d => d.average_grade || 0)).toFixed(1)}</span>
+              <span>${Math.max(...sortedDates.map((d) => d.average_grade || 0)).toFixed(1)}</span>
             </div>
             <div class="metric">
               <span><strong>Lowest Grade:</strong></span>
-              <span>${Math.min(...sortedDates.filter(d => d.average_grade > 0).map(d => d.average_grade || 0)).toFixed(1)}</span>
+              <span>${Math.min(...sortedDates.filter((d) => d.average_grade > 0).map((d) => d.average_grade || 0)).toFixed(1)}</span>
             </div>
             <div class="metric">
               <span><strong>Best Submission Rate:</strong></span>
-              <span>${(Math.max(...sortedDates.map(d => d.submission_rate || 0)) * 100).toFixed(1)}%</span>
+              <span>${(Math.max(...sortedDates.map((d) => d.submission_rate || 0)) * 100).toFixed(1)}%</span>
             </div>
             <div class="metric">
               <span><strong>Grade Trend:</strong></span>
               <span>${sortedDates.length > 1 && sortedDates[sortedDates.length - 1].average_grade > sortedDates[0].average_grade ? '📈 Improving' : sortedDates.length > 1 && sortedDates[sortedDates.length - 1].average_grade < sortedDates[0].average_grade ? '📉 Declining' : '➡️ Stable'}</span>
             </div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
 
         <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
           <p>Generated by Student Statistics App</p>
@@ -390,39 +450,38 @@ const StudentIndividualStatistics = () => {
       </body>
     </html>`;
 
-    const fileName = `student_${studentDisplayName.replace(/[^a-zA-Z0-9]/g, '_')}_${course.name.replace(/[^a-zA-Z0-9]/g, '_')}_${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}.pdf`;
+      const fileName = `student_${studentDisplayName.replace(/[^a-zA-Z0-9]/g, '_')}_${course.name.replace(/[^a-zA-Z0-9]/g, '_')}_${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}.pdf`;
 
-    // Configuración del PDF
-    const options = {
-      html: htmlContent,
-      fileName: fileName,
-      directory: 'Documents',
-      base64: true,
-      width: 612,
-      height: 792,
-      padding: 24,
-      bgColor: '#FFFFFF',
-    };
+      // Configuración del PDF
+      const options = {
+        html: htmlContent,
+        fileName: fileName,
+        directory: 'Documents',
+        base64: true,
+        width: 612,
+        height: 792,
+        padding: 24,
+        bgColor: '#FFFFFF',
+      };
 
-    console.log('Generating PDF...');
-    const pdf = await RNHTMLtoPDF.convert(options);
-    console.log('PDF generated successfully');
+      console.log('Generating PDF...');
+      const pdf = await RNHTMLtoPDF.convert(options);
+      console.log('PDF generated successfully');
 
-    // 📄 Usar downloadAndShareFile
-    await downloadAndShareFile({ 
-      name: fileName, 
-      content: pdf.base64 
-    });
+      // 📄 Usar downloadAndShareFile
+      await downloadAndShareFile({
+        name: fileName,
+        content: pdf.base64,
+      });
 
-    Alert.alert('Success', 'PDF exported successfully!');
-
-  } catch (error) {
-    console.error('PDF Export Error:', error);
-    Alert.alert('Error', 'Failed to generate PDF');
-  } finally {
-    setGeneratingPDF(false);
-  }
-};
+      Alert.alert('Success', 'PDF exported successfully!');
+    } catch (error) {
+      console.error('PDF Export Error:', error);
+      Alert.alert('Error', 'Failed to generate PDF');
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -441,8 +500,13 @@ const StudentIndividualStatistics = () => {
   if (!stats) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.noDataText}>No statistics available for this student</Text>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+        <Text style={styles.noDataText}>
+          No statistics available for this student
+        </Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.buttonText}>Back</Text>
         </TouchableOpacity>
       </View>
@@ -458,7 +522,10 @@ const StudentIndividualStatistics = () => {
           <Text style={styles.subtitle}>{studentDisplayName}</Text>
           <Text style={styles.courseText}>{course.name}</Text>
         </View>
-        <TouchableOpacity style={styles.refreshButton} onPress={() => fetchStatistics(true)}>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={() => fetchStatistics(true)}
+        >
           <Text style={styles.refreshText}>🔄</Text>
         </TouchableOpacity>
       </View>
@@ -486,11 +553,21 @@ const StudentIndividualStatistics = () => {
       <View style={styles.filtersContainer}>
         <Text style={styles.sectionTitle}>🔍 Date Range</Text>
         <View style={styles.dateRow}>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
-            <Text style={styles.dateText}>From: {startDate.toLocaleDateString()}</Text>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setShowStartDatePicker(true)}
+          >
+            <Text style={styles.dateText}>
+              From: {startDate.toLocaleDateString()}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndDatePicker(true)}>
-            <Text style={styles.dateText}>To: {endDate.toLocaleDateString()}</Text>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setShowEndDatePicker(true)}
+          >
+            <Text style={styles.dateText}>
+              To: {endDate.toLocaleDateString()}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -561,7 +638,10 @@ const StudentIndividualStatistics = () => {
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.exportButton, generatingPDF && { backgroundColor: '#6c757d' }]}
+          style={[
+            styles.exportButton,
+            generatingPDF && { backgroundColor: '#6c757d' },
+          ]}
           onPress={handleExportPDF}
           disabled={generatingPDF}
         >
@@ -572,7 +652,10 @@ const StudentIndividualStatistics = () => {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.buttonText}>Back</Text>
         </TouchableOpacity>
       </View>
@@ -621,12 +704,12 @@ const chartConfig = {
   propsForDots: {
     r: '4',
     strokeWidth: '2',
-    stroke: '#3b82f6'
+    stroke: '#3b82f6',
   },
   propsForBackgroundLines: {
     strokeDasharray: '',
     stroke: '#e3e3e3',
-    strokeWidth: 1
+    strokeWidth: 1,
   },
   yAxisMinimum: 0,
   fillShadowGradient: 'transparent',

@@ -52,48 +52,48 @@ export default function CourseDetail({ route }) {
   );
 
   // Fetch student submissions for an assignment
-const fetchStudentSubmissions = async (assignmentId) => {
-  try {
-    const response = await fetch(
-      `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+  const fetchStudentSubmissions = async (assignmentId) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/assignment/${assignmentId}/submission`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      }
-    );
+      );
 
-    if (response.ok) {
-      const data = await response.json();
-      
-      // Si la respuesta tiene una estructura como { data: {...} }
-      if (data.data) {
-        return data.data;
+      if (response.ok) {
+        const data = await response.json();
+
+        // Si la respuesta tiene una estructura como { data: {...} }
+        if (data.data) {
+          return data.data;
+        }
+
+        // Si la respuesta es directamente el objeto submission
+        if (data.id || data.grade !== undefined) {
+          return data;
+        }
+
+        // Si es un array con un elemento
+        if (Array.isArray(data) && data.length > 0) {
+          return data[0];
+        }
+
+        return null;
+      } else if (response.status === 404) {
+        // 404 significa que el estudiante no ha hecho submission aún
+        console.log('No submission found for this assignment');
+        return null;
       }
-      
-      // Si la respuesta es directamente el objeto submission
-      if (data.id || data.grade !== undefined) {
-        return data;
-      }
-      
-      // Si es un array con un elemento
-      if (Array.isArray(data) && data.length > 0) {
-        return data[0];
-      }
-      
-      return null;
-    } else if (response.status === 404) {
-      // 404 significa que el estudiante no ha hecho submission aún
-      console.log('No submission found for this assignment');
-      return null;
+    } catch (error) {
+      console.error('Error fetching submission:', error);
     }
-  } catch (error) {
-    console.error('Error fetching submission:', error);
-  }
-  return null;
-};
+    return null;
+  };
 
   // Fetch modules/resources for the course
   const fetchModules = async () => {
@@ -120,7 +120,7 @@ const fetchStudentSubmissions = async (assignmentId) => {
           module_id: item['module_id'],
           title: item['module_name'],
           order: item['order'],
-          resources: item['resources'].map(r => ({
+          resources: item['resources'].map((r) => ({
             id: r['id'],
             type: r['type'],
             name: r['name'],
@@ -169,9 +169,9 @@ const fetchStudentSubmissions = async (assignmentId) => {
             const submission = await fetchStudentSubmissions(assignment.id);
             return {
               ...assignment,
-              submission: submission
+              submission: submission,
             };
-          })
+          }),
         );
 
         setAssignments(assignmentsWithSubmissions);
@@ -190,7 +190,10 @@ const fetchStudentSubmissions = async (assignmentId) => {
   // Lógica de paginación para Resources
   const totalResourcePages = Math.ceil(modules.length / ITEMS_PER_PAGE);
   const startResourceIndex = (resourceCurrentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedModules = modules.slice(startResourceIndex, startResourceIndex + ITEMS_PER_PAGE);
+  const paginatedModules = modules.slice(
+    startResourceIndex,
+    startResourceIndex + ITEMS_PER_PAGE,
+  );
 
   useEffect(() => {
     if (isFocused) {
@@ -222,11 +225,11 @@ const fetchStudentSubmissions = async (assignmentId) => {
         </Text>
         <View style={styles.detailRow}>
           <Text style={styles.detail}>
-            Start date: {course.startDate || 'Not specified'}{' '}
-            End date: {course.endDate || 'Not specified'}
+            Start date: {course.startDate || 'Not specified'} End date:{' '}
+            {course.endDate || 'Not specified'}
           </Text>
         </View>
-        
+
         {Array.isArray(course.eligibilityCriteria) &&
         course.eligibilityCriteria.length > 0 ? (
           <View style={styles.eligibilityContainer}>
@@ -346,7 +349,7 @@ const fetchStudentSubmissions = async (assignmentId) => {
 
                   {/* Botón View Grade - solo si hay calificación */}
                   {item.submission &&
-                    item.submission.grade !== null  &&
+                    item.submission.grade !== null &&
                     item.submission.grade !== 0 && (
                       <TouchableOpacity
                         style={styles.viewGradeButton}
@@ -358,7 +361,9 @@ const fetchStudentSubmissions = async (assignmentId) => {
                           })
                         }
                       >
-                        <Text style={styles.viewGradeButtonText}>View Grade</Text>
+                        <Text style={styles.viewGradeButtonText}>
+                          View Grade
+                        </Text>
                       </TouchableOpacity>
                     )}
                 </View>
@@ -404,7 +409,8 @@ const fetchStudentSubmissions = async (assignmentId) => {
                 {/* Header del módulo solo con título */}
                 <View style={styles.moduleHeader}>
                   <Text style={styles.moduleTitle}>
-                    Module {startResourceIndex + moduleIndex + 1}: {module.title}
+                    Module {startResourceIndex + moduleIndex + 1}:{' '}
+                    {module.title}
                   </Text>
                 </View>
 
@@ -440,7 +446,9 @@ const fetchStudentSubmissions = async (assignmentId) => {
             <View style={styles.paginationContainer}>
               <TouchableOpacity
                 disabled={resourceCurrentPage === 1}
-                onPress={() => setResourceCurrentPage((prev) => Math.max(prev - 1, 1))}
+                onPress={() =>
+                  setResourceCurrentPage((prev) => Math.max(prev - 1, 1))
+                }
                 style={[
                   styles.pageButton,
                   resourceCurrentPage === 1 && styles.pageButtonDisabled,
@@ -456,11 +464,14 @@ const fetchStudentSubmissions = async (assignmentId) => {
               <TouchableOpacity
                 disabled={resourceCurrentPage === totalResourcePages}
                 onPress={() =>
-                  setResourceCurrentPage((prev) => Math.min(prev + 1, totalResourcePages))
+                  setResourceCurrentPage((prev) =>
+                    Math.min(prev + 1, totalResourcePages),
+                  )
                 }
                 style={[
                   styles.pageButton,
-                  resourceCurrentPage === totalResourcePages && styles.pageButtonDisabled,
+                  resourceCurrentPage === totalResourcePages &&
+                    styles.pageButtonDisabled,
                 ]}
               >
                 <Text style={styles.pageButtonText}>Next</Text>

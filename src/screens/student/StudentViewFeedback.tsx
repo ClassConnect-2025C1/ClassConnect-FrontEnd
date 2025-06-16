@@ -71,7 +71,7 @@ const StudentViewFeedback = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch feedbacks');
       }
-      
+
       const data = await response.json();
       setFeedbacks(data);
       setCurrentPage(1);
@@ -129,7 +129,7 @@ const StudentViewFeedback = () => {
         if (isNaN(to.getTime())) return false;
         if (createdAt > to) return false;
       }
-      
+
       return true;
     });
   };
@@ -195,9 +195,9 @@ const StudentViewFeedback = () => {
           } else {
             setAiSummary(
               responseData.summary ||
-              responseData.analysis ||
-              responseData.message ||
-              'No content available'
+                responseData.analysis ||
+                responseData.message ||
+                'No content available',
             );
           }
 
@@ -215,7 +215,8 @@ const StudentViewFeedback = () => {
     }
 
     setAiSummaryError(
-      lastError || 'No working endpoint found. Please check with your backend team.'
+      lastError ||
+        'No working endpoint found. Please check with your backend team.',
     );
     setAiSummaryLoading(false);
   };
@@ -231,7 +232,6 @@ const StudentViewFeedback = () => {
   // ===============================================
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-
       <Text style={styles.header}>My Reviews</Text>
     </View>
   );
@@ -265,7 +265,9 @@ const StudentViewFeedback = () => {
           <Text style={styles.dateLabel}>From:</Text>
           <TouchableOpacity
             style={styles.dateInput}
-            onPress={() => showDatePicker(fromDate ? new Date(fromDate) : null, setFromDate)}
+            onPress={() =>
+              showDatePicker(fromDate ? new Date(fromDate) : null, setFromDate)
+            }
           >
             <Text style={{ color: fromDate ? '#000' : '#999' }}>
               {fromDate ? formatDate(fromDate) : 'Select date'}
@@ -277,7 +279,9 @@ const StudentViewFeedback = () => {
           <Text style={styles.dateLabel}>To:</Text>
           <TouchableOpacity
             style={styles.dateInput}
-            onPress={() => showDatePicker(toDate ? new Date(toDate) : null, setToDate)}
+            onPress={() =>
+              showDatePicker(toDate ? new Date(toDate) : null, setToDate)
+            }
           >
             <Text style={{ color: toDate ? '#000' : '#999' }}>
               {toDate ? formatDate(toDate) : 'Select date'}
@@ -291,7 +295,7 @@ const StudentViewFeedback = () => {
   const renderFeedbackItem = (item) => (
     <View key={item.id.toString()} style={styles.feedbackItem}>
       <Text style={styles.courseTitle}>{item.course_title}</Text>
-      
+
       <View style={styles.feedbackHeader}>
         <Text style={styles.feedbackContent}>{item.comment}</Text>
       </View>
@@ -315,13 +319,21 @@ const StudentViewFeedback = () => {
         style={styles.generateButton}
         onPress={handleGenerateAISummary}
       >
-        <MaterialIcons name="star" size={20} color="#5B6799" style={{ marginRight: 6 }} />
+        <MaterialIcons
+          name="star"
+          size={20}
+          color="#5B6799"
+          style={{ marginRight: 6 }}
+        />
         <Text style={styles.generateButtonText}>Generate AI summary</Text>
       </TouchableOpacity>
 
       <View style={styles.paginationButtons}>
         <TouchableOpacity
-          style={[styles.paginationButton, currentPage === 1 && styles.disabledButton]}
+          style={[
+            styles.paginationButton,
+            currentPage === 1 && styles.disabledButton,
+          ]}
           onPress={handlePrevPage}
           disabled={currentPage === 1}
         >
@@ -333,7 +345,10 @@ const StudentViewFeedback = () => {
         </Text>
 
         <TouchableOpacity
-          style={[styles.paginationButton, currentPage === totalPages && styles.disabledButton]}
+          style={[
+            styles.paginationButton,
+            currentPage === totalPages && styles.disabledButton,
+          ]}
           onPress={handleNextPage}
           disabled={currentPage === totalPages}
         >
@@ -370,7 +385,10 @@ const StudentViewFeedback = () => {
               <Text style={styles.errorTitle}>No Summary Available</Text>
               <Text style={styles.errorMessage}>{aiSummaryError}</Text>
               {feedbacks?.data && feedbacks.data.length > 0 && (
-                <TouchableOpacity style={styles.retryButton} onPress={handleGenerateAISummary}>
+                <TouchableOpacity
+                  style={styles.retryButton}
+                  onPress={handleGenerateAISummary}
+                >
                   <Text style={styles.retryButtonText}>Try Again</Text>
                 </TouchableOpacity>
               )}
@@ -381,7 +399,10 @@ const StudentViewFeedback = () => {
                 <Text style={styles.summaryText}>{aiSummary}</Text>
               </View>
 
-              <TouchableOpacity style={styles.closeButton} onPress={handleCloseAISummaryModal}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={handleCloseAISummaryModal}
+              >
                 <Text style={styles.closeButtonText}>Close</Text>
               </TouchableOpacity>
             </ScrollView>
@@ -398,11 +419,11 @@ const StudentViewFeedback = () => {
     <SafeAreaView style={styles.container}>
       {renderHeader()}
       {renderFilters()}
-      
+
       <View style={styles.divider} />
 
       <Text style={styles.sectionHeader}>Reviews</Text>
-      
+
       <View style={styles.feedbackList}>
         {paginatedFeedbacks.map(renderFeedbackItem)}
       </View>

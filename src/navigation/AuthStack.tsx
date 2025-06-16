@@ -19,8 +19,6 @@ import ShowProfileData from '../utils/ShowProfileData';
 import StudentAssigmentScreen from '../screens/student/StudentAssigmentScreen';
 import StudentViewFeedback from '../screens/student/StudentViewFeedback';
 
-
-
 import TeacherCoursesScreen from '../screens/teacher/TeacherCoursesScreen';
 import TeacherCreateNewCourse from '../screens/teacher/TeacherCreateNewCourse';
 import TeacherCoursesDetail from '../screens/teacher/TeacherCoursesDetail';
@@ -118,7 +116,7 @@ const AuthStack = () => (
       name="StudentIndividualStatistics"
       component={StudentIndividualStatistics}
     />
-    
+
     <Stack.Screen name="StudentsSubmissions" component={StudentsSubmissions} />
     <Stack.Screen
       name="TeacherEditAssigments"
@@ -140,28 +138,21 @@ const AuthStack = () => (
     />
 
     <Stack.Screen name="AddModuleScreen" component={AddModuleScreen} />
-    
+
     <Stack.Screen
       name="AddResourceForModule"
       component={AddResourceForModule}
     />
-   <Stack.Screen 
-  name="UpdateOrder" 
-  component={UpdateOrder}
-  options={{ headerShown: false }}
-/>
+    <Stack.Screen
+      name="UpdateOrder"
+      component={UpdateOrder}
+      options={{ headerShown: false }}
+    />
     <Stack.Screen name="EditModule" component={EditModule} />
 
     <Stack.Screen name="TeacherStatistics" component={TeacherStatistics} />
 
-    <Stack.Screen 
-  name="StudentShowGrade"  
-  component={StudentShowGrade} 
-/>
-
-
-
-    
+    <Stack.Screen name="StudentShowGrade" component={StudentShowGrade} />
   </Stack.Navigator>
 );
 

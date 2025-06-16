@@ -39,9 +39,9 @@ export default function EditCourseScreen({ route }) {
   );
 
   const [auxTeachersOptions, setAuxTeachersOptions] = useState([]);
-const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
-  course.teachingAssistants || [],
-);
+  const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
+    course.teachingAssistants || [],
+  );
   const [errors, setErrors] = useState({
     title: '',
     description: '',
@@ -87,7 +87,7 @@ const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
     };
 
     fetchData();
-  }, [token]); 
+  }, [token]);
 
   const fetchAuxTeachers = async () => {
     try {
@@ -102,7 +102,9 @@ const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
       }
 
       const auxEmails: string[] = await auxResponse.json();
-      const filteredEmails = auxEmails.filter(email => email !== course.createdBy);
+      const filteredEmails = auxEmails.filter(
+        (email) => email !== course.createdBy,
+      );
 
       const auxOptions = filteredEmails.map((email) => ({
         id: email,
@@ -118,9 +120,10 @@ const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
   };
 
   const handleRemoveAuxTeacher = (teacherEmail: string) => {
-    setSelectedAuxTeachers((prev) => prev.filter((email) => email !== teacherEmail));
+    setSelectedAuxTeachers((prev) =>
+      prev.filter((email) => email !== teacherEmail),
+    );
   };
-
 
   const handleSaveChanges = async () => {
     const newErrors = validateFields(
@@ -129,7 +132,6 @@ const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
       selectedCriteria,
       startDate,
       endDate,
-      
     );
     setErrors(newErrors);
     console.log('Errors:', newErrors);
@@ -255,11 +257,7 @@ const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
 
           {/* Selected Criteria */}
           {selectedCriteria.filter((criteria) => criteria.trim() !== '')
-            .length === 0 && (
-              <Text style={styles.noCriteriaText}>
-                .
-              </Text>
-            )}
+            .length === 0 && <Text style={styles.noCriteriaText}>.</Text>}
 
           {/* Teaching Assistants */}
           {/* Teaching Assistants */}
@@ -284,8 +282,6 @@ const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
               submitButtonText="Confirm"
             />
           </View>
-
-          
 
           {/* Start Date */}
           <TextInput
@@ -315,7 +311,10 @@ const [selectedAuxTeachers, setSelectedAuxTeachers] = useState<string[]>(
               <Text style={styles.buttonText}>Save Changes</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
               <Text style={styles.backButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -439,5 +438,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 15,
   },
-
 });

@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import StatusOverlay from '../../../components/StatusOverlay';
 import { API_URL } from '@env';
 import { useNavigation } from '@react-navigation/native';
@@ -30,10 +37,10 @@ const EditModule = ({ route }) => {
         {
           method: 'PATCH',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: formData,
-        }
+        },
       );
 
       if (response.ok) {
@@ -66,7 +73,7 @@ const EditModule = ({ route }) => {
   ) : (
     <View style={styles.container}>
       <Text style={styles.title}>Edit Module</Text>
-      
+
       <Text style={styles.label}>Module Name</Text>
       <TextInput
         style={styles.input}
@@ -75,7 +82,6 @@ const EditModule = ({ route }) => {
         placeholder="Enter module name"
       />
 
-    
       <TouchableOpacity style={styles.sendButton} onPress={handleSave}>
         <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>

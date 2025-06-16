@@ -1,41 +1,41 @@
 {
   "project_info": {
-    "project_number": "325738008663",
-    "project_id": "classconnect-b155b",
-    "storage_bucket": "classconnect-b155b.firebasestorage.app"
+    "project_number": "98403984467",
+    "project_id": "loginclassconnect",
+    "storage_bucket": "loginclassconnect.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:325738008663:android:4660349f9d5bdbbe845312",
+        "mobilesdk_app_id": "1:98403984467:android:402508d6bf2f843cb1d2a6",
         "android_client_info": {
           "package_name": "com.classconnect1.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "325738008663-52jos2jjirnhj77rboejit0hu642rvur.apps.googleusercontent.com",
+          "client_id": "98403984467-em1uv3qgkc8s42uge2sl9piulkdcolv1.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.classconnect1.app",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+            "certificate_hash": "8b7db1786fb3f56d0423208cd19bba0a6ce4e1ef"
           }
         },
         {
-          "client_id": "325738008663-j8deeb2n27oboisc9m7mvefli2quaons.apps.googleusercontent.com",
+          "client_id": "98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAamDQG3RquWqEqNkJgsIznOCLrEMdADh8"
+          "current_key": "AIzaSyAiqWVEsnLS0jnR51C6BEcs3_OXNba_wsU"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "325738008663-j8deeb2n27oboisc9m7mvefli2quaons.apps.googleusercontent.com",
+              "client_id": "98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

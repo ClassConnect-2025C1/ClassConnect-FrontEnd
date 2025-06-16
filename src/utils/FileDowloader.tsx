@@ -18,7 +18,7 @@ export const downloadAndShareFile = async (file) => {
       await FileSystem.writeAsStringAsync(fileUri, file.content, {
         encoding: FileSystem.EncodingType.Base64,
       });
-    } 
+    }
     // Si el archivo tiene URL, descargarlo primero
     else if (file.url) {
       const downloadResult = await FileSystem.downloadAsync(file.url, fileUri);
