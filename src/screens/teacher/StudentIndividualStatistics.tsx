@@ -23,7 +23,7 @@ import { captureRef } from 'react-native-view-shot';
 const StudentIndividualStatistics = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { course, userId, studentName } = route.params; // Agregamos studentName opcional
+  const { course, userId, studentName } = route.params;
 
   const [studentStats, setStudentStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -87,10 +87,8 @@ const StudentIndividualStatistics = () => {
       console.log('Response data:', data);
       console.log('Fetched student statistics:', data);
 
-      // Los datos vienen como un objeto 'statistics', no como un array
       const newStats = data.statistics;
 
-      // Solo actualizar si cambió algo
       if (JSON.stringify(newStats) !== JSON.stringify(studentStats)) {
         setStudentStats(newStats);
       }
@@ -103,7 +101,6 @@ const StudentIndividualStatistics = () => {
     }
   };
 
-  // Función para filtrar datos por fecha
   const filterByDate = (dataArray) => {
     if (!dataArray || !Array.isArray(dataArray)) return [];
     return dataArray.filter((item) => {
@@ -112,7 +109,6 @@ const StudentIndividualStatistics = () => {
     });
   };
 
-  // Calcular estadísticas del estudiante
   const getStudentStats = () => {
     if (!studentStats) return null;
 
@@ -121,7 +117,6 @@ const StudentIndividualStatistics = () => {
     let avgGrade, avgSubmissionRate, totalActiveDays;
 
     if (filteredDates.length > 0) {
-      // Usar datos del período seleccionado
       const validGrades = filteredDates.filter((d) => d.average_grade > 0);
       avgGrade =
         validGrades.length > 0
@@ -133,7 +128,6 @@ const StudentIndividualStatistics = () => {
         filteredDates.length;
       totalActiveDays = filteredDates.length;
     } else {
-      // Usar datos globales del estudiante
       avgGrade = studentStats.average_grade || 0;
       avgSubmissionRate = studentStats.submission_rate || 0;
       totalActiveDays = studentStats.statistics_for_dates?.length || 0;
@@ -147,7 +141,7 @@ const StudentIndividualStatistics = () => {
     };
   };
 
-  // Generar datos para gráficos
+  // ✅ Función getChartData actualizada con lógica del 0 invisible
   const getChartData = () => {
     if (!studentStats || !studentStats.statistics_for_dates) {
       return { gradeData: null, submissionData: null, trendData: null };
@@ -163,35 +157,31 @@ const StudentIndividualStatistics = () => {
       (a, b) => new Date(a.date) - new Date(b.date),
     );
 
-    // Datos para gráfico de línea de evolución de notas
+    // Labels de fechas
+    const dateLabels = sortedDates.map((item) => {
+      const date = new Date(item.date);
+      return `${date.getDate()}/${date.getMonth() + 1}`;
+    });
+
+    // ✅ Datos para gráfico de barras de evolución de notas
     const trendData = {
-      labels: sortedDates.map((item) => {
-        const date = new Date(item.date);
-        return `${date.getDate()}/${date.getMonth() + 1}`;
-      }),
-      datasets: [
-        {
-          data: sortedDates.map((item) => item.average_grade || 0),
-          color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-          strokeWidth: 2,
-        },
-      ],
+      labels: ['', ...dateLabels], // 0 invisible + fechas
+      datasets: [{
+        data: [0, ...sortedDates.map((item) => item.average_grade || 0)], // 0 + datos
+        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
+      }]
     };
 
-    // Datos para gráfico de barras de tasa de envío
+    // ✅ Datos para gráfico de barras de tasa de envío
     const submissionData = {
-      labels: sortedDates.map((item) => {
-        const date = new Date(item.date);
-        return `${date.getDate()}/${date.getMonth() + 1}`;
-      }),
-      datasets: [
-        {
-          data: sortedDates.map((item) => (item.submission_rate || 0) * 100),
-        },
-      ],
+      labels: ['', ...dateLabels], // 0 invisible + fechas
+      datasets: [{
+        data: [0, ...sortedDates.map((item) => (item.submission_rate || 0) * 100)], // 0 + datos
+        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
+      }]
     };
 
-    // Datos comparativos por semana (si hay suficientes datos)
+    // ✅ Datos comparativos por semana
     let weeklyData = null;
     if (sortedDates.length > 7) {
       const weeklyStats = [];
@@ -200,25 +190,20 @@ const StudentIndividualStatistics = () => {
         const weekAvgGrade =
           weekDates.reduce((sum, d) => sum + (d.average_grade || 0), 0) /
           weekDates.length;
-        const weekAvgSubmission =
-          weekDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) /
-          weekDates.length;
 
         weeklyStats.push({
           week: `W${Math.floor(i / 7) + 1}`,
           grade: weekAvgGrade,
-          submission: weekAvgSubmission * 100,
         });
       }
 
       if (weeklyStats.length > 1) {
         weeklyData = {
-          labels: weeklyStats.map((w) => w.week),
-          datasets: [
-            {
-              data: weeklyStats.map((w) => w.grade),
-            },
-          ],
+          labels: ['', ...weeklyStats.map((w) => w.week)], // 0 invisible + semanas
+          datasets: [{
+            data: [0, ...weeklyStats.map((w) => w.grade)], // 0 + datos
+            color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
+          }]
         };
       }
     }
@@ -226,7 +211,6 @@ const StudentIndividualStatistics = () => {
     return { gradeData: weeklyData, submissionData, trendData };
   };
 
-  // Date picker handlers
   const onStartDateChange = (event, selectedDate) => {
     setShowStartDatePicker(Platform.OS === 'ios');
     if (selectedDate && selectedDate <= endDate) {
@@ -249,7 +233,6 @@ const StudentIndividualStatistics = () => {
       const studentDisplayName = studentName || `Student ${userId}`;
       const { gradeData, submissionData, trendData } = getChartData();
 
-      // Esperar a que los gráficos se rendericen
       console.log('Waiting for charts to render...');
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -260,7 +243,6 @@ const StudentIndividualStatistics = () => {
       console.log('Starting chart capture...');
 
       try {
-        // Capturar gráfico de tendencias
         if (trendChartRef.current && trendData) {
           console.log('Capturing trend chart...');
           trendChartImage = await captureRef(trendChartRef.current, {
@@ -274,7 +256,6 @@ const StudentIndividualStatistics = () => {
           );
         }
 
-        // Capturar gráfico de submission
         if (submissionChartRef.current && submissionData) {
           console.log('Capturing submission chart...');
           submissionChartImage = await captureRef(submissionChartRef.current, {
@@ -288,7 +269,6 @@ const StudentIndividualStatistics = () => {
           );
         }
 
-        // Capturar gráfico de calificaciones semanales
         if (gradeChartRef.current && gradeData) {
           console.log('Capturing grade chart...');
           gradeChartImage = await captureRef(gradeChartRef.current, {
@@ -305,7 +285,6 @@ const StudentIndividualStatistics = () => {
         console.log('Error capturing charts:', error);
       }
 
-      // Preparar datos para mostrar en el PDF
       const filteredDates = filterByDate(
         studentStats?.statistics_for_dates || [],
       );
@@ -452,7 +431,6 @@ const StudentIndividualStatistics = () => {
 
       const fileName = `student_${studentDisplayName.replace(/[^a-zA-Z0-9]/g, '_')}_${course.name.replace(/[^a-zA-Z0-9]/g, '_')}_${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}.pdf`;
 
-      // Configuración del PDF
       const options = {
         html: htmlContent,
         fileName: fileName,
@@ -468,7 +446,6 @@ const StudentIndividualStatistics = () => {
       const pdf = await RNHTMLtoPDF.convert(options);
       console.log('PDF generated successfully');
 
-      // 📄 Usar downloadAndShareFile
       await downloadAndShareFile({
         name: fileName,
         content: pdf.base64,
@@ -515,7 +492,6 @@ const StudentIndividualStatistics = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>📊 Student Performance</Text>
@@ -530,7 +506,6 @@ const StudentIndividualStatistics = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Student Stats */}
       <View style={styles.statsContainer}>
         <Text style={styles.sectionTitle}>📈 Performance Overview</Text>
         <View style={styles.statsGrid}>
@@ -549,7 +524,6 @@ const StudentIndividualStatistics = () => {
         </View>
       </View>
 
-      {/* Date Filters */}
       <View style={styles.filtersContainer}>
         <Text style={styles.sectionTitle}>🔍 Date Range</Text>
         <View style={styles.dateRow}>
@@ -572,7 +546,7 @@ const StudentIndividualStatistics = () => {
         </View>
       </View>
 
-      {/* Charts */}
+      {/* ✅ Charts actualizados - Todo BarChart */}
       {(trendData || submissionData || gradeData) && (
         <View style={styles.chartsContainer}>
           {trendData && (
@@ -583,13 +557,12 @@ const StudentIndividualStatistics = () => {
                 collapsable={false}
                 style={{ backgroundColor: 'white' }}
               >
-                <LineChart
+                <BarChart
                   data={trendData}
                   width={screenWidth - 40}
                   height={200}
                   chartConfig={chartConfig}
                   style={styles.chart}
-                  bezier
                 />
               </View>
             </View>
@@ -635,7 +608,6 @@ const StudentIndividualStatistics = () => {
         </View>
       )}
 
-      {/* Action Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[
@@ -660,7 +632,6 @@ const StudentIndividualStatistics = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Date Pickers */}
       {showStartDatePicker && (
         <DateTimePicker
           value={startDate}
@@ -685,6 +656,7 @@ const StudentIndividualStatistics = () => {
   );
 };
 
+// ✅ chartConfig actualizado para mejor soporte de BarChart
 const chartConfig = {
   backgroundGradientFrom: '#ffffff',
   backgroundGradientTo: '#ffffff',
@@ -701,17 +673,14 @@ const chartConfig = {
     return parseFloat(yValue).toFixed(1);
   },
   decimalPlaces: 1,
-  propsForDots: {
-    r: '4',
-    strokeWidth: '2',
-    stroke: '#3b82f6',
-  },
   propsForBackgroundLines: {
     strokeDasharray: '',
     stroke: '#e3e3e3',
     strokeWidth: 1,
   },
   yAxisMinimum: 0,
+  paddingTop: 20,
+  count: 5,
   fillShadowGradient: 'transparent',
   fillShadowGradientOpacity: 0,
 };
