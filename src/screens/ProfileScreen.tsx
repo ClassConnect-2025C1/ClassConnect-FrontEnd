@@ -19,6 +19,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 import { API_URL } from '@env';
 import { useAuth } from '../navigation/AuthContext';
+import { NotificationService } from '../utils/NotificationService';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -36,6 +37,9 @@ const ProfileScreen = () => {
   const [modalMessage, setModalMessage] = useState('');
   const [userId, setUserId] = useState(null);
   const { token } = useAuth();
+
+  const [fcmToken, setFcmToken] = useState('');
+  const [notificationPermissionGranted, setNotificationPermissionGranted] = useState(false);
 
   // Estados para el modal de notificaciones
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -161,6 +165,14 @@ const ProfileScreen = () => {
             setLocation('');
             setRole(null);
           }
+
+          // Inicializar notificaciones FCM
+          const notificationResult = await NotificationService.initialize(
+            userIdFromToken, 
+            token
+          );
+          setFcmToken(notificationResult.token);
+          setNotificationPermissionGranted(notificationResult.hasPermission);
         }
       } catch (error) {
         console.error('Error al obtener el perfil del usuario:', error);
@@ -202,6 +214,7 @@ const ProfileScreen = () => {
       setLoadingNotifications(false);
     }
   };
+
   const saveNotificationSettings = async () => {
     if (!userId) {
       Alert.alert('Error', 'User ID not found');
@@ -215,6 +228,8 @@ const ProfileScreen = () => {
         course_approve: courseApprove,
         feedback: feedback,
         enrollment: enrollment,
+        fcm_token: fcmToken,
+        notification_enabled: notificationPermissionGranted,
       };
 
       console.log('User ID:', userId);
@@ -231,9 +246,6 @@ const ProfileScreen = () => {
       );
 
       if (response.ok) {
-        // ===============================================
-        // REEMPLAZAR Alert.alert CON OVERLAY PERSONALIZADO
-        // ===============================================
         setShowNotificationModal(false);
 
         // Pequeño delay para que se cierre el modal primero
@@ -325,9 +337,6 @@ const ProfileScreen = () => {
 
         if (response.ok) {
           console.log('Perfil actualizado con éxito');
-          // ===============================================
-          // TAMBIÉN PUEDES USAR EL OVERLAY AQUÍ SI QUIERES
-          // ===============================================
           showSuccessMessage('✅ Profile updated successfully!');
         } else {
           console.error('Error al actualizar el perfil:', result);
