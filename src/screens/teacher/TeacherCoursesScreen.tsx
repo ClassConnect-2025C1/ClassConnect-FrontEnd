@@ -90,7 +90,8 @@ const CoursesScreen = ({ route }) => {
                 const isCreator = course.createdBy === userEmail;
 
                 // Mostrar si es asistente del curso
-                const isAssistant = course.teachingAssistants &&
+                const isAssistant =
+                  course.teachingAssistants &&
                   course.teachingAssistants.includes(userEmail);
 
                 return isCreator || isAssistant;
@@ -448,11 +449,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   assistantBadge: {
-  fontSize: 12,
-  color: 'rgba(255,255,255,0.8)',
-  fontStyle: 'italic',
-  marginTop: 2,
-},
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
 });
 
 export default CoursesScreen;

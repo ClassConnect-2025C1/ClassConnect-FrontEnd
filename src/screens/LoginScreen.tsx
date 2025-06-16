@@ -14,78 +14,59 @@ import { useNavigation } from '@react-navigation/native';
 import { showLoginErrorToast } from '../Errors/LoginErrors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
-import { handleGoogleLoginCallback } from '../components/GoogleAuth';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 import { API_URL } from '@env';
-//import { useAuthRequest } from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
 import { AuthContext } from '../navigation/AuthContext';
-
-//WebBrowser.maybeCompleteAuthSession();
-
+import { handleGoogleLoginCallback } from '../components/GoogleAuth';
 import {
- GoogleSignin,
- GoogleSigninButton,
- statusCodes,
+  GoogleSignin,
+  GoogleSigninButton,
+  statusCodes,
 } from '@react-native-google-signin/google-signin';
 
-// Somewhere in your code
-//GoogleSignin.configure();
-
-const signIn = async () => {
-  try {
-    await GoogleSignin.hasPlayServices();
-    const response = await GoogleSignin.signIn();
-    console.log('Google response:', response);
-    const id_token = response.data?.idToken;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
+// Configurar GoogleSignin
+GoogleSignin.configure({
+  webClientId:
+    '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com', // ⚠️ CAMBIA ESTO
+  offlineAccess: true,
+  forceCodeForRefreshToken: true,
+});
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-
   const [generalError, setGeneralError] = useState('');
   const [showGeneralErrorModal, setShowGeneralErrorModal] = useState(false);
-
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-
-  //const [googleLoginPressed, setGoogleLoginPressed] = useState(false);
   const { token, setToken } = useContext(AuthContext);
 
-  // const [request, response, promptAsync] = useAuthRequest({
-  //   androidClientId:
-  //     '98403984467-b7t9npmhl4bc1aa6tnrsh8hg4esi4mem.apps.googleusercontent.com',
-  //   webClientId:
-  //     '98403984467-7tu22g1ie8gk8cq7cjcfjlj28r1oug4f.apps.googleusercontent.com',
-  //   redirectUri: AuthSession.makeRedirectUri({
-  //     scheme: 'com.classconnect1.app',
-  //   }),
-  //   responseType: 'id_token',
-  // });
+  const signIn = async () => {
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
 
-  // useEffect(() => {
-  //   if (googleLoginPressed && response?.type === 'success') {
-  //     console.log('Google response:', response);
-  //     const { id_token } = response.params;
-  //     console.log('Google ID Token:', id_token);
-  //     if (id_token) {
-  //       handleGoogleLoginCallback(id_token, navigation);
-  //     } else {
-  //       console.warn('No id_token in Google response:', response);
-  //     }
-  //     setGoogleLoginPressed(false);
-  //   }
-  // }, [response, googleLoginPressed]);
+      const response = await GoogleSignin.signIn();
+
+      const id_token = response.data.idToken;
+
+      if (id_token) {
+        handleGoogleLoginCallback(id_token, navigation);
+      } else {
+      }
+    } catch (error) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+      } else {
+        // Mostrar más detalles del error DEVELOPER_ERROR
+      }
+    }
+  };
 
   const handleLogin = async () => {
     setEmailError('');
@@ -119,7 +100,6 @@ const LoginScreen = () => {
 
       if (response.ok) {
         const decodeToken = jwtDecode(data.access_token);
-        console.log('Decoded token:', decodeToken);
 
         await AsyncStorage.setItem('token', data.access_token);
         setToken(data.access_token);
@@ -127,7 +107,6 @@ const LoginScreen = () => {
         const decodedToken: any = jwtDecode(data.access_token);
         const user_id = decodedToken.user_id;
 
-        console.log('El token que seteo es:', data.access_token);
         setToken(data.access_token);
 
         try {
@@ -145,7 +124,7 @@ const LoginScreen = () => {
             showLoginErrorToast('Error fetching profile');
             return;
           }
-          console.log('userId del login', user_id);
+
           const userProfile = await profileResponse.json();
           const userRole = userProfile.role;
 
@@ -160,15 +139,11 @@ const LoginScreen = () => {
           setShowGeneralErrorModal(true);
         }
       } else {
-        // Verificar específicamente si el usuario está bloqueado (401)
         if (response.status === 401) {
           setGeneralError('Your account has been blocked by an administrator.');
           setShowGeneralErrorModal(true);
           return;
         }
-
-        // Manejo de otros errores (código original)
-        console.log('la data detail', data.detail);
 
         const detailMsg = data.detail?.detail || data.detail;
         if (
@@ -179,13 +154,11 @@ const LoginScreen = () => {
         } else if (detailMsg === 'Invalid password') {
           setPasswordError('Invalid password');
         } else {
-          console.log('la data detail', detailMsg);
           setModalMessage(detailMsg);
           setShowModal(true);
         }
       }
     } catch (error) {
-      console.error('Error during login:', error);
       setGeneralError('An error occurred. Please try again later.');
       setShowGeneralErrorModal(true);
     }
@@ -272,7 +245,7 @@ const LoginScreen = () => {
               flexDirection: 'row',
               alignItems: 'center',
             }}
-            onPress={console.log("signIn")}
+            onPress={signIn}
           >
             <Image
               source={require('../../assets/images/googlelog.png')}
@@ -284,7 +257,7 @@ const LoginScreen = () => {
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={styles.bottomLink}>
-            Don’t have an account? <Text style={styles.signUp}>Sign up</Text>
+            Don't have an account? <Text style={styles.signUp}>Sign up</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -308,7 +281,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20,
   },
-
   logo: {
     width: 160,
     height: 160,
@@ -359,11 +331,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 14,
   },
-  socialContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
   socialIcon: {
     width: 44,
     height: 44,
@@ -381,7 +348,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 8,
   },
-
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,14 +363,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-
   googleText: {
     fontSize: 16,
     color: '#000',
     marginLeft: 10,
     fontWeight: '500',
   },
-
   signUp: {
     fontWeight: 'bold',
     color: '#4CAF50',

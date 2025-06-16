@@ -165,8 +165,6 @@ const MembersScreen = () => {
         />
       ) : (
         <>
-
-
           <Text style={styles.sectionHeader}>Students</Text>
 
           <FlatList
@@ -183,8 +181,8 @@ const MembersScreen = () => {
                       item.photo
                         ? item.photo
                         : {
-                          uri: 'https://www.w3schools.com/howto/img_avatar.png',
-                        }
+                            uri: 'https://www.w3schools.com/howto/img_avatar.png',
+                          }
                     }
                     style={styles.memberImage}
                   />
@@ -214,7 +212,7 @@ const MembersScreen = () => {
                           navigation.navigate('StudentIndividualStatistics', {
                             course,
                             userId: item.user_id,
-                            studentName:item.name,
+                            studentName: item.name,
                           });
                         }}
                       >

@@ -41,7 +41,7 @@ const ProfileScreen = () => {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [savingNotifications, setSavingNotifications] = useState(false);
-  
+
   // Estados para configuraciones de notificaciones
   const [courseApprove, setCourseApprove] = useState('none');
   const [feedback, setFeedback] = useState('none');
@@ -93,7 +93,7 @@ const ProfileScreen = () => {
   const showSuccessMessage = (message) => {
     setSuccessMessage(message);
     setShowSuccessOverlay(true);
-    
+
     // Animación de entrada
     Animated.sequence([
       Animated.timing(overlayAnimation, {
@@ -172,7 +172,7 @@ const ProfileScreen = () => {
 
   const fetchNotificationSettings = async () => {
     if (!userId) return;
-    
+
     try {
       setLoadingNotifications(true);
       const response = await fetch(
@@ -180,10 +180,10 @@ const ProfileScreen = () => {
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -210,25 +210,24 @@ const ProfileScreen = () => {
 
     try {
       setSavingNotifications(true);
-      
+
       const settings = {
         course_approve: courseApprove,
         feedback: feedback,
         enrollment: enrollment,
       };
 
-   
       console.log('User ID:', userId);
       const response = await fetch(
         `${API_URL}/api/notification/${userId}/config`,
         {
           method: 'PATCH',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(settings),
-        }
+        },
       );
 
       if (response.ok) {
@@ -236,12 +235,11 @@ const ProfileScreen = () => {
         // REEMPLAZAR Alert.alert CON OVERLAY PERSONALIZADO
         // ===============================================
         setShowNotificationModal(false);
-        
+
         // Pequeño delay para que se cierre el modal primero
         setTimeout(() => {
           showSuccessMessage('Notification settings updated successfully!');
         }, 300);
-        
       } else {
         const errorData = await response.text();
         console.error('Error saving settings:', errorData);
@@ -331,7 +329,6 @@ const ProfileScreen = () => {
           // TAMBIÉN PUEDES USAR EL OVERLAY AQUÍ SI QUIERES
           // ===============================================
           showSuccessMessage('✅ Profile updated successfully!');
-
         } else {
           console.error('Error al actualizar el perfil:', result);
           setModalMessage('Error updating profile');
@@ -352,15 +349,17 @@ const ProfileScreen = () => {
       key={option.value}
       style={[
         styles.optionButton,
-        isSelected && { ...styles.selectedOption, borderColor: option.color }
+        isSelected && { ...styles.selectedOption, borderColor: option.color },
       ]}
       onPress={onPress}
     >
       <Text style={styles.optionIcon}>{option.icon}</Text>
-      <Text style={[
-        styles.optionText,
-        isSelected && { color: option.color, fontWeight: '600' }
-      ]}>
+      <Text
+        style={[
+          styles.optionText,
+          isSelected && { color: option.color, fontWeight: '600' },
+        ]}
+      >
         {option.label}
       </Text>
       {isSelected && (
@@ -375,14 +374,12 @@ const ProfileScreen = () => {
         <Text style={styles.notificationTitle}>{type.title}</Text>
         <Text style={styles.notificationDescription}>{type.description}</Text>
       </View>
-      
+
       <View style={styles.optionsContainer}>
-        {notificationOptions.map(option =>
-          renderOptionButton(
-            option,
-            type.state === option.value,
-            () => type.setState(option.value)
-          )
+        {notificationOptions.map((option) =>
+          renderOptionButton(option, type.state === option.value, () =>
+            type.setState(option.value),
+          ),
         )}
       </View>
     </View>
@@ -401,21 +398,23 @@ const ProfileScreen = () => {
       {/* OVERLAY DE ÉXITO PERSONALIZADO */}
       {/* =============================================== */}
       {showSuccessOverlay && (
-        <Animated.View 
+        <Animated.View
           style={[
             styles.successOverlay,
             {
               opacity: overlayAnimation,
-              transform: [{
-                translateY: overlayAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-100, 0],
-                })
-              }]
-            }
+              transform: [
+                {
+                  translateY: overlayAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-100, 0],
+                  }),
+                },
+              ],
+            },
           ]}
         >
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.successContainer}
             onPress={dismissSuccessOverlay}
             activeOpacity={0.9}
@@ -443,23 +442,27 @@ const ProfileScreen = () => {
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>My Profile</Text>
 
-        <TouchableOpacity onPress={handleSelectImage} style={styles.imageSection}>
+        <TouchableOpacity
+          onPress={handleSelectImage}
+          style={styles.imageSection}
+        >
           <View style={styles.imageContainer}>
             <Image
               source={{
-                uri: userImage || 'https://www.w3schools.com/howto/img_avatar.png',
+                uri:
+                  userImage || 'https://www.w3schools.com/howto/img_avatar.png',
               }}
               style={styles.profileImage}
             />
@@ -481,7 +484,7 @@ const ProfileScreen = () => {
                 placeholder="Enter first name"
               />
             </View>
-            
+
             <View style={styles.inputHalf}>
               <Text style={styles.label}>Last Name</Text>
               <TextInput
@@ -509,7 +512,7 @@ const ProfileScreen = () => {
                 editable={false}
               />
             </View>
-            
+
             <View style={styles.inputHalf}>
               <Text style={styles.label}>Role</Text>
               <TextInput
@@ -541,15 +544,17 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.buttonSection}>
-          <TouchableOpacity 
-            style={styles.notificationButton} 
+          <TouchableOpacity
+            style={styles.notificationButton}
             onPress={handleOpenNotificationModal}
           >
-            <Text style={styles.notificationButtonText}>🔔 Edit Notifications</Text>
+            <Text style={styles.notificationButtonText}>
+              🔔 Edit Notifications
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.saveButton, isLoading && styles.disabledButton]} 
+          <TouchableOpacity
+            style={[styles.saveButton, isLoading && styles.disabledButton]}
             onPress={handleSaveChanges}
             disabled={isLoading}
           >
@@ -585,26 +590,37 @@ const ProfileScreen = () => {
                 <Text style={styles.loadingText}>Loading settings...</Text>
               </View>
             ) : (
-              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={styles.modalContent}
+                showsVerticalScrollIndicator={false}
+              >
                 <Text style={styles.modalDescription}>
-                  Choose how you want to receive notifications for different events.
+                  Choose how you want to receive notifications for different
+                  events.
                 </Text>
-    
+
                 {notificationTypes.map(renderNotificationType)}
 
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
-                    style={[styles.saveNotificationButton, savingNotifications && styles.disabledButton]}
+                    style={[
+                      styles.saveNotificationButton,
+                      savingNotifications && styles.disabledButton,
+                    ]}
                     onPress={saveNotificationSettings}
                     disabled={savingNotifications}
                   >
                     {savingNotifications ? (
                       <View style={styles.savingContainer}>
                         <ActivityIndicator size="small" color="#fff" />
-                        <Text style={styles.saveNotificationText}>Saving...</Text>
+                        <Text style={styles.saveNotificationText}>
+                          Saving...
+                        </Text>
                       </View>
                     ) : (
-                      <Text style={styles.saveNotificationText}>Save Settings</Text>
+                      <Text style={styles.saveNotificationText}>
+                        Save Settings
+                      </Text>
                     )}
                   </TouchableOpacity>
 
@@ -794,7 +810,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  
+
   // ===============================================
   // ESTILOS DEL OVERLAY DE ÉXITO
   // ===============================================
@@ -864,7 +880,7 @@ const styles = StyleSheet.create({
     color: '#6c757d',
     fontStyle: 'italic',
   },
-  
+
   // Estilos del Modal (sin cambios)
   modalOverlay: {
     flex: 1,

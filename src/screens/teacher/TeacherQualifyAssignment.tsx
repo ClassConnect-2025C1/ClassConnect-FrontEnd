@@ -12,7 +12,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 
 import StatusOverlay from '@/components/StatusOverlay';
-import { useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_URL } from '@env';
 
 interface RouteParams {
@@ -36,16 +36,23 @@ const TeacherQualifyAssignment = () => {
   const [grade, setGrade] = useState('');
   const [commentError, setCommentError] = useState('');
   const [gradeError, setGradeError] = useState('');
-  
+
   // Estados para el modal de IA
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<AIGradeResponse | null>(null);
   const [aiError, setAiError] = useState('');
-  
+
   const navigation = useNavigation();
   const route = useRoute();
-  const { course_id, assignment_id, submission_id, token, currentFeedback, currentGrade } = route.params as RouteParams;
+  const {
+    course_id,
+    assignment_id,
+    submission_id,
+    token,
+    currentFeedback,
+    currentGrade,
+  } = route.params as RouteParams;
 
   // Inicializar con los valores actuales si existen
   React.useEffect(() => {
@@ -59,7 +66,7 @@ const TeacherQualifyAssignment = () => {
 
   const validateFields = () => {
     let isValid = true;
-    
+
     // Validar comentario
     if (!comment.trim()) {
       setCommentError('This field is necessary');
@@ -87,15 +94,15 @@ const TeacherQualifyAssignment = () => {
     setAiLoading(true);
     setAiError('');
     setAiResponse(null);
-    
+
     try {
       // URL del endpoint que mostraste en la imagen
       const url = `${API_URL}/api/courses/${course_id}/assignment/${assignment_id}/submission/${submission_id}/ai-grade`;
-      
+
       const response = await fetch(url, {
         method: 'GET', // Asumiendo que es GET según la imagen
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -103,20 +110,20 @@ const TeacherQualifyAssignment = () => {
       if (response.ok) {
         const responseData = await response.json();
         console.log('AI Grade Response:', responseData);
-        
+
         // Extraer los datos desde la estructura: { data: { feedback, grade } }
         const aiGradeData = responseData.data || responseData;
         let gradeValue = Number(aiGradeData.grade) || 0;
-        
+
         // Normalizar la calificación: si es mayor a 10, dividir por 10
         // Esto convierte escalas 0-100 a 0-10
         if (gradeValue > 10) {
           gradeValue = gradeValue / 10;
         }
-        
+
         setAiResponse({
           feedback: aiGradeData.feedback || 'No feedback provided',
-          grade: gradeValue
+          grade: gradeValue,
         });
       } else {
         setAiError('Failed to generate AI grade. Please try again.');
@@ -152,11 +159,11 @@ const TeacherQualifyAssignment = () => {
 
     setIsLoading(true);
     setSaveChangueConfirmed(false);
-    
+
     try {
       // Construir la URL del endpoint
       const url = `${API_URL}/api/courses/${course_id}/assignment/${assignment_id}/submission/${submission_id}`;
-      
+
       const response = await fetch(url, {
         method: 'PATCH',
         headers: {
@@ -171,7 +178,7 @@ const TeacherQualifyAssignment = () => {
 
       if (response.ok) {
         setSaveChangueConfirmed(true);
-        
+
         // Esperar un poco para mostrar el mensaje de éxito y luego navegar hacia atrás
         setTimeout(() => {
           navigation.goBack();
@@ -206,14 +213,19 @@ const TeacherQualifyAssignment = () => {
           {aiLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#5B6799" />
-              <Text style={styles.loadingText}>Generating grade with AI...</Text>
+              <Text style={styles.loadingText}>
+                Generating grade with AI...
+              </Text>
             </View>
           ) : aiError ? (
             <View style={styles.errorContainer}>
               <MaterialIcons name="error" size={48} color="#ff4444" />
               <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
               <Text style={styles.errorMessage}>{aiError}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={handleAIGrade}>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={handleAIGrade}
+              >
                 <Text style={styles.retryButtonText}>Try Again</Text>
               </TouchableOpacity>
             </View>
@@ -223,21 +235,21 @@ const TeacherQualifyAssignment = () => {
                 <Text style={styles.responseLabel}>Suggested Comment:</Text>
                 <Text style={styles.responseText}>{aiResponse.feedback}</Text>
               </View>
-              
+
               <View style={styles.responseSection}>
                 <Text style={styles.responseLabel}>Suggested Grade:</Text>
                 <Text style={styles.responseGrade}>{aiResponse.grade}</Text>
               </View>
 
               <View style={styles.modalButtons}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.useGradeButton}
                   onPress={handleUseAIGrade}
                 >
                   <Text style={styles.useGradeButtonText}>Use This Grade</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.cancelModalButton}
                   onPress={handleCloseAIModal}
                 >
@@ -261,14 +273,14 @@ const TeacherQualifyAssignment = () => {
   ) : (
     <View style={styles.container}>
       <Text style={styles.title}>Submission From Student</Text>
-      
+
       {/* Botón de Grade with AI */}
       <TouchableOpacity style={styles.aiButton} onPress={handleAIGrade}>
-        <MaterialIcons 
-          name="star" 
-          size={20} 
-          color="#5B6799" 
-          style={{ marginRight: 6 }} 
+        <MaterialIcons
+          name="star"
+          size={20}
+          color="#5B6799"
+          style={{ marginRight: 6 }}
         />
         <Text style={styles.generateButtonText}>Grade with AI</Text>
       </TouchableOpacity>
@@ -276,9 +288,9 @@ const TeacherQualifyAssignment = () => {
       <Text style={styles.label}>Comment</Text>
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
           { height: 100, textAlignVertical: 'top' },
-          commentError ? styles.inputError : null
+          commentError ? styles.inputError : null,
         ]}
         multiline
         placeholder="Enter your comment"
@@ -288,14 +300,16 @@ const TeacherQualifyAssignment = () => {
           if (commentError) setCommentError('');
         }}
       />
-      {commentError ? <Text style={styles.errorText}>{commentError}</Text> : null}
+      {commentError ? (
+        <Text style={styles.errorText}>{commentError}</Text>
+      ) : null}
 
       <Text style={styles.label}>Grade</Text>
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
           { width: 80 },
-          gradeError ? styles.inputError : null
+          gradeError ? styles.inputError : null,
         ]}
         placeholder="e.g. 10"
         value={grade}
@@ -308,10 +322,7 @@ const TeacherQualifyAssignment = () => {
       {gradeError ? <Text style={styles.errorText}>{gradeError}</Text> : null}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={styles.createButton}
-          onPress={handleSubmit}
-        >
+        <TouchableOpacity style={styles.createButton} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Submit Grade</Text>
         </TouchableOpacity>
 
@@ -404,7 +415,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 8,
   },
-  
+
   // Estilos del Modal
   modalOverlay: {
     flex: 1,

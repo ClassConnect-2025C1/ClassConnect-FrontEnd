@@ -31,11 +31,11 @@ const StudentShowGrade = () => {
   };
 
   const getGradeColorLight = (grade: number) => {
-    if (grade >= 9) return '#1e3a8a20'; 
-    if (grade >= 7) return '#1e40af20'; 
-    if (grade >= 5) return '#05966920'; 
-    if (grade >= 3) return '#d9770620'; 
-    return '#dc262620'; 
+    if (grade >= 9) return '#1e3a8a20';
+    if (grade >= 7) return '#1e40af20';
+    if (grade >= 5) return '#05966920';
+    if (grade >= 3) return '#d9770620';
+    return '#dc262620';
   };
 
   const getGradeEmoji = (grade: number) => {
@@ -60,7 +60,7 @@ const StudentShowGrade = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#2C2C2C" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
@@ -68,7 +68,10 @@ const StudentShowGrade = () => {
         </Text>
       </View>
 
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.content}>
           {/* Assignment card */}
           <View style={styles.assignmentCard}>
@@ -82,16 +85,21 @@ const StudentShowGrade = () => {
           {/* Smaller grade card */}
           <View style={styles.gradeCard}>
             <Text style={styles.gradeLabel}>Your Grade</Text>
-            
+
             <View style={[styles.gradeCircle, { backgroundColor: gradeColor }]}>
               <Text style={styles.gradeText}>{grade}</Text>
               <View style={styles.gradeEmojiContainer}>
                 <Text style={styles.gradeEmoji}>{getGradeEmoji(grade)}</Text>
               </View>
             </View>
-            
+
             <Text style={styles.gradeSubtext}>out of 10 points</Text>
-            <View style={[styles.gradeMessageContainer, { backgroundColor: gradeColorLight }]}>
+            <View
+              style={[
+                styles.gradeMessageContainer,
+                { backgroundColor: gradeColorLight },
+              ]}
+            >
               <Text style={[styles.gradeMessage, { color: gradeColor }]}>
                 {getGradeMessage(grade)}
               </Text>
@@ -104,14 +112,19 @@ const StudentShowGrade = () => {
               <Text style={styles.feedbackIcon}>💭</Text>
               <Text style={styles.feedbackLabel}>Feedback</Text>
             </View>
-            <ScrollView style={styles.feedbackScrollContainer} nestedScrollEnabled={true}>
+            <ScrollView
+              style={styles.feedbackScrollContainer}
+              nestedScrollEnabled={true}
+            >
               <View style={styles.feedbackContent}>
                 {feedback ? (
                   <Text style={styles.feedbackText}>{feedback}</Text>
                 ) : (
                   <View style={styles.noFeedbackContainer}>
                     <Text style={styles.noFeedbackEmoji}>📄</Text>
-                    <Text style={styles.noFeedbackText}>No feedback provided</Text>
+                    <Text style={styles.noFeedbackText}>
+                      No feedback provided
+                    </Text>
                   </View>
                 )}
               </View>
@@ -217,7 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   gradeCircle: {
-    width: 90,  // Más pequeño
+    width: 90, // Más pequeño
     height: 90, // Más pequeño
     borderRadius: 45,
     justifyContent: 'center',
@@ -230,7 +243,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   gradeText: {
-    fontSize: 32,  // Más pequeño
+    fontSize: 32, // Más pequeño
     fontWeight: '900',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0,0,0,0.3)',
@@ -243,7 +256,7 @@ const styles = StyleSheet.create({
     right: -6,
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
-    width: 30,  // Más pequeño
+    width: 30, // Más pequeño
     height: 30, // Más pequeño
     justifyContent: 'center',
     alignItems: 'center',
@@ -254,7 +267,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   gradeEmoji: {
-    fontSize: 16,  // Más pequeño
+    fontSize: 16, // Más pequeño
   },
   gradeSubtext: {
     fontSize: 13,
@@ -281,7 +294,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    height: 280,  // Altura fija más grande
+    height: 280, // Altura fija más grande
     overflow: 'hidden',
   },
   feedbackHeader: {
@@ -303,11 +316,11 @@ const styles = StyleSheet.create({
   },
   feedbackScrollContainer: {
     flex: 1,
-    maxHeight: 220,  // Altura máxima para el scroll
+    maxHeight: 220, // Altura máxima para el scroll
   },
   feedbackContent: {
     padding: 16,
-    minHeight: 200,  // Altura mínima
+    minHeight: 200, // Altura mínima
   },
   feedbackText: {
     fontSize: 15,

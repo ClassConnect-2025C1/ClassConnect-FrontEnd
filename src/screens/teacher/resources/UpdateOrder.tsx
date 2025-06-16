@@ -39,7 +39,10 @@ type RootStackParamList = {
 };
 
 type UpdateOrderScreenRouteProp = RouteProp<RootStackParamList, 'UpdateOrder'>;
-type UpdateOrderScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'UpdateOrder'>;
+type UpdateOrderScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'UpdateOrder'
+>;
 
 interface UpdateOrderProps {
   route: UpdateOrderScreenRouteProp;
@@ -50,60 +53,70 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
   const { course, modules: initialModules } = route.params;
   const navigation = useNavigation();
   const { token } = useAuth();
-  
+
   const [modules, setModules] = useState<Module[]>(initialModules);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [saveChangueConfirmed, setSaveChangueConfirmed] = useState(false);
-  const [animatingModuleId, setAnimatingModuleId] = useState<string | null>(null);
-  const [animatingResourceId, setAnimatingResourceId] = useState<string | null>(null);
+  const [animatingModuleId, setAnimatingModuleId] = useState<string | null>(
+    null,
+  );
+  const [animatingResourceId, setAnimatingResourceId] = useState<string | null>(
+    null,
+  );
   const [hasChanges, setHasChanges] = useState(false);
 
   // Función para mover módulos completos
   const moveModuleUp = (moduleIndex: number) => {
     if (moduleIndex === 0) return; // No se puede mover más arriba
-    
+
     const moduleId = modules[moduleIndex].module_id;
     setAnimatingModuleId(moduleId);
     Vibration.vibrate(50); // Feedback háptico suave
-    
+
     const newModules = [...modules];
     // Intercambiar el módulo actual con el anterior
-    [newModules[moduleIndex], newModules[moduleIndex - 1]] = [newModules[moduleIndex - 1], newModules[moduleIndex]];
-    
+    [newModules[moduleIndex], newModules[moduleIndex - 1]] = [
+      newModules[moduleIndex - 1],
+      newModules[moduleIndex],
+    ];
+
     // Actualizar el orden de los módulos
     const updatedModules = newModules.map((module, index) => ({
       ...module,
-      order: index + 1
+      order: index + 1,
     }));
-    
+
     setModules(updatedModules);
     setHasChanges(true);
-    
+
     // Quitar la animación después de un tiempo
     setTimeout(() => setAnimatingModuleId(null), 600);
   };
 
   const moveModuleDown = (moduleIndex: number) => {
     if (moduleIndex === modules.length - 1) return; // No se puede mover más abajo
-    
+
     const moduleId = modules[moduleIndex].module_id;
     setAnimatingModuleId(moduleId);
     Vibration.vibrate(50); // Feedback háptico suave
-    
+
     const newModules = [...modules];
     // Intercambiar el módulo actual con el siguiente
-    [newModules[moduleIndex], newModules[moduleIndex + 1]] = [newModules[moduleIndex + 1], newModules[moduleIndex]];
-    
+    [newModules[moduleIndex], newModules[moduleIndex + 1]] = [
+      newModules[moduleIndex + 1],
+      newModules[moduleIndex],
+    ];
+
     // Actualizar el orden de los módulos
     const updatedModules = newModules.map((module, index) => ({
       ...module,
-      order: index + 1
+      order: index + 1,
     }));
-    
+
     setModules(updatedModules);
     setHasChanges(true);
-    
+
     // Quitar la animación después de un tiempo
     setTimeout(() => setAnimatingModuleId(null), 600);
   };
@@ -111,19 +124,22 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
   // Función para mover recursos dentro del mismo módulo únicamente
   const moveResourceUp = (moduleIndex: number, resourceIndex: number) => {
     if (resourceIndex === 0) return; // No se puede mover más arriba
-    
+
     const resourceId = modules[moduleIndex].resources[resourceIndex].id;
     setAnimatingResourceId(resourceId);
     Vibration.vibrate(30); // Feedback háptico más suave para recursos
-    
+
     const newModules = [...modules];
     const moduleResources = [...newModules[moduleIndex].resources];
     // Intercambiar el recurso actual con el anterior
-    [moduleResources[resourceIndex], moduleResources[resourceIndex - 1]] = [moduleResources[resourceIndex - 1], moduleResources[resourceIndex]];
+    [moduleResources[resourceIndex], moduleResources[resourceIndex - 1]] = [
+      moduleResources[resourceIndex - 1],
+      moduleResources[resourceIndex],
+    ];
     newModules[moduleIndex].resources = moduleResources;
     setModules(newModules);
     setHasChanges(true);
-    
+
     // Quitar la animación después de un tiempo
     setTimeout(() => setAnimatingResourceId(null), 400);
   };
@@ -131,19 +147,22 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
   const moveResourceDown = (moduleIndex: number, resourceIndex: number) => {
     const module = modules[moduleIndex];
     if (resourceIndex === module.resources.length - 1) return; // No se puede mover más abajo
-    
+
     const resourceId = modules[moduleIndex].resources[resourceIndex].id;
     setAnimatingResourceId(resourceId);
     Vibration.vibrate(30); // Feedback háptico más suave para recursos
-    
+
     const newModules = [...modules];
     const moduleResources = [...newModules[moduleIndex].resources];
     // Intercambiar el recurso actual con el siguiente
-    [moduleResources[resourceIndex], moduleResources[resourceIndex + 1]] = [moduleResources[resourceIndex + 1], moduleResources[resourceIndex]];
+    [moduleResources[resourceIndex], moduleResources[resourceIndex + 1]] = [
+      moduleResources[resourceIndex + 1],
+      moduleResources[resourceIndex],
+    ];
     newModules[moduleIndex].resources = moduleResources;
     setModules(newModules);
     setHasChanges(true);
-    
+
     // Quitar la animación después de un tiempo
     setTimeout(() => setAnimatingResourceId(null), 400);
   };
@@ -152,29 +171,32 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
   const handleSaveOrder = async () => {
     try {
       setIsLoading(true);
-      
+
       // Preparar datos para el endpoint según el formato requerido
       const modulesData = modules.map((module) => ({
         module_id: parseInt(module.module_id), // Convertir a número si es necesario
-        resources: module.resources.map(resource => ({
-          id: resource.id
-        }))
+        resources: module.resources.map((resource) => ({
+          id: resource.id,
+        })),
       }));
 
       const requestBody = {
-        modules: modulesData
+        modules: modulesData,
       };
 
       console.log('Enviando datos:', JSON.stringify(requestBody, null, 2));
 
-      const response = await fetch(`${API_URL}/api/courses/${course.id}/resources`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      const response = await fetch(
+        `${API_URL}/api/courses/${course.id}/resources`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody),
-      });
+      );
 
       if (response.ok) {
         setSaveChangueConfirmed(true);
@@ -192,7 +214,10 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
     } catch (error) {
       console.error('Network error updating order:', error);
       setIsLoading(false);
-      Alert.alert('Error', 'Network error. Please check your connection and try again.');
+      Alert.alert(
+        'Error',
+        'Network error. Please check your connection and try again.',
+      );
     }
   };
 
@@ -214,40 +239,65 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Update Order</Text>
         <Text style={styles.headerSubtitle}>
-          {hasChanges ? "✓ Changes detected - Ready to save" : "Drag items to reorder"}
+          {hasChanges
+            ? '✓ Changes detected - Ready to save'
+            : 'Drag items to reorder'}
         </Text>
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {modules.map((module, moduleIndex) => (
-          <View 
-            key={module.module_id} 
+          <View
+            key={module.module_id}
             style={[
               styles.moduleContainer,
-              animatingModuleId === module.module_id && styles.animatingModule
+              animatingModuleId === module.module_id && styles.animatingModule,
             ]}
           >
             {/* Module Header with move buttons - Mueve módulos completos */}
             <View style={styles.moduleHeader}>
               <View style={styles.moduleInfo}>
-                <Text style={styles.moduleTitle}>Module {moduleIndex + 1}: {module.title}</Text>
-                <Text style={styles.moduleSubtitle}>{module.resources.length} resources</Text>
+                <Text style={styles.moduleTitle}>
+                  Module {moduleIndex + 1}: {module.title}
+                </Text>
+                <Text style={styles.moduleSubtitle}>
+                  {module.resources.length} resources
+                </Text>
               </View>
               <View style={styles.moduleActions}>
                 <TouchableOpacity
                   disabled={moduleIndex === 0}
                   onPress={() => moveModuleUp(moduleIndex)}
-                  style={[styles.moveButton, moduleIndex === 0 && styles.disabledButton]}
+                  style={[
+                    styles.moveButton,
+                    moduleIndex === 0 && styles.disabledButton,
+                  ]}
                 >
-                  <Feather name="chevron-up" size={20} color={moduleIndex === 0 ? "#ccc" : "#007AFF"} />
+                  <Feather
+                    name="chevron-up"
+                    size={20}
+                    color={moduleIndex === 0 ? '#ccc' : '#007AFF'}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity
                   disabled={moduleIndex === modules.length - 1}
                   onPress={() => moveModuleDown(moduleIndex)}
-                  style={[styles.moveButton, moduleIndex === modules.length - 1 && styles.disabledButton]}
+                  style={[
+                    styles.moveButton,
+                    moduleIndex === modules.length - 1 && styles.disabledButton,
+                  ]}
                 >
-                  <Feather name="chevron-down" size={20} color={moduleIndex === modules.length - 1 ? "#ccc" : "#007AFF"} />
+                  <Feather
+                    name="chevron-down"
+                    size={20}
+                    color={
+                      moduleIndex === modules.length - 1 ? '#ccc' : '#007AFF'
+                    }
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -255,11 +305,12 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
             {/* Resources - Solo se mueven dentro del mismo módulo */}
             <View style={styles.resourcesContainer}>
               {module.resources.map((resource, resourceIndex) => (
-                <View 
-                  key={resource.id} 
+                <View
+                  key={resource.id}
                   style={[
                     styles.resourceItem,
-                    animatingResourceId === resource.id && styles.animatingResource
+                    animatingResourceId === resource.id &&
+                      styles.animatingResource,
                   ]}
                 >
                   <View style={styles.resourceInfo}>
@@ -270,16 +321,37 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
                     <TouchableOpacity
                       disabled={resourceIndex === 0}
                       onPress={() => moveResourceUp(moduleIndex, resourceIndex)}
-                      style={[styles.moveButton, resourceIndex === 0 && styles.disabledButton]}
+                      style={[
+                        styles.moveButton,
+                        resourceIndex === 0 && styles.disabledButton,
+                      ]}
                     >
-                      <Feather name="chevron-up" size={16} color={resourceIndex === 0 ? "#ccc" : "#007AFF"} />
+                      <Feather
+                        name="chevron-up"
+                        size={16}
+                        color={resourceIndex === 0 ? '#ccc' : '#007AFF'}
+                      />
                     </TouchableOpacity>
                     <TouchableOpacity
                       disabled={resourceIndex === module.resources.length - 1}
-                      onPress={() => moveResourceDown(moduleIndex, resourceIndex)}
-                      style={[styles.moveButton, resourceIndex === module.resources.length - 1 && styles.disabledButton]}
+                      onPress={() =>
+                        moveResourceDown(moduleIndex, resourceIndex)
+                      }
+                      style={[
+                        styles.moveButton,
+                        resourceIndex === module.resources.length - 1 &&
+                          styles.disabledButton,
+                      ]}
                     >
-                      <Feather name="chevron-down" size={16} color={resourceIndex === module.resources.length - 1 ? "#ccc" : "#007AFF"} />
+                      <Feather
+                        name="chevron-down"
+                        size={16}
+                        color={
+                          resourceIndex === module.resources.length - 1
+                            ? '#ccc'
+                            : '#007AFF'
+                        }
+                      />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -294,18 +366,17 @@ export default function UpdateOrder({ route }: UpdateOrderProps) {
         <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[
-            styles.saveButton,
-            hasChanges && styles.saveButtonHighlight
-          ]} 
+        <TouchableOpacity
+          style={[styles.saveButton, hasChanges && styles.saveButtonHighlight]}
           onPress={handleSaveOrder}
         >
-          <Text style={[
-            styles.saveButtonText,
-            hasChanges && styles.saveButtonTextHighlight
-          ]}>
-            {hasChanges ? "Save Changes" : "Save Order"}
+          <Text
+            style={[
+              styles.saveButtonText,
+              hasChanges && styles.saveButtonTextHighlight,
+            ]}
+          >
+            {hasChanges ? 'Save Changes' : 'Save Order'}
           </Text>
         </TouchableOpacity>
       </View>

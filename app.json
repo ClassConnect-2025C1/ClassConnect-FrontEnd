@@ -23,11 +23,6 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "config": {
-        "googleSignIn": {
-          "certificateHash": "DD:65:D8:49:D0:28:F3:4C:03:02:97:22:29:BC:6C:28:8D:83:F8:C7"
-        }
       }
     },
     "web": {

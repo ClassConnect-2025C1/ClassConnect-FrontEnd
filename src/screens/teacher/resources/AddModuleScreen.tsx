@@ -45,7 +45,7 @@ const AddModuleScreen = () => {
 
     try {
       setError('');
-      
+
       // Iniciar loading
       setIsLoading(true);
       setLoadingMessage('Creating module...');
@@ -62,7 +62,7 @@ const AddModuleScreen = () => {
             Authorization: `Bearer ${token}`,
           },
           body: formData,
-        }
+        },
       );
 
       if (!response.ok) {
@@ -73,7 +73,6 @@ const AddModuleScreen = () => {
       setIsLoading(false);
       setOperationSuccess(true);
       setSuccessMessage('Module created successfully!');
-
     } catch (error) {
       console.error('Error adding module:', error);
       setIsLoading(false);
@@ -112,7 +111,10 @@ const AddModuleScreen = () => {
         <TouchableOpacity style={styles.sendButton} onPress={handleCreate}>
           <Text style={styles.buttonText}>Create</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
       </View>

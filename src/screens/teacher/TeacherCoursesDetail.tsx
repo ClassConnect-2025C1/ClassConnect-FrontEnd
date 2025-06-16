@@ -29,7 +29,6 @@ export default function TeacherCourseDetail({ route }) {
   const [saveChangueConfirmed, setChangueConfirmed] = useState(false);
   const [modules, setModules] = useState([]);
   const filteredAssignments = assignments.filter((assignment) => {
-
     const titleMatch = assignment.title
       ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -59,7 +58,10 @@ export default function TeacherCourseDetail({ route }) {
   // Lógica de paginación para Resources
   const totalResourcePages = Math.ceil(modules.length / ITEMS_PER_PAGE);
   const startResourceIndex = (resourceCurrentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedModules = modules.slice(startResourceIndex, startResourceIndex + ITEMS_PER_PAGE);
+  const paginatedModules = modules.slice(
+    startResourceIndex,
+    startResourceIndex + ITEMS_PER_PAGE,
+  );
 
   const fetchAssignments = async () => {
     try {
@@ -98,7 +100,6 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-
   const fetchModules = async () => {
     try {
       if (!token) {
@@ -123,7 +124,7 @@ export default function TeacherCourseDetail({ route }) {
           module_id: item['module_id'],
           title: item['module_name'],
           order: item['order'],
-          resources: item['resources'].map(r => ({
+          resources: item['resources'].map((r) => ({
             id: r['id'],
             type: r['type'],
             name: r['name'],
@@ -141,16 +142,12 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-  
-
   useEffect(() => {
     if (isFocused) {
       fetchAssignments();
       fetchModules();
     }
   }, [isFocused]);
-
-
 
   const handleDeleteAssignment = async (assignmentId) => {
     try {
@@ -186,76 +183,79 @@ export default function TeacherCourseDetail({ route }) {
     }
   };
 
-
   const handleDeleteResource = async (resource) => {
-  try {
-    // Encontrar el módulo que contiene este recurso
-    const module = modules.find(m => 
-      m.resources.some(r => r.id === resource.id)
-    );
-    
-    if (!module) return;
-    
-    const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${module.module_id}/${resource.id}`;
+    try {
+      // Encontrar el módulo que contiene este recurso
+      const module = modules.find((m) =>
+        m.resources.some((r) => r.id === resource.id),
+      );
 
-    setLoading(true);
+      if (!module) return;
 
-    const response = await fetch(deleteUrl, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+      const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${module.module_id}/${resource.id}`;
 
-    if (response.ok) {
-      console.log('Resource deleted successfully');
-      // ✅ RECARGAR RECURSOS DESPUÉS DEL ÉXITO
-      await fetchModules();
-    } else {
-      const errorData = await response.json();
-      console.error('Error deleting resource:', errorData);
-      console.log('Error', 'Failed to delete resource. Please try again.');
+      setLoading(true);
+
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        console.log('Resource deleted successfully');
+        // ✅ RECARGAR RECURSOS DESPUÉS DEL ÉXITO
+        await fetchModules();
+      } else {
+        const errorData = await response.json();
+        console.error('Error deleting resource:', errorData);
+        console.log('Error', 'Failed to delete resource. Please try again.');
+      }
+    } catch (error) {
+      console.error('Network error deleting resource:', error);
+      console.log(
+        'Error',
+        'Network error. Please check your connection and try again.',
+      );
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Network error deleting resource:', error);
-    console.log('Error', 'Network error. Please check your connection and try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleDeleteModule = async (moduleId) => {
-  try {
-    const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${moduleId}`;
+    try {
+      const deleteUrl = `${API_URL}/api/courses/${course.id}/resource/module/${moduleId}`;
 
-    setLoading(true);
+      setLoading(true);
 
-    const response = await fetch(deleteUrl, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (response.ok) {
-  
-      // ✅ RECARGAR RECURSOS DESPUÉS DEL ÉXITO
-      await fetchModules();
-    } else {
-      const errorData = await response.json();
-      console.error('Error deleting module:', errorData);
-      console.log('Error', 'Failed to delete module. Please try again.');
+      if (response.ok) {
+        // ✅ RECARGAR RECURSOS DESPUÉS DEL ÉXITO
+        await fetchModules();
+      } else {
+        const errorData = await response.json();
+        console.error('Error deleting module:', errorData);
+        console.log('Error', 'Failed to delete module. Please try again.');
+      }
+    } catch (error) {
+      console.error('Network error deleting module:', error);
+      console.log(
+        'Error',
+        'Network error. Please check your connection and try again.',
+      );
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Network error deleting module:', error);
-    console.log('Error', 'Network error. Please check your connection and try again.');
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return isLoading ? (
     <StatusOverlay
@@ -289,7 +289,7 @@ export default function TeacherCourseDetail({ route }) {
         </Text>
 
         {Array.isArray(course.eligibilityCriteria) &&
-          course.eligibilityCriteria.length > 0 ? (
+        course.eligibilityCriteria.length > 0 ? (
           <View style={styles.eligibilityContainer}>
             <Text style={styles.detail}>Eligibility Criteria:</Text>
 
@@ -400,25 +400,25 @@ export default function TeacherCourseDetail({ route }) {
             </View>
           ))
         ) : activeSubTab === 'Resources' ? (
-
           <View style={styles.resourcesContainer}>
             {/* Mostrar módulos paginados */}
             {paginatedModules.map((module, moduleIndex) => (
-
               <View key={moduleIndex} style={styles.moduleContainer}>
-
                 {/* Header del módulo con título y botón delete */}
                 <View style={styles.moduleHeader}>
                   <Text style={styles.moduleTitle}>
-                    Module {startResourceIndex + moduleIndex + 1}: {module.title}
+                    Module {startResourceIndex + moduleIndex + 1}:{' '}
+                    {module.title}
                   </Text>
                   <View style={styles.moduleActions}>
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('EditModule', {
-                        token,
-                        course,
-                        module,
-                      })}
+                      onPress={() =>
+                        navigation.navigate('EditModule', {
+                          token,
+                          course,
+                          module,
+                        })
+                      }
                       style={styles.editButton}
                     >
                       <Text style={styles.editText}>✏️</Text>
@@ -455,7 +455,7 @@ export default function TeacherCourseDetail({ route }) {
                     navigation.navigate('AddResourceForModule', {
                       token,
                       course,
-                      module
+                      module,
                     })
                   }
                 >
@@ -477,11 +477,12 @@ export default function TeacherCourseDetail({ route }) {
               <Text style={styles.smallButtonText}>Create module</Text>
             </TouchableOpacity>
 
-
             {/* Update order button */}
             <TouchableOpacity
               style={styles.updateOrderButton}
-              onPress={() => navigation.navigate('UpdateOrder', { course, modules })}
+              onPress={() =>
+                navigation.navigate('UpdateOrder', { course, modules })
+              }
             >
               <Text style={styles.updateOrderText}>Update Order</Text>
             </TouchableOpacity>
@@ -490,7 +491,9 @@ export default function TeacherCourseDetail({ route }) {
             <View style={styles.paginationContainer}>
               <TouchableOpacity
                 disabled={resourceCurrentPage === 1}
-                onPress={() => setResourceCurrentPage((prev) => Math.max(prev - 1, 1))}
+                onPress={() =>
+                  setResourceCurrentPage((prev) => Math.max(prev - 1, 1))
+                }
                 style={[
                   styles.pageButton,
                   resourceCurrentPage === 1 && styles.disabledButton,
@@ -506,11 +509,14 @@ export default function TeacherCourseDetail({ route }) {
               <TouchableOpacity
                 disabled={resourceCurrentPage === totalResourcePages}
                 onPress={() =>
-                  setResourceCurrentPage((prev) => Math.min(prev + 1, totalResourcePages))
+                  setResourceCurrentPage((prev) =>
+                    Math.min(prev + 1, totalResourcePages),
+                  )
                 }
                 style={[
                   styles.pageButton,
-                  resourceCurrentPage === totalResourcePages && styles.disabledButton,
+                  resourceCurrentPage === totalResourcePages &&
+                    styles.disabledButton,
                 ]}
               >
                 <Text style={styles.pageButtonText}>Next</Text>
@@ -935,10 +941,7 @@ const styles = StyleSheet.create({
   },
 
   resourcesScrollView: {
-  maxHeight: 60, // Altura para aproximadamente 3 recursos
-  marginBottom: 5,
-},
-
+    maxHeight: 60, // Altura para aproximadamente 3 recursos
+    marginBottom: 5,
+  },
 });
-
-

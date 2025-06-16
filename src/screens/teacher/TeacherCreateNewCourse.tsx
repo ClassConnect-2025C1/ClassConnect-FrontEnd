@@ -63,7 +63,7 @@ const TeacherCreateNewCourseScreen = () => {
         });
 
         console.log('Response status:', auxResponse.status);
-        console.log('Response statusText:', auxResponse.statusText)
+        console.log('Response statusText:', auxResponse.statusText);
 
         if (!auxResponse.ok) {
           throw new Error('Failed to fetch auxiliary teachers');
@@ -127,7 +127,7 @@ const TeacherCreateNewCourseScreen = () => {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error creating course:', errorData);
-        
+
         // Error en la petición
         setIsLoading(false);
         setModalMessage('Failed to create course. Please try again.');
@@ -145,7 +145,6 @@ const TeacherCreateNewCourseScreen = () => {
       setTimeout(() => {
         navigation.navigate('TeacherCourses', { newCourse: data });
       }, 1500);
-
     } catch (error) {
       console.error('Network error creating course:', error);
       setIsLoading(false);
