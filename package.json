@@ -37,7 +37,6 @@
     "expo-status-bar": "~2.0.1",
     "expo-updates": "^0.27.4",
     "expo-web-browser": "~14.0.2",
-    "firebase": "^11.6.0",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
     "metro-react-native-babel-preset": "^0.77.0",
