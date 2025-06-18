@@ -221,10 +221,10 @@ const TeacherStatistics = () => {
       };
 
       const submissionData = {
-        labels: courseData.map((c) => c.name),
+        labels: ['', ...courseData.map((c) => c.name)],
         datasets: [
           {
-            data: courseData.map((c) => c.submission),
+            data: [0, ...courseData.map((c) => c.submission)],
           },
         ],
       };
@@ -537,7 +537,7 @@ const TeacherStatistics = () => {
         content: pdf.base64,
       });
 
-      Alert.alert('Success', 'PDF exported successfully!');
+
     } catch (error) {
       console.error('PDF Export Error:', error);
       Alert.alert(
