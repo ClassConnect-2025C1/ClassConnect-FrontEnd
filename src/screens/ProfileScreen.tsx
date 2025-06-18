@@ -168,7 +168,7 @@ const ProfileScreen = () => {
 
           // Inicializar notificaciones FCM
           const notificationResult = await NotificationService.initialize(
-            userIdFromToken, 
+            userIdFromToken,
             token
           );
           setFcmToken(notificationResult.token);
@@ -255,7 +255,6 @@ const ProfileScreen = () => {
       } else {
         const errorData = await response.text();
         console.error('Error saving settings:', errorData);
-        Alert.alert('Error', 'Failed to save notification settings');
       }
     } catch (error) {
       console.error('Error saving notification settings:', error);
