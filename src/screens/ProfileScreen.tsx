@@ -147,6 +147,7 @@ const ProfileScreen = () => {
 
           const userProfile = await response.json();
 
+
           if (userProfile) {
             setFirstName(userProfile.name || 'No Name');
             setLastName(userProfile.last_name || 'No Last Name');
@@ -171,6 +172,8 @@ const ProfileScreen = () => {
             userIdFromToken,
             token
           );
+
+
           setFcmToken(notificationResult.token);
           setNotificationPermissionGranted(notificationResult.hasPermission);
         }
@@ -232,7 +235,7 @@ const ProfileScreen = () => {
         notification_enabled: notificationPermissionGranted,
       };
 
-      console.log('User ID:', userId);
+
       const response = await fetch(
         `${API_URL}/api/notification/${userId}/config`,
         {
@@ -335,7 +338,7 @@ const ProfileScreen = () => {
         const result = await response.json();
 
         if (response.ok) {
-          console.log('Perfil actualizado con éxito');
+
           showSuccessMessage('✅ Profile updated successfully!');
         } else {
           console.error('Error al actualizar el perfil:', result);
@@ -401,10 +404,6 @@ const ProfileScreen = () => {
         onAccept={() => setShowModal(false)}
         onClose={() => setShowModal(false)}
       />
-
-      {/* =============================================== */}
-      {/* OVERLAY DE ÉXITO PERSONALIZADO */}
-      {/* =============================================== */}
       {showSuccessOverlay && (
         <Animated.View
           style={[
@@ -560,6 +559,17 @@ const ProfileScreen = () => {
               🔔 Edit Notifications
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => navigation.navigate('SetPassword', { email })}
+          >
+            <Text style={styles.notificationButtonText}>
+              🔒 Create password
+            </Text>
+          </TouchableOpacity>
+
+
 
           <TouchableOpacity
             style={[styles.saveButton, isLoading && styles.disabledButton]}

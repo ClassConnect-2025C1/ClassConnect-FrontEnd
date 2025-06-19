@@ -20,6 +20,7 @@ const ResetPasswordScreen = () => {
   const route = useRoute();
   const { email } = route.params;
 
+
   const resetPassword = async () => {
     if (newPassword.length < 5) {
       setPasswordError('Password must be at least 5 characters');
@@ -27,8 +28,10 @@ const ResetPasswordScreen = () => {
     }
     setPasswordError('');
 
+
     try {
       setLoading(true);
+
       const response = await axios.patch(
         `${API_URL}/api/auth/recovery-password/change-password`,
         {
@@ -38,6 +41,7 @@ const ResetPasswordScreen = () => {
         {
           headers: {
             'Content-Type': 'application/json',
+
           },
         },
       );
