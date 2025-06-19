@@ -520,7 +520,7 @@ const StudentIndividualStatistics = () => {
         content: pdf.base64,
       });
 
-      Alert.alert('Success', 'PDF exported successfully!');
+      //Alert.alert('Success', 'PDF exported successfully!');
     } catch (error) {
       console.error('PDF Export Error:', error);
       Alert.alert('Error', 'Failed to generate PDF');
