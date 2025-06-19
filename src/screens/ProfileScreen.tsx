@@ -36,6 +36,7 @@ const ProfileScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [userId, setUserId] = useState(null);
+  const [hasPassword, setHasPassword] = useState(null);
   const { token } = useAuth();
 
   const [fcmToken, setFcmToken] = useState('');
@@ -165,6 +166,11 @@ const ProfileScreen = () => {
             setUserImage(null);
             setLocation('');
             setRole(null);
+          }
+
+          if (userProfile.email) {
+            await checkUserPassword(userProfile.email); // ✅ Usar el email del perfil
+            console.log('User password check completed for:', userProfile.email);
           }
 
           // Inicializar notificaciones FCM
@@ -395,6 +401,31 @@ const ProfileScreen = () => {
       </View>
     </View>
   );
+  const checkUserPassword = async (userEmail) => {
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/auth/has-password/${userEmail}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log('response status:', response.status,);
+      if (response.ok) {
+
+        const result = await response.json();
+        setHasPassword(result.has_password);
+      }
+    } catch (error) {
+      console.log('Estamos aca!!');
+      console.error('Error checking password:', error);
+    }
+  };
+
 
   return (
     <View style={styles.container}>
@@ -560,14 +591,16 @@ const ProfileScreen = () => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={() => navigation.navigate('SetPassword', { email })}
-          >
-            <Text style={styles.notificationButtonText}>
-              🔒 Create password
-            </Text>
-          </TouchableOpacity>
+          {!hasPassword && (
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={() => navigation.navigate('SetPassword', { email })}
+            >
+              <Text style={styles.notificationButtonText}>
+                🔒 Create password
+              </Text>
+            </TouchableOpacity>
+          )}
 
 
 

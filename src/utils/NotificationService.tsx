@@ -8,7 +8,7 @@ export interface NotificationToken {
 }
 
 export class NotificationService {
-  
+
   // Solicitar permisos de notificación
   static async requestNotificationPermission(): Promise<boolean> {
     try {
@@ -28,7 +28,7 @@ export class NotificationService {
         } else {
           const authStatus = await messaging().requestPermission();
           return authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-                 authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+            authStatus === messaging.AuthorizationStatus.PROVISIONAL;
         }
       }
       return true;
@@ -42,7 +42,7 @@ export class NotificationService {
   static async getFCMToken(): Promise<NotificationToken> {
     try {
       const hasPermission = await this.requestNotificationPermission();
-      
+
       if (!hasPermission) {
         Alert.alert(
           'Permissions Required',
@@ -53,19 +53,19 @@ export class NotificationService {
       }
 
       const token = await messaging().getToken();
-      console.log('🔑 FCM Token obtained:', token);
-      
+      //console.log('🔑 FCM Token obtained:', token);
+
       return { token, hasPermission: true };
     } catch (error) {
-      console.error('❌ Error getting FCM token:', error);
+      //console.error('❌ Error getting FCM token:', error);
       return { token: '', hasPermission: false };
     }
   }
 
   // Enviar token al backend
   static async sendTokenToBackend(
-    fcmToken: string, 
-    userId: string, 
+    fcmToken: string,
+    userId: string,
     authToken: string
   ): Promise<boolean> {
     if (!userId || !fcmToken) {
@@ -74,7 +74,7 @@ export class NotificationService {
     }
 
     try {
-      console.log('📤 Sending FCM token to backend...');
+
       const response = await fetch(`${API_URL}/api/users/${userId}/push-token`, {
         method: 'POST',
         headers: {
@@ -96,7 +96,7 @@ export class NotificationService {
         return true;
       } else {
         const errorText = await response.text();
-        console.error('❌ Failed to send FCM token to backend:', errorText);
+        //console.error('❌ Failed to send FCM token to backend:', errorText);
         return false;
       }
     } catch (error) {
@@ -109,12 +109,12 @@ export class NotificationService {
   static setupNotificationListeners(
     onForegroundMessage?: (message: any) => void
   ) {
-    console.log('🎧 Setting up FCM notification listeners...');
+
 
     // Listener para notificaciones en primer plano
     const unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
       console.log('📱 FCM message received in foreground:', remoteMessage);
-      
+
       if (onForegroundMessage) {
         onForegroundMessage(remoteMessage);
       } else {
@@ -142,22 +142,22 @@ export class NotificationService {
 
   // Función completa para inicializar todo
   static async initialize(
-    userId: string, 
+    userId: string,
     authToken: string,
     onForegroundMessage?: (message: any) => void
   ): Promise<NotificationToken> {
     try {
       // 1. Obtener token FCM
       const tokenResult = await this.getFCMToken();
-      
+
       if (tokenResult.hasPermission && tokenResult.token) {
         // 2. Enviar token al backend
         await this.sendTokenToBackend(tokenResult.token, userId, authToken);
-        
+
         // 3. Configurar listeners
         this.setupNotificationListeners(onForegroundMessage);
       }
-      
+
       return tokenResult;
     } catch (error) {
       console.error('❌ Error initializing notification service:', error);
