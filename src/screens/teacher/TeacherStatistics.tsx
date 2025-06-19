@@ -691,24 +691,7 @@ const TeacherStatistics = () => {
             </View>
           </View>
 
-          {trendData && (
-            <View style={styles.chartSection}>
-              <Text style={styles.chartTitle}>📈 Grade Trends</Text>
-              <View
-                ref={trendChartRef}
-                collapsable={false}
-                style={{ backgroundColor: 'white' }}
-              >
-                <LineChart
-                  data={trendData}
-                  width={screenWidth - 40}
-                  height={200}
-                  chartConfig={chartConfig}
-                  style={styles.chart}
-                />
-              </View>
-            </View>
-          )}
+
         </View>
       )}
 
