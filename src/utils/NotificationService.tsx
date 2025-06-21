@@ -75,7 +75,7 @@ export class NotificationService {
 
     try {
 
-      const response = await fetch(`${API_URL}/api/users/${userId}/push-token`, {
+      const response = await fetch(`${API_URL}/api/notification/${userId}/push-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
