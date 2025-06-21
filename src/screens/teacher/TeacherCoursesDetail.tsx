@@ -289,7 +289,7 @@ export default function TeacherCourseDetail({ route }) {
         </Text>
 
         {Array.isArray(course.eligibilityCriteria) &&
-        course.eligibilityCriteria.length > 0 ? (
+          course.eligibilityCriteria.length > 0 ? (
           <View style={styles.eligibilityContainer}>
             <Text style={styles.detail}>Eligibility Criteria:</Text>
 
@@ -516,7 +516,7 @@ export default function TeacherCourseDetail({ route }) {
                 style={[
                   styles.pageButton,
                   resourceCurrentPage === totalResourcePages &&
-                    styles.disabledButton,
+                  styles.disabledButton,
                 ]}
               >
                 <Text style={styles.pageButtonText}>Next</Text>
@@ -734,8 +734,8 @@ const styles = StyleSheet.create({
   bottomButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 0,
     gap: 10,
   },
 
@@ -786,9 +786,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center', // centra todo
     alignItems: 'center',
-    marginHorizontal: 20,
-    marginVertical: 12,
-    gap: 30, // espacio entre botones y texto
+    marginHorizontal: 5,
+    marginVertical: 5,
+    gap: 10, // espacio entre botones y texto
   },
   pageButton: {
     paddingHorizontal: 17,

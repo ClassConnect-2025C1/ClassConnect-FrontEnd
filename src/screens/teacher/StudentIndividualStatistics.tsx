@@ -121,7 +121,7 @@ const StudentIndividualStatistics = () => {
       avgGrade =
         validGrades.length > 0
           ? validGrades.reduce((sum, d) => sum + d.average_grade, 0) /
-            validGrades.length
+          validGrades.length
           : 0;
       avgSubmissionRate =
         filteredDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) /
@@ -142,6 +142,7 @@ const StudentIndividualStatistics = () => {
   };
 
   // ✅ Función getChartData actualizada con lógica del 0 invisible
+  // ✅ Función getChartData mejorada para StudentIndividualStatistics
   const getChartData = () => {
     if (!studentStats || !studentStats.statistics_for_dates) {
       return { gradeData: null, submissionData: null, trendData: null };
@@ -153,40 +154,113 @@ const StudentIndividualStatistics = () => {
       return { gradeData: null, submissionData: null, trendData: null };
     }
 
-    const sortedDates = filteredDates.sort(
+    // Eliminar fechas duplicadas y ordenar
+    const uniqueDatesMap = new Map();
+    filteredDates.forEach((item) => {
+      const dateKey = new Date(item.date).toISOString().split('T')[0]; // YYYY-MM-DD
+      if (
+        !uniqueDatesMap.has(dateKey) ||
+        new Date(item.date) > new Date(uniqueDatesMap.get(dateKey).date)
+      ) {
+        uniqueDatesMap.set(dateKey, item);
+      }
+    });
+
+    const uniqueDates = Array.from(uniqueDatesMap.values()).sort(
       (a, b) => new Date(a.date) - new Date(b.date),
     );
 
-    // Labels de fechas
-    const dateLabels = sortedDates.map((item) => {
+    // FILTRAR fechas que realmente tienen actividad (no son solo 0s)
+    const datesWithActivity = uniqueDates.filter((item) => {
+      // Una fecha tiene actividad si tiene grades > 0 O submission_rate > 0
+      return item.average_grade > 0 || item.submission_rate > 0;
+    });
+
+    // Si no hay fechas con actividad real, usar datos globales
+    if (datesWithActivity.length === 0) {
+      const gradeData = {
+        labels: ['Today'],
+        datasets: [{ data: [studentStats.average_grade || 0] }],
+      };
+
+      const submissionData = {
+        labels: ['Today'],
+        datasets: [{ data: [(studentStats.submission_rate || 0) * 100] }],
+      };
+
+      return { gradeData, submissionData, trendData: null };
+    }
+
+    // Procesar las fechas para mantener el promedio anterior cuando no hay nuevas calificaciones
+    let lastValidGrade = 0; // Empezar desde 0
+    let lastValidSubmissionRate = 0; // También mantener el último submission rate válido
+
+    const processedDates = datesWithActivity.map((item) => {
+      // Si hay una nueva calificación (> 0), actualizar el lastValidGrade
+      if (item.average_grade > 0) {
+        lastValidGrade = item.average_grade;
+      }
+
+      // Si hay nueva actividad de submission, actualizar el lastValidSubmissionRate
+      if (item.submission_rate > 0) {
+        lastValidSubmissionRate = item.submission_rate;
+      }
+
+      return {
+        ...item,
+        average_grade: lastValidGrade,
+        submission_rate: lastValidSubmissionRate,
+      };
+    });
+
+    const finalDates = [...processedDates];
+
+    // ⭐ CLAVE: Agregar fechas adicionales para tener al menos 4 barras
+    while (finalDates.length < 4 && finalDates.length < 8) {
+      const lastDate = finalDates[finalDates.length - 1];
+      const nextDate = new Date(lastDate.date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      if (nextDate <= endDate) {
+        finalDates.push({
+          date: nextDate.toISOString(),
+          average_grade: lastValidGrade,
+          submission_rate: lastValidSubmissionRate,
+        });
+      } else {
+        break;
+      }
+    }
+
+    const labels = finalDates.map((item) => {
       const date = new Date(item.date);
       return `${date.getDate()}/${date.getMonth() + 1}`;
     });
 
     // ✅ Datos para gráfico de barras de evolución de notas
     const trendData = {
-      labels: ['', ...dateLabels], // 0 invisible + fechas
+      labels: ['', ...labels], // 0 invisible + fechas
       datasets: [{
-        data: [0, ...sortedDates.map((item) => item.average_grade || 0)], // 0 + datos
+        data: [0, ...finalDates.map((item) => item.average_grade || 0)], // 0 + datos
         color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
       }]
     };
 
     // ✅ Datos para gráfico de barras de tasa de envío
     const submissionData = {
-      labels: ['', ...dateLabels], // 0 invisible + fechas
+      labels: ['', ...labels], // 0 invisible + fechas
       datasets: [{
-        data: [0, ...sortedDates.map((item) => (item.submission_rate || 0) * 100)], // 0 + datos
+        data: [0, ...finalDates.map((item) => (item.submission_rate || 0) * 100)], // 0 + datos
         color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
       }]
     };
 
-    // ✅ Datos comparativos por semana
+    // ✅ Datos comparativos por semana (solo si hay más de 7 días)
     let weeklyData = null;
-    if (sortedDates.length > 7) {
+    if (finalDates.length > 7) {
       const weeklyStats = [];
-      for (let i = 0; i < sortedDates.length; i += 7) {
-        const weekDates = sortedDates.slice(i, i + 7);
+      for (let i = 0; i < finalDates.length; i += 7) {
+        const weekDates = finalDates.slice(i, i + 7);
         const weekAvgGrade =
           weekDates.reduce((sum, d) => sum + (d.average_grade || 0), 0) /
           weekDates.length;
@@ -332,42 +406,38 @@ const StudentIndividualStatistics = () => {
           <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
         </div>
 
-        ${
-          trendChartImage
-            ? `
+        ${trendChartImage
+          ? `
           <div class="chart-section">
             <h2 class="chart-title">📈 Grade Evolution</h2>
             <img src="data:image/png;base64,${trendChartImage}" class="chart-image" alt="Trend Chart" />
           </div>
         `
-            : ''
+          : ''
         }
 
-        ${
-          submissionChartImage
-            ? `
+        ${submissionChartImage
+          ? `
           <div class="chart-section">
             <h2 class="chart-title">📊 Task Completion Rate</h2>
             <img src="data:image/png;base64,${submissionChartImage}" class="chart-image" alt="Submission Chart" />
           </div>
         `
-            : ''
+          : ''
         }
 
-        ${
-          gradeChartImage
-            ? `
+        ${gradeChartImage
+          ? `
           <div class="chart-section">
             <h2 class="chart-title">📊 Weekly Performance</h2>
             <img src="data:image/png;base64,${gradeChartImage}" class="chart-image" alt="Grade Chart" />
           </div>
         `
-            : ''
+          : ''
         }
 
-        ${
-          sortedDates.length > 0
-            ? `
+        ${sortedDates.length > 0
+          ? `
           <div class="data-section">
             <h2 class="data-title">📅 Daily Performance Data</h2>
             <table class="data-table">
@@ -380,26 +450,25 @@ const StudentIndividualStatistics = () => {
               </thead>
               <tbody>
                 ${sortedDates
-                  .map(
-                    (item) => `
+            .map(
+              (item) => `
                   <tr>
                     <td>${new Date(item.date).toLocaleDateString()}</td>
                     <td>${(item.average_grade || 0).toFixed(1)}</td>
                     <td>${((item.submission_rate || 0) * 100).toFixed(1)}%</td>
                   </tr>
                 `,
-                  )
-                  .join('')}
+            )
+            .join('')}
               </tbody>
             </table>
           </div>
         `
-            : ''
+          : ''
         }
 
-        ${
-          sortedDates.length > 1
-            ? `
+        ${sortedDates.length > 1
+          ? `
           <div class="data-section">
             <h2 class="data-title">📈 Performance Analysis</h2>
             <div class="metric">
@@ -420,7 +489,7 @@ const StudentIndividualStatistics = () => {
             </div>
           </div>
         `
-            : ''
+          : ''
         }
 
         <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
@@ -451,7 +520,7 @@ const StudentIndividualStatistics = () => {
         content: pdf.base64,
       });
 
-      Alert.alert('Success', 'PDF exported successfully!');
+      //Alert.alert('Success', 'PDF exported successfully!');
     } catch (error) {
       console.error('PDF Export Error:', error);
       Alert.alert('Error', 'Failed to generate PDF');

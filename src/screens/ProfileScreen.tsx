@@ -19,6 +19,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { AcceptOnlyModal, AcceptRejectModal } from '../components/Modals';
 import { API_URL } from '@env';
 import { useAuth } from '../navigation/AuthContext';
+import { NotificationService } from '../utils/NotificationService';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -35,7 +36,11 @@ const ProfileScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [userId, setUserId] = useState(null);
+  const [hasPassword, setHasPassword] = useState(null);
   const { token } = useAuth();
+
+  const [fcmToken, setFcmToken] = useState('');
+  const [notificationPermissionGranted, setNotificationPermissionGranted] = useState(false);
 
   // Estados para el modal de notificaciones
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -143,6 +148,7 @@ const ProfileScreen = () => {
 
           const userProfile = await response.json();
 
+
           if (userProfile) {
             setFirstName(userProfile.name || 'No Name');
             setLastName(userProfile.last_name || 'No Last Name');
@@ -161,6 +167,21 @@ const ProfileScreen = () => {
             setLocation('');
             setRole(null);
           }
+
+          if (userProfile.email) {
+            await checkUserPassword(userProfile.email); // ✅ Usar el email del perfil
+            console.log('User password check completed for:', userProfile.email);
+          }
+
+          // Inicializar notificaciones FCM
+          const notificationResult = await NotificationService.initialize(
+            userIdFromToken,
+            token
+          );
+
+
+          setFcmToken(notificationResult.token);
+          setNotificationPermissionGranted(notificationResult.hasPermission);
         }
       } catch (error) {
         console.error('Error al obtener el perfil del usuario:', error);
@@ -202,6 +223,7 @@ const ProfileScreen = () => {
       setLoadingNotifications(false);
     }
   };
+
   const saveNotificationSettings = async () => {
     if (!userId) {
       Alert.alert('Error', 'User ID not found');
@@ -215,9 +237,11 @@ const ProfileScreen = () => {
         course_approve: courseApprove,
         feedback: feedback,
         enrollment: enrollment,
+        fcm_token: fcmToken,
+        notification_enabled: notificationPermissionGranted,
       };
 
-      console.log('User ID:', userId);
+
       const response = await fetch(
         `${API_URL}/api/notification/${userId}/config`,
         {
@@ -231,9 +255,6 @@ const ProfileScreen = () => {
       );
 
       if (response.ok) {
-        // ===============================================
-        // REEMPLAZAR Alert.alert CON OVERLAY PERSONALIZADO
-        // ===============================================
         setShowNotificationModal(false);
 
         // Pequeño delay para que se cierre el modal primero
@@ -243,7 +264,6 @@ const ProfileScreen = () => {
       } else {
         const errorData = await response.text();
         console.error('Error saving settings:', errorData);
-        Alert.alert('Error', 'Failed to save notification settings');
       }
     } catch (error) {
       console.error('Error saving notification settings:', error);
@@ -324,10 +344,7 @@ const ProfileScreen = () => {
         const result = await response.json();
 
         if (response.ok) {
-          console.log('Perfil actualizado con éxito');
-          // ===============================================
-          // TAMBIÉN PUEDES USAR EL OVERLAY AQUÍ SI QUIERES
-          // ===============================================
+
           showSuccessMessage('✅ Profile updated successfully!');
         } else {
           console.error('Error al actualizar el perfil:', result);
@@ -384,6 +401,31 @@ const ProfileScreen = () => {
       </View>
     </View>
   );
+  const checkUserPassword = async (userEmail) => {
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/auth/has-password/${userEmail}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log('response status:', response.status,);
+      if (response.ok) {
+
+        const result = await response.json();
+        setHasPassword(result.has_password);
+      }
+    } catch (error) {
+      console.log('Estamos aca!!');
+      console.error('Error checking password:', error);
+    }
+  };
+
 
   return (
     <View style={styles.container}>
@@ -393,10 +435,6 @@ const ProfileScreen = () => {
         onAccept={() => setShowModal(false)}
         onClose={() => setShowModal(false)}
       />
-
-      {/* =============================================== */}
-      {/* OVERLAY DE ÉXITO PERSONALIZADO */}
-      {/* =============================================== */}
       {showSuccessOverlay && (
         <Animated.View
           style={[
@@ -552,6 +590,19 @@ const ProfileScreen = () => {
               🔔 Edit Notifications
             </Text>
           </TouchableOpacity>
+
+          {!hasPassword && (
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={() => navigation.navigate('SetPassword', { email })}
+            >
+              <Text style={styles.notificationButtonText}>
+                🔒 Create password
+              </Text>
+            </TouchableOpacity>
+          )}
+
+
 
           <TouchableOpacity
             style={[styles.saveButton, isLoading && styles.disabledButton]}

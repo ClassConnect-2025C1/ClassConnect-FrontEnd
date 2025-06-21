@@ -221,10 +221,10 @@ const TeacherStatistics = () => {
       };
 
       const submissionData = {
-        labels: courseData.map((c) => c.name),
+        labels: ['', ...courseData.map((c) => c.name)],
         datasets: [
           {
-            data: courseData.map((c) => c.submission),
+            data: [0, ...courseData.map((c) => c.submission)],
           },
         ],
       };
@@ -537,7 +537,7 @@ const TeacherStatistics = () => {
         content: pdf.base64,
       });
 
-      Alert.alert('Success', 'PDF exported successfully!');
+
     } catch (error) {
       console.error('PDF Export Error:', error);
       Alert.alert(
@@ -691,24 +691,7 @@ const TeacherStatistics = () => {
             </View>
           </View>
 
-          {trendData && (
-            <View style={styles.chartSection}>
-              <Text style={styles.chartTitle}>📈 Grade Trends</Text>
-              <View
-                ref={trendChartRef}
-                collapsable={false}
-                style={{ backgroundColor: 'white' }}
-              >
-                <LineChart
-                  data={trendData}
-                  width={screenWidth - 40}
-                  height={200}
-                  chartConfig={chartConfig}
-                  style={styles.chart}
-                />
-              </View>
-            </View>
-          )}
+
         </View>
       )}
 
