@@ -30,7 +30,7 @@ const AppContent = () => {
         // Listener para foreground - SOLO MOSTRAR ALERTA
         const unsubscribeForeground = messaging().onMessage(async remoteMessage => {
           console.log('📱 FCM Foreground:', remoteMessage);
-          
+
           Alert.alert(
             remoteMessage.notification?.title || 'New Notification',
             remoteMessage.notification?.body || 'You have a new message',
@@ -63,7 +63,7 @@ const AppContent = () => {
         const userId = decoded.user_id || decoded.sub;
         if (!userId) return;
 
-        await fetch(`${API_URL}/api/users/${userId}/push-token`, {
+        await fetch(`${API_URL}/api/notification/${userId}/push-token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
