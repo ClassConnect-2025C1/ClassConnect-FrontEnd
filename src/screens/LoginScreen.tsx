@@ -23,6 +23,7 @@ import {
   GoogleSigninButton,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 // Configurar GoogleSignin
 GoogleSignin.configure({
@@ -127,6 +128,23 @@ const LoginScreen = () => {
 
           const userProfile = await profileResponse.json();
           const userRole = userProfile.role;
+
+
+          // Local Authentication before proceeding 
+          const hasHardware = await LocalAuthentication.hasHardwareAsync();
+          const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+          if (hasHardware && isEnrolled) {
+            const result = await LocalAuthentication.authenticateAsync({
+              promptMessage: 'Authenticate to login',
+              fallbackLabel: 'Enter password',
+            });
+            if (!result.success) {
+              setGeneralError('Authentication failed. Please try again.');
+              setShowGeneralErrorModal(true);
+              return;
+            }
+          }
+
 
           if (userRole === 'teacher') {
             navigation.navigate('TeacherCourses');
