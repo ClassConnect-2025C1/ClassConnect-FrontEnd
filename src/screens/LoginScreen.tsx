@@ -130,18 +130,18 @@ const LoginScreen = () => {
           const userRole = userProfile.role;
 
 
-           // Local Authentication before proceeding 
+          // Local Authentication before proceeding 
           const hasHardware = await LocalAuthentication.hasHardwareAsync();
           const isEnrolled = await LocalAuthentication.isEnrolledAsync();
           if (hasHardware && isEnrolled) {
             const result = await LocalAuthentication.authenticateAsync({
-            promptMessage: 'Authenticate to login',
-            fallbackLabel: 'Enter password',
+              promptMessage: 'Authenticate to login',
+              fallbackLabel: 'Enter password',
             });
             if (!result.success) {
-            setGeneralError('Authentication failed. Please try again.');
-            setShowGeneralErrorModal(true);
-            return;
+              setGeneralError('Authentication failed. Please try again.');
+              setShowGeneralErrorModal(true);
+              return;
             }
           }
 
