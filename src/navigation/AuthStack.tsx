@@ -9,6 +9,7 @@ import PinScreen from '../screens/PinScreen';
 import PasswordRecoveryScreen from '../screens/recoveryPassword/PasswordRecoveryScreen';
 import RestPassword from '../screens/recoveryPassword/RestePassword';
 import VerifyPin from '../screens/recoveryPassword/VerifyPin';
+import SetPasswordScreen from '@/screens/SetPasswordScreen';
 
 import StudentCoursesScreen from '../screens/student/StudentCoursesScreen';
 import StudentAvailableCoursesScrenn from '../screens/student/StudentAvailableCoursesScrenn';
@@ -56,6 +57,9 @@ const AuthStack = () => (
     <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
     <Stack.Screen name="VerifyPin" component={VerifyPin} />
     <Stack.Screen name="ResetPassword" component={RestPassword} />
+    <Stack.Screen name="SetPassword" component={SetPasswordScreen} />
+
+    {/* Student Screens */}
 
     <Stack.Screen name="StudentCourses" component={StudentCoursesScreen} />
     <Stack.Screen

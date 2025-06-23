@@ -130,18 +130,18 @@ const TeacherStatistics = () => {
       const avgGrade =
         activeCourses.length > 0
           ? activeCourses.reduce(
-              (sum, c) => sum + (c.global_average_grade || 0),
-              0,
-            ) / activeCourses.length
+            (sum, c) => sum + (c.global_average_grade || 0),
+            0,
+          ) / activeCourses.length
           : 0;
 
       // Solo calcular submission rate de cursos que tienen actividad real
       const avgSubmissionRate =
         coursesWithActivity.length > 0
           ? coursesWithActivity.reduce(
-              (sum, c) => sum + (c.global_submission_rate || 0),
-              0,
-            ) / coursesWithActivity.length
+            (sum, c) => sum + (c.global_submission_rate || 0),
+            0,
+          ) / coursesWithActivity.length
           : 0;
 
       return {
@@ -175,7 +175,7 @@ const TeacherStatistics = () => {
         avgGrade =
           validGrades.length > 0
             ? validGrades.reduce((sum, d) => sum + d.average_grade, 0) /
-              validGrades.length
+            validGrades.length
             : 0;
         avgSubmissionRate =
           filteredDates.reduce((sum, d) => sum + (d.submission_rate || 0), 0) /
@@ -221,10 +221,10 @@ const TeacherStatistics = () => {
       };
 
       const submissionData = {
-        labels: courseData.map((c) => c.name),
+        labels: ['', ...courseData.map((c) => c.name)],
         datasets: [
           {
-            data: courseData.map((c) => c.submission),
+            data: [0, ...courseData.map((c) => c.submission)],
           },
         ],
       };
@@ -371,15 +371,15 @@ const TeacherStatistics = () => {
       const trendData =
         finalDates.length > 1
           ? {
-              labels,
-              datasets: [
-                {
-                  data: finalDates.map((item) => item.average_grade || 0),
-                  color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-                  strokeWidth: 2,
-                },
-              ],
-            }
+            labels,
+            datasets: [
+              {
+                data: finalDates.map((item) => item.average_grade || 0),
+                color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+                strokeWidth: 2,
+              },
+            ],
+          }
           : null;
 
       return { gradeData, submissionData, trendData };
@@ -440,7 +440,7 @@ const TeacherStatistics = () => {
             result: 'base64',
           });
         }
-      } catch (error) {}
+      } catch (error) { }
 
       const htmlContent = `
     <!DOCTYPE html>
@@ -464,13 +464,12 @@ const TeacherStatistics = () => {
         <div class="header">
           <h1>📊 Teacher Statistics Report</h1>
           <p>Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-          <p>Course: ${
-            selectedCourse === 'all'
-              ? 'All Courses'
-              : statistics.find(
-                  (c) => c.course_id.toString() === selectedCourse,
-                )?.course_name || 'Selected Course'
-          }</p>
+          <p>Course: ${selectedCourse === 'all'
+          ? 'All Courses'
+          : statistics.find(
+            (c) => c.course_id.toString() === selectedCourse,
+          )?.course_name || 'Selected Course'
+        }</p>
         </div>
         
         <div class="stats">
@@ -481,37 +480,34 @@ const TeacherStatistics = () => {
           <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
         </div>
 
-        ${
-          gradeChartImage
-            ? `
+        ${gradeChartImage
+          ? `
           <div class="chart-section">
             <h2 class="chart-title">📊 Average Grades</h2>
             <img src="data:image/png;base64,${gradeChartImage}" class="chart-image" alt="Grade Chart" />
           </div>
         `
-            : ''
+          : ''
         }
 
-        ${
-          submissionChartImage
-            ? `
+        ${submissionChartImage
+          ? `
           <div class="chart-section">
             <h2 class="chart-title">📈 Task Completion Rates</h2>
             <img src="data:image/png;base64,${submissionChartImage}" class="chart-image" alt="Submission Chart" />
           </div>
         `
-            : ''
+          : ''
         }
 
-        ${
-          trendChartImage
-            ? `
+        ${trendChartImage
+          ? `
           <div class="chart-section">
             <h2 class="chart-title">📈 Performance Trends</h2>
             <img src="data:image/png;base64,${trendChartImage}" class="chart-image" alt="Trend Chart" />
           </div>
         `
-            : ''
+          : ''
         }
 
         <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
@@ -541,7 +537,7 @@ const TeacherStatistics = () => {
         content: pdf.base64,
       });
 
-      Alert.alert('Success', 'PDF exported successfully!');
+
     } catch (error) {
       console.error('PDF Export Error:', error);
       Alert.alert(
@@ -630,8 +626,8 @@ const TeacherStatistics = () => {
             {selectedCourse === 'all'
               ? 'All Courses'
               : statistics.find(
-                  (c) => c.course_id.toString() === selectedCourse,
-                )?.course_name || 'Select Course'}
+                (c) => c.course_id.toString() === selectedCourse,
+              )?.course_name || 'Select Course'}
           </Text>
         </TouchableOpacity>
 
@@ -695,24 +691,7 @@ const TeacherStatistics = () => {
             </View>
           </View>
 
-          {trendData && (
-            <View style={styles.chartSection}>
-              <Text style={styles.chartTitle}>📈 Grade Trends</Text>
-              <View
-                ref={trendChartRef}
-                collapsable={false}
-                style={{ backgroundColor: 'white' }}
-              >
-                <LineChart
-                  data={trendData}
-                  width={screenWidth - 40}
-                  height={200}
-                  chartConfig={chartConfig}
-                  style={styles.chart}
-                />
-              </View>
-            </View>
-          )}
+
         </View>
       )}
 
@@ -790,7 +769,7 @@ const TeacherStatistics = () => {
                   style={[
                     styles.courseOption,
                     selectedCourse === item.course_id.toString() &&
-                      styles.selectedCourse,
+                    styles.selectedCourse,
                   ]}
                   onPress={() => {
                     setSelectedCourse(item.course_id.toString());
@@ -804,10 +783,23 @@ const TeacherStatistics = () => {
               )}
             />
             <TouchableOpacity
-              style={styles.button}
+              style={{
+                backgroundColor: '#6c757d',
+                paddingVertical: 14,
+                paddingHorizontal: 20,
+                borderRadius: 8,
+                marginTop: 10,
+                alignItems: 'center'
+              }}
               onPress={() => setShowCourseModal(false)}
             >
-              <Text style={styles.buttonText}>Close</Text>
+              <Text style={{
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+                fontSize: 16
+              }}>
+                Close
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1033,7 +1025,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#6c757d',
-    padding: 15,
+    padding: 19,
     borderRadius: 8,
     flex: 0.3,
     alignItems: 'center',

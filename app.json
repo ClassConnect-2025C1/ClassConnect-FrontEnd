@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.classconnect1.app"
     },
     "android": {
+      "usesCleartextTraffic": true,
       "package": "com.classconnect1.app",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
@@ -33,7 +34,15 @@
         "projectId": "c01c75ab-7cf3-457c-9edc-98d09376e36e"
       }
     },
-    "plugins": ["@react-native-google-signin/google-signin"],
+    "plugins": [
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
+        }
+      ]
+    ],
     "owner": "franl0pez12",
     "runtimeVersion": "1.0.0",
     "updates": {
