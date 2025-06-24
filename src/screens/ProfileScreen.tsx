@@ -178,6 +178,7 @@ const ProfileScreen = () => {
             userIdFromToken,
             token
           );
+          console.log('FCM Token:', notificationResult.token);
 
 
           setFcmToken(notificationResult.token);
