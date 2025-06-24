@@ -174,14 +174,11 @@ const ProfileScreen = () => {
           }
 
           // Inicializar notificaciones FCM
-          const notificationResult = await NotificationService.initialize(
-            userIdFromToken,
-            token
-          );
-
-
-          setFcmToken(notificationResult.token);
-          setNotificationPermissionGranted(notificationResult.hasPermission);
+          // ✅ Solo obtener el token FCM sin inicializar todo el servicio
+          const tokenResult = await NotificationService.getFCMToken();
+          console.log('🔑 FCM Token:', tokenResult.token);
+          setFcmToken(tokenResult.token);
+          setNotificationPermissionGranted(tokenResult.hasPermission);
         }
       } catch (error) {
         console.error('Error al obtener el perfil del usuario:', error);
