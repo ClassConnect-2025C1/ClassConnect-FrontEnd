@@ -31,7 +31,7 @@ const TeacherStatistics = () => {
   const [selectedCourse, setSelectedCourse] = useState('all');
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [globalChartWidth, setGlobalChartWidth] = useState(0);
-  const [courseChartWidth, setCourseChartWidth] = useState(0);
+  const [chartWidth, setChartWidth] = useState(0);
 
   // Date filters
   const [startDate, setStartDate] = useState(
@@ -651,6 +651,77 @@ const TeacherStatistics = () => {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.statsContainer}>
+        <Text style={styles.sectionTitle}>📈 Performance Overview</Text>
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{globalStats.averageGrade}</Text>
+            <Text style={styles.statLabel}>Avg Grade</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>
+              {globalStats.submissionRate}%
+            </Text>
+            <Text style={styles.statLabel}>Completion Rate</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{globalStats.activeCourses}</Text>
+            <Text style={styles.statLabel}>Active Courses</Text>
+          </View>
+        </View>
+
+        {selectedCourse === 'all' && globalChartData && (
+          <View
+            style={styles.chartComponent}
+            onLayout={e => {
+              const { width } = e.nativeEvent.layout;
+              setChartWidth(width);
+            }}
+          >
+            <View
+              ref={globalChartRef}
+              collapsable={false}
+              style={{ backgroundColor: 'white' }}
+            >
+            <BarChart
+              data={globalChartData}
+              width={chartWidth}
+              height={200}
+              fromZero
+              yAxisMin={0}
+              yAxisMax={100}
+              chartConfig={chartConfig}
+            />
+            </View>
+          </View>
+        )}
+
+          {selectedCourse !== 'all' && globalChartDataForCourse && (
+            <View
+              style={styles.chartComponent}
+              onLayout={e => {
+                setChartWidth(e.nativeEvent.layout.width);
+              }}
+            >
+              <View
+                ref={courseChartRef}
+                collapsable={false}
+                style={{ backgroundColor: 'white' }}
+              >
+                <BarChart
+                  data={globalChartDataForCourse}
+                  width={chartWidth || 1}
+                  height={200}
+                  fromZero
+                  yAxisMin={0}
+                  yAxisMax={100}
+                  chartConfig={chartConfig}
+                />
+              </View>
+            </View>
+          )}
+        </View>
+
       {/* Filters */}
       <View style={styles.filtersContainer}>
         <Text style={styles.sectionTitle}>🔍 Filters</Text>
@@ -692,78 +763,6 @@ const TeacherStatistics = () => {
           </View>
         )}
       </View>
-
-      {/* Global Stats */}
-      <View style={styles.statsContainer}>
-        <Text style={styles.sectionTitle}>📈 Performance Overview</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{globalStats.averageGrade}</Text>
-            <Text style={styles.statLabel}>Avg Grade</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>
-              {globalStats.submissionRate}%
-            </Text>
-            <Text style={styles.statLabel}>Completion Rate</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{globalStats.activeCourses}</Text>
-            <Text style={styles.statLabel}>Active Courses</Text>
-          </View>
-        </View>
-
-        {selectedCourse === 'all' && globalChartData && (
-          <View
-            style={styles.chartComponent}
-            onLayout={e => {
-              const { width } = e.nativeEvent.layout;
-              setGlobalChartWidth(width);
-            }}
-          >
-            <View
-              ref={globalChartRef}
-              collapsable={false}
-              style={{ backgroundColor: 'white' }}
-            >
-            <BarChart
-              data={globalChartData}
-              width={globalChartWidth}
-              height={200}
-              fromZero
-              yAxisMin={0}
-              yAxisMax={100}
-              chartConfig={chartConfig}
-            />
-            </View>
-          </View>
-        )}
-
-          {selectedCourse !== 'all' && globalChartDataForCourse && (
-            <View
-              style={styles.chartComponent}
-              onLayout={e => {
-                setCourseChartWidth(e.nativeEvent.layout.width);
-              }}
-            >
-              <View
-                ref={courseChartRef}
-                collapsable={false}
-                style={{ backgroundColor: 'white' }}
-              >
-                <BarChart
-                  data={globalChartDataForCourse}
-                  width={courseChartWidth || 1}
-                  height={200}
-                  fromZero
-                  yAxisMin={0}
-                  yAxisMax={100}
-                  chartConfig={chartConfig}
-                />
-              </View>
-            </View>
-          )}
-        </View>
 
       {/* Charts */}
       {gradeData && (
@@ -1029,6 +1028,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     backgroundColor: '#fff',
     margin: 15,
+    marginBottom: 0,
     padding: 20,
     borderRadius: 10,
     shadowColor: '#000',
