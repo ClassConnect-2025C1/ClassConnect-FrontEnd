@@ -363,8 +363,10 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
       }
 
       // Procesar las fechas para mantener el promedio anterior cuando no hay nuevas calificaciones
-      let lastValidGrade = 0; // Empezar desde 0, no desde global_average_grade
-      let lastValidSubmissionRate = 0; // También mantener el último submission rate válido
+      // let lastValidGrade = 0; // Empezar desde 0, no desde global_average_grade
+      // let lastValidSubmissionRate = 0; // También mantener el último submission rate válido
+      let lastValidGrade = course.global_average_grade || 0;
+      let lastValidSubmissionRate = course.global_submission_rate || 0;
 
       const processedDates = datesWithActivity.map((item) => {
         // Si hay una nueva calificación (> 0), actualizar el lastValidGrade
@@ -386,49 +388,19 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
 
       const finalDates = [...processedDates];
 
-      // Agregar fechas adicionales para tener al menos 4 barras
-      while (finalDates.length < 4 && finalDates.length < 8) {
-        const lastDate = finalDates[finalDates.length - 1];
-        const nextDate = new Date(lastDate.date);
-        nextDate.setDate(nextDate.getDate() + 1);
-
-        if (nextDate <= endDate) {
-          finalDates.push({
-            date: nextDate.toISOString(),
-            average_grade: lastValidGrade,
-            submission_rate: lastValidSubmissionRate,
-          });
-        } else {
-          break;
-        }
-      }
-
       const labels = finalDates.map((item) => {
         const date = new Date(item.date);
         return `${date.getDate()}/${date.getMonth() + 1}`;
       });
 
       const gradeData = {
-        labels: [...labels], // ✅ Igual que en "All Courses"
-        datasets: [
-          {
-            data: [...finalDates.map((item) => item.average_grade || 0)], // ✅ Igual que en "All Courses"
-            color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-          },
-        ],
+        labels,
+        datasets: [{ data: finalDates.map(d => d.average_grade || 0) }],
       };
 
       const submissionData = {
-        labels: [...labels], // ✅ Igual que en "All Courses"
-        datasets: [
-          {
-            data: [
-              0,
-              ...finalDates.map((item) => (item.submission_rate || 0) * 100),
-            ], // ✅ Igual que en "All Courses"
-            color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-          },
-        ],
+        labels,
+        datasets: [{ data: finalDates.map(d => (d.submission_rate || 0) * 100) }],
       };
 
       const trendData =
