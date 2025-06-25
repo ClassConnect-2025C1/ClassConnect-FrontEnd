@@ -30,6 +30,7 @@ const TeacherStatistics = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState('all');
   const [showCourseModal, setShowCourseModal] = useState(false);
+  const [globalChartWidth, setGlobalChartWidth] = useState(0);
 
   // Date filters
   const [startDate, setStartDate] = useState(
@@ -41,6 +42,7 @@ const TeacherStatistics = () => {
 
   const { token } = useAuth();
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const globalChartRef = useRef(null);
   const gradeChartRef = useRef(null);
   const submissionChartRef = useRef(null);
   const trendChartRef = useRef(null);
@@ -197,6 +199,22 @@ const TeacherStatistics = () => {
     }
   };
 
+  const getGlobalChartData = (stats) => {
+    if (!stats) return null;
+
+    const avgGrade = parseFloat(stats.averageGrade);
+    const submissionRate = parseFloat(stats.submissionRate);
+
+    return {
+      labels: ['Avg Grade', 'Completion %'],
+      datasets: [
+        {
+          data: [avgGrade, submissionRate],
+        },
+      ],
+    };
+  };
+
   const getGlobalAverageGradeForCourse = (courseId) => {
     const course = statistics.find(
       (c) => c.course_id.toString() === courseId,
@@ -233,19 +251,19 @@ const TeacherStatistics = () => {
       }
 
       const gradeData = {
-        labels: ['', ...courseData.map((c) => c.name)],
+        labels: [...courseData.map((c) => c.name)],
         datasets: [
           {
-            data: [0, ...courseData.map((c) => c.grade)],
+            data: [...courseData.map((c) => c.grade)],
           },
         ],
       };
 
       const submissionData = {
-        labels: ['', ...courseData.map((c) => c.name)],
+        labels: [...courseData.map((c) => c.name)],
         datasets: [
           {
-            data: [0, ...courseData.map((c) => c.submission)],
+            data: [...courseData.map((c) => c.submission)],
           },
         ],
       };
@@ -367,17 +385,17 @@ const TeacherStatistics = () => {
       });
 
       const gradeData = {
-        labels: ['', ...labels], // ✅ Igual que en "All Courses"
+        labels: [...labels], // ✅ Igual que en "All Courses"
         datasets: [
           {
-            data: [0, ...finalDates.map((item) => item.average_grade || 0)], // ✅ Igual que en "All Courses"
+            data: [...finalDates.map((item) => item.average_grade || 0)], // ✅ Igual que en "All Courses"
             color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
           },
         ],
       };
 
       const submissionData = {
-        labels: ['', ...labels], // ✅ Igual que en "All Courses"
+        labels: [...labels], // ✅ Igual que en "All Courses"
         datasets: [
           {
             data: [
@@ -580,6 +598,7 @@ const TeacherStatistics = () => {
   }
 
   const globalStats = getGlobalStats();
+  const globalChartData = getGlobalChartData(globalStats);
   const { gradeData, submissionData, trendData } = getChartData();
   const screenWidth = Dimensions.get('window').width;
 
@@ -630,6 +649,36 @@ const TeacherStatistics = () => {
               <Text style={styles.statLabel}>Active Courses</Text>
             </View>
           </View>
+
+          {selectedCourse === 'all' && globalChartData && (
+            <View
+              style={styles.chartComponent}
+              onLayout={e => {
+                const { width } = e.nativeEvent.layout;
+                setGlobalChartWidth(width);
+              }}
+            >
+              <View
+                ref={globalChartRef}
+                collapsable={false}
+                style={{ backgroundColor: 'white' }}
+              >
+              <BarChart
+                data={globalChartData}
+                width={globalChartWidth}
+                height={200}
+                fromZero
+                yAxisMin={0}
+                yAxisMax={100}
+                chartConfig={chartConfig}
+              />
+              </View>
+            </View>
+          )}
+
+          { selectedCourse !== 'all' && (
+            selectedCourse
+          )}
         </View>
       )}
       {selectedCourse !== 'all' && (
@@ -711,6 +760,9 @@ const TeacherStatistics = () => {
                 data={gradeData}
                 width={screenWidth - 40}
                 height={200}
+                fromZero
+                yAxisMin={0}
+                yAxisMax={100}
                 chartConfig={chartConfig}
                 style={styles.chart}
               />
@@ -733,6 +785,9 @@ const TeacherStatistics = () => {
                 data={submissionData}
                 width={screenWidth - 40}
                 height={200}
+                fromZero
+                yAxisMin={0}
+                yAxisMax={100}
                 chartConfig={chartConfig}
                 style={styles.chart}
               />
@@ -908,6 +963,9 @@ const chartConfig = {
 
   fillShadowGradient: 'transparent',
   fillShadowGradientOpacity: 0,
+
+  yAxisMin: 0,
+  yAxisMax: 100,
 };
 
 const styles = StyleSheet.create({
@@ -1023,6 +1081,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
     textAlign: 'center',
+  },
+  chartComponent: {
+    backgroundColor: '#fff',
+    paddingTop: 10,
   },
   chartsContainer: {
     paddingHorizontal: 15,
