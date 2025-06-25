@@ -73,6 +73,9 @@ const TeacherStatistics = () => {
     };
   }, []);
 
+const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
+  Math.max(minWidth, labelsCount * 60);   // 60 = ~1 bar+gap
+
   const fetchStatistics = async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
@@ -774,22 +777,24 @@ const TeacherStatistics = () => {
             {selectedCourse !== 'all' && (
               <Text style={styles.chartTitle}>📊 Average Grade per date</Text>
             )}
-            <View
-              ref={gradeChartRef}
-              collapsable={false}
-              style={{ backgroundColor: 'white' }}
-            >
-              <BarChart
-                data={gradeData}
-                width={screenWidth - 40}
-                height={200}
-                fromZero
-                yAxisMin={0}
-                yAxisMax={100}
-                chartConfig={chartConfig}
-                style={styles.chart}
-              />
-            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View
+                ref={gradeChartRef}
+                collapsable={false}
+                style={{ backgroundColor: 'white' }}
+              >
+                <BarChart
+                  data={gradeData}
+                  width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
+                  height={200}
+                  fromZero
+                  yAxisMin={0}
+                  yAxisMax={100}
+                  chartConfig={chartConfig}
+                  style={styles.chart}
+                />
+              </View>
+            </ScrollView>
           </View>
 
           <View style={styles.chartSection}>
@@ -799,22 +804,24 @@ const TeacherStatistics = () => {
             {selectedCourse !== 'all' && (
               <Text style={styles.chartTitle}> Task Completion (%) per date</Text>
             )}
-            <View
-              ref={submissionChartRef}
-              collapsable={false}
-              style={{ backgroundColor: 'white' }}
-            >
-              <BarChart
-                data={submissionData}
-                width={screenWidth - 40}
-                height={200}
-                fromZero
-                yAxisMin={0}
-                yAxisMax={100}
-                chartConfig={chartConfig}
-                style={styles.chart}
-              />
-            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View
+                ref={submissionChartRef}
+                collapsable={false}
+                style={{ backgroundColor: 'white' }}
+              >
+                <BarChart
+                  data={submissionData}
+                  width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
+                  height={200}
+                  fromZero
+                  yAxisMin={0}
+                  yAxisMax={100}
+                  chartConfig={chartConfig}
+                  style={styles.chart}
+                />
+              </View>
+            </ScrollView>
           </View>
 
 
