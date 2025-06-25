@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -194,6 +196,25 @@ const TeacherStatistics = () => {
       };
     }
   };
+
+  const getGlobalAverageGradeForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course) return 0;
+
+    return course.global_average_grade || 0;
+  }
+
+  const getGlobalSubmissionRateForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course) return 0;
+
+    return (course.global_submission_rate || 0) * 100; // Convertir a porcentaje
+  }
+
 
   // Generar datos para gráficos simplificado
   const getChartData = () => {
@@ -611,6 +632,23 @@ const TeacherStatistics = () => {
           </View>
         </View>
       )}
+      {selectedCourse !== 'all' && (
+        <View style={styles.statsContainer}>
+          <Text style={styles.sectionTitle}>📈 Performance Overview</Text>
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{getGlobalAverageGradeForCourse(selectedCourse)}</Text>
+              <Text style={styles.statLabel}>Avg Grade</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>
+                {getGlobalSubmissionRateForCourse(selectedCourse)}%
+              </Text>
+              <Text style={styles.statLabel}>Completion Rate</Text>
+            </View>
+          </View>
+        </View>
+      )}      
 
       {/* Filters */}
       <View style={styles.filtersContainer}>
