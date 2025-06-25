@@ -173,16 +173,13 @@ const ProfileScreen = () => {
             console.log('User password check completed for:', userProfile.email);
           }
 
-          // Inicializar notificaciones FCM
-          const notificationResult = await NotificationService.initialize(
-            userIdFromToken,
-            token
-          );
-          console.log('FCM Token:', notificationResult.token);
 
+          // ✅ Solo obtener el token FCM sin inicializar todo el servicio
+          const tokenResult = await NotificationService.getFCMToken();
+          console.log('🔑 FCM Token:', tokenResult.token);
+          setFcmToken(tokenResult.token);
+          setNotificationPermissionGranted(tokenResult.hasPermission);
 
-          setFcmToken(notificationResult.token);
-          setNotificationPermissionGranted(notificationResult.hasPermission);
         }
       } catch (error) {
         console.error('Error al obtener el perfil del usuario:', error);

@@ -24,6 +24,7 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { NotificationService } from '../utils/NotificationService';
 
 // Configurar GoogleSignin
 GoogleSignin.configure({
@@ -108,7 +109,10 @@ const LoginScreen = () => {
         const decodedToken: any = jwtDecode(data.access_token);
         const user_id = decodedToken.user_id;
 
-        setToken(data.access_token);
+        const notificationResult = await NotificationService.initialize(
+          user_id,
+          data.access_token
+        );
 
         try {
           const profileResponse = await fetch(
@@ -153,7 +157,7 @@ const LoginScreen = () => {
           }
         } catch (profileError) {
           console.error('Error fetching user profile:', profileError);
-          setGeneralError('This account is blocked for admin.');
+          setGeneralError('Error fetching profile. Please try again later.');
           setShowGeneralErrorModal(true);
         }
       } else {
