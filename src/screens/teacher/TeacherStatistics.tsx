@@ -696,7 +696,12 @@ const TeacherStatistics = () => {
       {gradeData && (
         <View style={styles.chartsContainer}>
           <View style={styles.chartSection}>
-            <Text style={styles.chartTitle}>📊 Average Grades</Text>
+            {selectedCourse === 'all' && (
+              <Text style={styles.chartTitle}>📊 Average Grade per course</Text>
+            )}
+            {selectedCourse !== 'all' && (
+              <Text style={styles.chartTitle}>📊 Average Grade per date</Text>
+            )}
             <View
               ref={gradeChartRef}
               collapsable={false}
@@ -713,7 +718,12 @@ const TeacherStatistics = () => {
           </View>
 
           <View style={styles.chartSection}>
-            <Text style={styles.chartTitle}>📈 Task Completion (%)</Text>
+            {selectedCourse === 'all' && (
+              <Text style={styles.chartTitle}>📈 Task Completion (%) per course</Text>
+            )}
+            {selectedCourse !== 'all' && (
+              <Text style={styles.chartTitle}> Task Completion (%) per date</Text>
+            )}
             <View
               ref={submissionChartRef}
               collapsable={false}
