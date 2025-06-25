@@ -93,7 +93,7 @@ const StudentShowGrade = () => {
               </View>
             </View>
 
-            <Text style={styles.gradeSubtext}>out of 10 points</Text>
+            <Text style={styles.gradeSubtext}>out of 100 points</Text>
             <View
               style={[
                 styles.gradeMessageContainer,

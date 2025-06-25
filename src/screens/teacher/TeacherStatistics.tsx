@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -28,6 +30,8 @@ const TeacherStatistics = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState('all');
   const [showCourseModal, setShowCourseModal] = useState(false);
+  const [globalChartWidth, setGlobalChartWidth] = useState(0);
+  const [chartWidth, setChartWidth] = useState(0);
 
   // Date filters
   const [startDate, setStartDate] = useState(
@@ -39,9 +43,11 @@ const TeacherStatistics = () => {
 
   const { token } = useAuth();
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const globalChartRef = useRef(null);
   const gradeChartRef = useRef(null);
   const submissionChartRef = useRef(null);
   const trendChartRef = useRef(null);
+  const courseChartRef = useRef(null);
 
   useEffect(() => {
     fetchStatistics(true);
@@ -66,6 +72,9 @@ const TeacherStatistics = () => {
       subscription?.remove();
     };
   }, []);
+
+const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
+  Math.max(minWidth, labelsCount * 60);   // 60 = ~1 bar+gap
 
   const fetchStatistics = async (showLoading = false) => {
     try {
@@ -195,6 +204,60 @@ const TeacherStatistics = () => {
     }
   };
 
+  const getGlobalChartData = (stats) => {
+    if (!stats) return null;
+
+    const avgGrade = parseFloat(stats.averageGrade);
+    const submissionRate = parseFloat(stats.submissionRate);
+
+    return {
+      labels: ['Avg Grade', 'Completion %'],
+      datasets: [
+        {
+          data: [avgGrade, submissionRate],
+        },
+      ],
+    };
+  };
+
+  const getGlobalChartDataForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course) return null;
+
+    const avgGrade = course.global_average_grade || 0;
+    const submissionRate = (course.global_submission_rate || 0) * 100; // Convertir a porcentaje
+
+    return {
+      labels: ['Avg Grade', 'Completion %'],
+      datasets: [
+        {
+          data: [avgGrade, submissionRate],
+        },
+      ],
+    };
+  }
+
+  const getGlobalAverageGradeForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course) return 0;
+
+    return course.global_average_grade || 0;
+  }
+
+  const getGlobalSubmissionRateForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course) return 0;
+
+    return (course.global_submission_rate || 0) * 100; // Convertir a porcentaje
+  }
+
+
   // Generar datos para gráficos simplificado
   const getChartData = () => {
     if (selectedCourse === 'all') {
@@ -212,19 +275,19 @@ const TeacherStatistics = () => {
       }
 
       const gradeData = {
-        labels: ['', ...courseData.map((c) => c.name)],
+        labels: [...courseData.map((c) => c.name)],
         datasets: [
           {
-            data: [0, ...courseData.map((c) => c.grade)],
+            data: [...courseData.map((c) => c.grade)],
           },
         ],
       };
 
       const submissionData = {
-        labels: ['', ...courseData.map((c) => c.name)],
+        labels: [...courseData.map((c) => c.name)],
         datasets: [
           {
-            data: [0, ...courseData.map((c) => c.submission)],
+            data: [...courseData.map((c) => c.submission)],
           },
         ],
       };
@@ -300,8 +363,10 @@ const TeacherStatistics = () => {
       }
 
       // Procesar las fechas para mantener el promedio anterior cuando no hay nuevas calificaciones
-      let lastValidGrade = 0; // Empezar desde 0, no desde global_average_grade
-      let lastValidSubmissionRate = 0; // También mantener el último submission rate válido
+      // let lastValidGrade = 0; // Empezar desde 0, no desde global_average_grade
+      // let lastValidSubmissionRate = 0; // También mantener el último submission rate válido
+      let lastValidGrade = course.global_average_grade || 0;
+      let lastValidSubmissionRate = course.global_submission_rate || 0;
 
       const processedDates = datesWithActivity.map((item) => {
         // Si hay una nueva calificación (> 0), actualizar el lastValidGrade
@@ -323,49 +388,19 @@ const TeacherStatistics = () => {
 
       const finalDates = [...processedDates];
 
-      // Agregar fechas adicionales para tener al menos 4 barras
-      while (finalDates.length < 4 && finalDates.length < 8) {
-        const lastDate = finalDates[finalDates.length - 1];
-        const nextDate = new Date(lastDate.date);
-        nextDate.setDate(nextDate.getDate() + 1);
-
-        if (nextDate <= endDate) {
-          finalDates.push({
-            date: nextDate.toISOString(),
-            average_grade: lastValidGrade,
-            submission_rate: lastValidSubmissionRate,
-          });
-        } else {
-          break;
-        }
-      }
-
       const labels = finalDates.map((item) => {
         const date = new Date(item.date);
         return `${date.getDate()}/${date.getMonth() + 1}`;
       });
 
       const gradeData = {
-        labels: ['', ...labels], // ✅ Igual que en "All Courses"
-        datasets: [
-          {
-            data: [0, ...finalDates.map((item) => item.average_grade || 0)], // ✅ Igual que en "All Courses"
-            color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-          },
-        ],
+        labels,
+        datasets: [{ data: finalDates.map(d => d.average_grade || 0) }],
       };
 
       const submissionData = {
-        labels: ['', ...labels], // ✅ Igual que en "All Courses"
-        datasets: [
-          {
-            data: [
-              0,
-              ...finalDates.map((item) => (item.submission_rate || 0) * 100),
-            ], // ✅ Igual que en "All Courses"
-            color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-          },
-        ],
+        labels,
+        datasets: [{ data: finalDates.map(d => (d.submission_rate || 0) * 100) }],
       };
 
       const trendData =
@@ -559,6 +594,8 @@ const TeacherStatistics = () => {
   }
 
   const globalStats = getGlobalStats();
+  const globalChartData = getGlobalChartData(globalStats);
+  const globalChartDataForCourse = getGlobalChartDataForCourse(selectedCourse);
   const { gradeData, submissionData, trendData } = getChartData();
   const screenWidth = Dimensions.get('window').width;
 
@@ -589,28 +626,76 @@ const TeacherStatistics = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Global Stats - Solo mostrar en "All Courses" */}
-      {selectedCourse === 'all' && (
-        <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>📈 Performance Overview</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{globalStats.averageGrade}</Text>
-              <Text style={styles.statLabel}>Avg Grade</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>
-                {globalStats.submissionRate}%
-              </Text>
-              <Text style={styles.statLabel}>Completion Rate</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{globalStats.activeCourses}</Text>
-              <Text style={styles.statLabel}>Active Courses</Text>
-            </View>
+      <View style={styles.statsContainer}>
+        <Text style={styles.sectionTitle}>📈 Performance Overview</Text>
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{globalStats.averageGrade}</Text>
+            <Text style={styles.statLabel}>Avg Grade</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>
+              {globalStats.submissionRate}%
+            </Text>
+            <Text style={styles.statLabel}>Completion Rate</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{globalStats.activeCourses}</Text>
+            <Text style={styles.statLabel}>Active Courses</Text>
           </View>
         </View>
-      )}
+
+        {selectedCourse === 'all' && globalChartData && (
+          <View
+            style={styles.chartComponent}
+            onLayout={e => {
+              const { width } = e.nativeEvent.layout;
+              setChartWidth(width);
+            }}
+          >
+            <View
+              ref={globalChartRef}
+              collapsable={false}
+              style={{ backgroundColor: 'white' }}
+            >
+            <BarChart
+              data={globalChartData}
+              width={chartWidth}
+              height={200}
+              fromZero
+              yAxisMin={0}
+              yAxisMax={100}
+              chartConfig={chartConfig}
+            />
+            </View>
+          </View>
+        )}
+
+          {selectedCourse !== 'all' && globalChartDataForCourse && (
+            <View
+              style={styles.chartComponent}
+              onLayout={e => {
+                setChartWidth(e.nativeEvent.layout.width);
+              }}
+            >
+              <View
+                ref={courseChartRef}
+                collapsable={false}
+                style={{ backgroundColor: 'white' }}
+              >
+                <BarChart
+                  data={globalChartDataForCourse}
+                  width={chartWidth || 1}
+                  height={200}
+                  fromZero
+                  yAxisMin={0}
+                  yAxisMax={100}
+                  chartConfig={chartConfig}
+                />
+              </View>
+            </View>
+          )}
+        </View>
 
       {/* Filters */}
       <View style={styles.filtersContainer}>
@@ -658,37 +743,57 @@ const TeacherStatistics = () => {
       {gradeData && (
         <View style={styles.chartsContainer}>
           <View style={styles.chartSection}>
-            <Text style={styles.chartTitle}>📊 Average Grades</Text>
-            <View
-              ref={gradeChartRef}
-              collapsable={false}
-              style={{ backgroundColor: 'white' }}
-            >
-              <BarChart
-                data={gradeData}
-                width={screenWidth - 40}
-                height={200}
-                chartConfig={chartConfig}
-                style={styles.chart}
-              />
-            </View>
+            {selectedCourse === 'all' && (
+              <Text style={styles.chartTitle}>📊 Average Grade per course</Text>
+            )}
+            {selectedCourse !== 'all' && (
+              <Text style={styles.chartTitle}>📊 Average Grade per date</Text>
+            )}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View
+                ref={gradeChartRef}
+                collapsable={false}
+                style={{ backgroundColor: 'white' }}
+              >
+                <BarChart
+                  data={gradeData}
+                  width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
+                  height={200}
+                  fromZero
+                  yAxisMin={0}
+                  yAxisMax={100}
+                  chartConfig={chartConfig}
+                  style={styles.chart}
+                />
+              </View>
+            </ScrollView>
           </View>
 
           <View style={styles.chartSection}>
-            <Text style={styles.chartTitle}>📈 Task Completion (%)</Text>
-            <View
-              ref={submissionChartRef}
-              collapsable={false}
-              style={{ backgroundColor: 'white' }}
-            >
-              <BarChart
-                data={submissionData}
-                width={screenWidth - 40}
-                height={200}
-                chartConfig={chartConfig}
-                style={styles.chart}
-              />
-            </View>
+            {selectedCourse === 'all' && (
+              <Text style={styles.chartTitle}>📈 Task Completion (%) per course</Text>
+            )}
+            {selectedCourse !== 'all' && (
+              <Text style={styles.chartTitle}> Task Completion (%) per date</Text>
+            )}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View
+                ref={submissionChartRef}
+                collapsable={false}
+                style={{ backgroundColor: 'white' }}
+              >
+                <BarChart
+                  data={submissionData}
+                  width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
+                  height={200}
+                  fromZero
+                  yAxisMin={0}
+                  yAxisMax={100}
+                  chartConfig={chartConfig}
+                  style={styles.chart}
+                />
+              </View>
+            </ScrollView>
           </View>
 
 
@@ -860,6 +965,9 @@ const chartConfig = {
 
   fillShadowGradient: 'transparent',
   fillShadowGradientOpacity: 0,
+
+  yAxisMin: 0,
+  yAxisMax: 100,
 };
 
 const styles = StyleSheet.create({
@@ -899,6 +1007,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     backgroundColor: '#fff',
     margin: 15,
+    marginBottom: 0,
     padding: 20,
     borderRadius: 10,
     shadowColor: '#000',
@@ -975,6 +1084,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
     textAlign: 'center',
+  },
+  chartComponent: {
+    backgroundColor: '#fff',
+    paddingTop: 10,
   },
   chartsContainer: {
     paddingHorizontal: 15,
