@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     StyleSheet,
     Platform,
+    Image, // ➕ AGREGAR
 } from 'react-native';
 
 interface NotificationToastProps {
@@ -52,7 +53,10 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
             ]}
         >
             <TouchableOpacity style={styles.content} onPress={onClose}>
-                <Text style={styles.icon}>📱</Text>
+                <Image
+                    source={require('../../assets/images/logo.png')}
+                    style={styles.iconImage}
+                />
                 <View style={styles.textContainer}>
                     <Text style={styles.title}>{title}</Text>
                     <Text style={styles.body}>{body}</Text>
@@ -71,7 +75,7 @@ const styles = StyleSheet.create({
         top: Platform.OS === 'ios' ? 60 : 40,
         left: 16,
         right: 16,
-        backgroundColor: '#3B82F6',
+        backgroundColor: '#4CAF50', // ✅ CAMBIADO a verde
         borderRadius: 12,
         zIndex: 9999,
         shadowColor: '#000',
@@ -85,8 +89,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
     },
-    icon: {
-        fontSize: 20,
+    iconImage: { // ✅ NUEVO estilo para tu logo
+        width: 24,
+        height: 24,
         marginRight: 12,
     },
     textContainer: {

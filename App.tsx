@@ -40,6 +40,19 @@ const AppContent = () => {
           );
         });
 
+        // ➕ NUEVO: Listener para cuando la app está en background y user toca notificación
+        const unsubscribeNotificationOpened = messaging().onNotificationOpenedApp(remoteMessage => {
+          console.log('🔔 User tapped notification (app in background):', remoteMessage);
+          navigateToStudentCourses();
+        });
+
+        // ➕ NUEVO: Para cuando la app está cerrada y user toca notificación
+        const initialNotification = await messaging().getInitialNotification();
+        if (initialNotification) {
+          console.log('🔔 User tapped notification (app was closed):', initialNotification);
+          navigateToStudentCourses();
+        }
+
         // Listener para token refresh
         const unsubscribeTokenRefresh = messaging().onTokenRefresh(token => {
           console.log('🔄 FCM Token refreshed:', token);
@@ -48,11 +61,28 @@ const AppContent = () => {
 
         return () => {
           unsubscribeForeground();
+          unsubscribeNotificationOpened(); // ➕ NUEVO cleanup
           unsubscribeTokenRefresh();
         };
 
       } catch (error) {
         console.error('❌ Error setting up Firebase:', error);
+      }
+    };
+
+    // ➕ NUEVA función para navegar a StudentCourses
+    const navigateToStudentCourses = async () => {
+      try {
+        // Obtener userId del token almacenado
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const decoded = jwtDecode(token);
+          const userId = decoded.user_id || decoded.sub;
+
+          navigation.navigate('StudentCourses', { userId: userId });
+        }
+      } catch (error) {
+        console.error('Error navigating to StudentCourses:', error);
       }
     };
 
