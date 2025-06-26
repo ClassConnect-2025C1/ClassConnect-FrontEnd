@@ -565,30 +565,30 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
           <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
         </div>
 
-${selectedCourse !== 'all' ? `
-  <div class="stats">
-    <h2>📈 Last 10 Assignments – Tendencies & AI tips</h2>
+        ${selectedCourse !== 'all' ? `
+          <div class="stats">
+            <h2>📈 Last 10 Assignments – Tendencies & AI tips</h2>
 
-    <div class="metric">
-      <span><strong>Grade tendency:</strong></span>
-      <span style="color:${tendencyColor(gradeTendency)}">
-        ${gradeTendency.toUpperCase()}
-      </span>
-    </div>
+            <div class="metric">
+              <span><strong>Grade tendency:</strong></span>
+              <span style="color:${tendencyColor(gradeTendency)}">
+                ${gradeTendency.toUpperCase()}
+              </span>
+            </div>
 
-    <div class="metric">
-      <span><strong>Completion tendency:</strong></span>
-      <span style="color:${tendencyColor(completionTendency)}">
-        ${completionTendency.toUpperCase()}
-      </span>
-    </div>
+            <div class="metric">
+              <span><strong>Completion tendency:</strong></span>
+              <span style="color:${tendencyColor(completionTendency)}">
+                ${completionTendency.toUpperCase()}
+              </span>
+            </div>
 
-    <div class="metric">
-      <span><strong>AI suggestions:</strong></span>
-      <span>${aiSuggestions || '—'}</span>
-    </div>
-  </div>
-` : '' }
+            <div class="metric">
+              <span><strong>AI suggestions:</strong></span>
+              <span>${aiSuggestions || '—'}</span>
+            </div>
+          </div>
+        ` : '' }
 
         ${gradeChartImage ? `
           <div class="chart-section">
@@ -681,7 +681,7 @@ ${selectedCourse !== 'all' ? `
           style={styles.refreshButton}
           onPress={() => fetchStatistics(true)}
         >
-          <Text style={styles.refreshText}>🔄</Text>
+          <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
       </View>
 
@@ -914,7 +914,7 @@ ${selectedCourse !== 'all' ? `
         <TouchableOpacity
           style={[
             styles.exportButton,
-            generatingPDF && { backgroundColor: '#6c757d' },
+            generatingPDF,
           ]}
           onPress={handleExportPDF}
           disabled={generatingPDF}
@@ -1098,7 +1098,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   refreshButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#3A59D1',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,
@@ -1258,22 +1258,22 @@ const styles = StyleSheet.create({
     margin: 15,
   },
   exportButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#3A59D1',
     padding: 15,
     borderRadius: 8,
     flex: 0.3,
     alignItems: 'center',
   },
   individualStatsButton: {
-    backgroundColor: '#22CAEC',
+    backgroundColor: '#3D90D7',
     padding: 15,
     borderRadius: 8,
     flex: 0.3,
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#6c757d',
-    padding: 19,
+    backgroundColor: '#7AC6D2',
+    padding: 15,
     borderRadius: 8,
     flex: 0.3,
     alignItems: 'center',

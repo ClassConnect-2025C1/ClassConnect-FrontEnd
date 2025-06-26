@@ -511,7 +511,7 @@ const StudentIndividualStatistics = () => {
           style={styles.refreshButton}
           onPress={() => fetchStatistics(true)}
         >
-          <Text style={styles.refreshText}>🔄</Text>
+          <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
       </View>
 
@@ -629,7 +629,7 @@ const StudentIndividualStatistics = () => {
         <TouchableOpacity
           style={[
             styles.exportButton,
-            generatingPDF && { backgroundColor: '#6c757d' },
+            generatingPDF,
           ]}
           onPress={handleExportPDF}
           disabled={generatingPDF}
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   refreshButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#3A59D1',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,
@@ -852,14 +852,14 @@ const styles = StyleSheet.create({
     margin: 15,
   },
   exportButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#3A59D1',
     padding: 15,
     borderRadius: 8,
     flex: 0.48,
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#6c757d',
+    backgroundColor: '#7AC6D2',
     padding: 15,
     borderRadius: 8,
     flex: 0.48,
