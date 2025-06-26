@@ -487,6 +487,19 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
     setGeneratingPDF(true);
 
     try {
+      const gradeTendency       = getLastGradeTendencyForCourse(selectedCourse);
+      const completionTendency  = getLastSubmissionRateTendencyForCourse(selectedCourse);
+      const aiSuggestions       = getSuggestionsForCourse(selectedCourse);
+
+      const tendencyColor = (t: string) => {
+        switch ((t || '').toUpperCase()) {
+          case 'CRESCENT':   return '#28a745';  // green
+          case 'DECRESCENT': return '#dc3545';  // red
+          case 'STABLE':     return '#007AFF';  // blue
+          default:           return '#333';     // fallback
+        }
+      };
+
       const globalStats = getGlobalStats();
       const { gradeData, submissionData, trendData } = getChartData();
 
@@ -551,6 +564,31 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
           <div class="metric"><span><strong>Active Courses:</strong></span><span>${globalStats?.activeCourses || 0}</span></div>
           <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
         </div>
+
+${selectedCourse !== 'all' ? `
+  <div class="stats">
+    <h2>📈 Last 10 Assignments – Tendencies & AI tips</h2>
+
+    <div class="metric">
+      <span><strong>Grade tendency:</strong></span>
+      <span style="color:${tendencyColor(gradeTendency)}">
+        ${gradeTendency.toUpperCase()}
+      </span>
+    </div>
+
+    <div class="metric">
+      <span><strong>Completion tendency:</strong></span>
+      <span style="color:${tendencyColor(completionTendency)}">
+        ${completionTendency.toUpperCase()}
+      </span>
+    </div>
+
+    <div class="metric">
+      <span><strong>AI suggestions:</strong></span>
+      <span>${aiSuggestions || '—'}</span>
+    </div>
+  </div>
+` : '' }
 
         ${gradeChartImage ? `
           <div class="chart-section">
