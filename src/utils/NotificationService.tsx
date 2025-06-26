@@ -44,11 +44,7 @@ export class NotificationService {
       const hasPermission = await this.requestNotificationPermission();
 
       if (!hasPermission) {
-        Alert.alert(
-          'Permissions Required',
-          'Notification permissions are needed to receive updates.',
-          [{ text: 'OK' }]
-        );
+        console.log('⚠️ Notification permissions not granted');
         return { token: '', hasPermission: false };
       }
 
@@ -118,12 +114,7 @@ export class NotificationService {
       if (onForegroundMessage) {
         onForegroundMessage(remoteMessage);
       } else {
-        // Comportamiento por defecto
-        Alert.alert(
-          remoteMessage.notification?.title || 'New Notification',
-          remoteMessage.notification?.body || 'You have a new update',
-          [{ text: 'OK' }]
-        );
+        console.log('No foreground message handler provided');
       }
     });
 

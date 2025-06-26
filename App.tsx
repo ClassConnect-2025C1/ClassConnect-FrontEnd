@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { Platform, Alert } from 'react-native';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import AuthStack from './src/navigation/AuthStack';
@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from './src/navigation/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
 import { API_URL } from '@env';
+import { NotificationToast } from './src/components/NotificationToast';
+import { useNotificationToast } from './src/hooks/useNotificationToast';
 
 // Handler para notificaciones en background
 messaging().setBackgroundMessageHandler(async remoteMessage => {
@@ -17,6 +19,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 const AppContent = () => {
   const { loading, shouldRedirectToLogin } = useAuth();
   const navigation = useNavigation();
+  const { isVisible, toastData, showToast, hideToast } = useNotificationToast();
 
   useEffect(() => {
     if (shouldRedirectToLogin) {
@@ -27,14 +30,13 @@ const AppContent = () => {
   useEffect(() => {
     const setupFirebaseMessaging = async () => {
       try {
-        // Listener para foreground - SOLO MOSTRAR ALERTA
+        // Listener para foreground - MOSTRAR TOAST
         const unsubscribeForeground = messaging().onMessage(async remoteMessage => {
           console.log('📱 FCM Foreground:', remoteMessage);
 
-          Alert.alert(
+          showToast(
             remoteMessage.notification?.title || 'New Notification',
-            remoteMessage.notification?.body || 'You have a new message',
-            [{ text: 'OK' }]
+            remoteMessage.notification?.body || 'You have a new message'
           );
         });
 
@@ -84,7 +86,17 @@ const AppContent = () => {
 
   if (loading) return null;
 
-  return <AuthStack />;
+  return (
+    <>
+      <AuthStack />
+      <NotificationToast
+        visible={isVisible}
+        title={toastData.title}
+        body={toastData.body}
+        onClose={hideToast}
+      />
+    </>
+  );
 };
 
 export default function App() {

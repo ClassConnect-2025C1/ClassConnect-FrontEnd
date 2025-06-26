@@ -109,10 +109,10 @@ const LoginScreen = () => {
         const decodedToken: any = jwtDecode(data.access_token);
         const user_id = decodedToken.user_id;
 
-        const notificationResult = await NotificationService.initialize(
-          user_id,
-          data.access_token
-        );
+        const tokenResult = await NotificationService.getFCMToken();
+        if (tokenResult.hasPermission && tokenResult.token) {
+          await NotificationService.sendTokenToBackend(tokenResult.token, user_id, data.access_token);
+        }
 
         try {
           const profileResponse = await fetch(
