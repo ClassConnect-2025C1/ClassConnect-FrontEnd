@@ -26,6 +26,7 @@ const StudentIndividualStatistics = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { course, userId, studentName } = route.params;
+  const courseId = course.id || course.course_id;
 
   const [chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 40);
   const [studentStats, setStudentStats] = useState(null);
@@ -77,7 +78,7 @@ const StudentIndividualStatistics = () => {
       if (showLoading) setLoading(true);
 
       const response = await fetch(
-        `${API_URL}/api/courses/statistics/course/${course.id}/user/${userId}`,
+        `${API_URL}/api/courses/statistics/course/${courseId}/user/${userId}`,
         {
           method: 'GET',
           headers: {
@@ -167,7 +168,7 @@ const StudentIndividualStatistics = () => {
   // ✅ Función getChartData mejorada para StudentIndividualStatistics
   const getChartData = () => {
     if (!studentStats?.statistics_for_assignments?.length) {
-      return { gradeData: null, submissionData: null};
+      return { gradeData: null, submissionData: null };
     }
 
     const filtered = filterByDate(studentStats.statistics_for_assignments);
@@ -189,11 +190,11 @@ const StudentIndividualStatistics = () => {
     }
 
     let lastGrade = studentStats.average_grade || 0;
-    let lastRate  = studentStats.submission_rate || 0;
+    let lastRate = studentStats.submission_rate || 0;
 
     const normalized = active.map(d => {
-      if (d.average_grade > 0)   lastGrade = d.average_grade;
-      if (d.submission_rate > 0) lastRate  = d.submission_rate;
+      if (d.average_grade > 0) lastGrade = d.average_grade;
+      if (d.submission_rate > 0) lastRate = d.submission_rate;
 
       return { ...d, average_grade: lastGrade, submission_rate: lastRate };
     });
@@ -544,15 +545,15 @@ const StudentIndividualStatistics = () => {
             collapsable={false}
             style={{ backgroundColor: 'white' }}
           >
-          <BarChart
-            data={globalChartData}
-            width={chartWidth}
-            height={200}
-            fromZero
-            yAxisMin={0}
-            yAxisMax={100}
-            chartConfig={chartConfig}
-          />
+            <BarChart
+              data={globalChartData}
+              width={chartWidth}
+              height={200}
+              fromZero
+              yAxisMin={0}
+              yAxisMax={100}
+              chartConfig={chartConfig}
+            />
           </View>
         </View>
 
@@ -587,7 +588,7 @@ const StudentIndividualStatistics = () => {
             <View style={styles.chartSection}>
               <Text style={styles.chartTitle}>📈 Grade Evolution</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View ref={gradeChartRef} collapsable={false} style={{backgroundColor:'white'}}>
+                <View ref={gradeChartRef} collapsable={false} style={{ backgroundColor: 'white' }}>
                   <BarChart
                     data={gradeData}
                     width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
@@ -607,7 +608,7 @@ const StudentIndividualStatistics = () => {
             <View style={styles.chartSection}>
               <Text style={styles.chartTitle}>📊 Task Completion Rate (%)</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View ref={submissionChartRef} collapsable={false} style={{backgroundColor:'white'}}>
+                <View ref={submissionChartRef} collapsable={false} style={{ backgroundColor: 'white' }}>
                   <BarChart
                     data={submissionData}
                     width={dynamicChartWidth(submissionData.labels.length, screenWidth - 40)}

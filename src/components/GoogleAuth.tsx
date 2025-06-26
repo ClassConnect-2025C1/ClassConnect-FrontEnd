@@ -14,42 +14,54 @@ export const handleGoogleLoginCallback = async (
     const userCredential = await signInWithCredential(auth, credential);
     const firebaseIdToken = await userCredential.user.getIdToken();
 
-    const response = await fetch(`${API_URL}/api/auth/google`, {
+    // ✅ Extraer info del usuario para pasarla a la pantalla de selección
+    const userInfo = {
+      name: userCredential.user.displayName,
+      email: userCredential.user.email,
+      photo: userCredential.user.photoURL,
+    };
+
+    // ✅ Primero verificar si el usuario ya existe
+    const checkUserResponse = await fetch(`${API_URL}/api/auth/check-google-user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ google_token: firebaseIdToken }),
     });
 
-    const data = await response.json();
+    if (checkUserResponse.ok) {
+      // ✅ Usuario ya existe, hacer login directo
+      const data = await checkUserResponse.json();
+      const backendToken = data.access_token;
+      await AsyncStorage.setItem('token', backendToken);
 
-    if (!response.ok) {
-      console.log('❌ Error al loguear en backend:', data.detail);
-      return;
+      const decoded = jwtDecode(backendToken);
+      const user_id = decoded.user_id;
+
+      // Obtener el perfil para saber el rol
+      const profileResponse = await fetch(
+        `${API_URL}/api/users/profile/${user_id}`,
+        {
+          headers: { Authorization: `Bearer ${backendToken}` },
+        }
+      );
+
+      if (profileResponse.ok) {
+        const userProfile = await profileResponse.json();
+        const userRole = userProfile.role;
+
+        navigation.navigate(
+          userRole === 'teacher' ? 'TeacherCourses' : 'StudentCourses',
+          { userId: user_id },
+        );
+      }
+    } else {
+      // ✅ Usuario nuevo, ir a selección de rol
+      navigation.navigate('RoleSelection', {
+        googleToken: firebaseIdToken,
+        userInfo: userInfo,
+      });
     }
 
-    const backendToken = data.access_token;
-    await AsyncStorage.setItem('token', backendToken);
-
-    const decoded: any = jwtDecode(backendToken);
-    const user_id = decoded.user_id;
-
-    const profileResponse = await fetch(
-      `${API_URL}/api/users/profile/${user_id}`,
-    );
-
-    if (!profileResponse.ok) {
-      console.log('❌ Error al obtener el perfil:', profileResponse.status);
-      console.log('❌ Detalle:', profileResponse.statusText);
-      return;
-    }
-
-    const userProfile = await profileResponse.json();
-    const userRole = userProfile.role;
-
-    navigation.navigate(
-      userRole === 'teacher' ? 'TeacherCourses' : 'StudentCourses',
-      { userId: user_id },
-    );
   } catch (error: any) {
     console.error('Error en login con Google:', error.message);
   }

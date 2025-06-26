@@ -161,7 +161,7 @@ const LoginScreen = () => {
           setShowGeneralErrorModal(true);
         }
       } else {
-        if (response.status === 401) {
+        if (response.status === 403) {
           setGeneralError('Your account has been blocked by an administrator.');
           setShowGeneralErrorModal(true);
           return;

@@ -280,17 +280,6 @@ const RegisterScreen = () => {
               <Text style={styles.registerButtonText}>Sign up</Text>
             </TouchableOpacity>
 
-            <Text style={styles.orText}>Or sign up with</Text>
-
-            <View style={styles.socialContainer}>
-              <TouchableOpacity style={styles.googleButton}>
-                <Image
-                  source={require('../../assets/images/googlelog.png')}
-                  style={styles.socialIcon}
-                />
-                <Text style={styles.googleText}>Google</Text>
-              </TouchableOpacity>
-            </View>
 
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <Text style={styles.bottomLink}>
