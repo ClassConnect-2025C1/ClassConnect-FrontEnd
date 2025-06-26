@@ -27,6 +27,7 @@ const StudentIndividualStatistics = () => {
   const route = useRoute();
   const { course, userId, studentName } = route.params;
 
+  const [chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 40);
   const [studentStats, setStudentStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,7 +43,7 @@ const StudentIndividualStatistics = () => {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const gradeChartRef = useRef(null);
   const submissionChartRef = useRef(null);
-  const trendChartRef = useRef(null);
+  const globalChartRef = useRef(null);
 
   useEffect(() => {
     fetchStatistics(true);
@@ -146,6 +147,22 @@ const StudentIndividualStatistics = () => {
     };
   };
 
+  const getGlobalChartData = (stats) => {
+    if (!stats) return null;
+
+    const avgGrade = parseFloat(stats.averageGrade);
+    const submissionRate = parseFloat(stats.submissionRate);
+
+    return {
+      labels: ['Avg Grade', 'Completion %'],
+      datasets: [
+        {
+          data: [avgGrade, submissionRate],
+        },
+      ],
+    };
+  };
+
   // ✅ Función getChartData actualizada con lógica del 0 invisible
   // ✅ Función getChartData mejorada para StudentIndividualStatistics
   const getChartData = () => {
@@ -225,6 +242,7 @@ const StudentIndividualStatistics = () => {
 
     try {
       const stats = getStudentStats();
+      const globalChartData = getGlobalChartData(stats);
       const studentDisplayName = studentName || `Student ${userId}`;
       const { gradeData, submissionData } = getChartData();
 
@@ -460,6 +478,7 @@ const StudentIndividualStatistics = () => {
   }
 
   const stats = getStudentStats();
+  const globalChartData = getGlobalChartData(stats);
   const { gradeData, submissionData, trendData } = getChartData();
   const screenWidth = Dimensions.get('window').width;
   const studentDisplayName = studentName || `Student ${userId}`;
@@ -512,6 +531,31 @@ const StudentIndividualStatistics = () => {
             <Text style={styles.statLabel}>Active Days</Text>
           </View>
         </View>
+
+        <View
+          style={styles.chartComponent}
+          onLayout={e => {
+            const { width } = e.nativeEvent.layout;
+            setChartWidth(width);
+          }}
+        >
+          <View
+            ref={globalChartRef}
+            collapsable={false}
+            style={{ backgroundColor: 'white' }}
+          >
+          <BarChart
+            data={globalChartData}
+            width={chartWidth}
+            height={200}
+            fromZero
+            yAxisMin={0}
+            yAxisMax={100}
+            chartConfig={chartConfig}
+          />
+          </View>
+        </View>
+
       </View>
 
       <View style={styles.filtersContainer}>
@@ -794,6 +838,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
+  },
+  chartComponent: {
+    backgroundColor: '#fff',
+    paddingTop: 10,
   },
   chart: {
     borderRadius: 8,

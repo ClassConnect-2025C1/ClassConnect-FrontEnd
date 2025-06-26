@@ -357,13 +357,13 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
       if (filteredDates.length === 0) {
         // Sin datos en el rango, mostrar datos globales
         const gradeData = {
-          labels: ['Today'],
-          datasets: [{ data: [course.global_average_grade || 0] }],
+          labels: [],
+          datasets: [{ data: [] }],
         };
 
         const submissionData = {
-          labels: ['Today'],
-          datasets: [{ data: [(course.global_submission_rate || 0) * 100] }],
+          labels: [],
+          datasets: [{ data: [] }],
         };
 
         return { gradeData, submissionData, trendData: null };
