@@ -22,7 +22,7 @@ const MembersScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { course } = route.params;
-  const courseId = course.id;
+  const courseId = course.course_id;
 
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
