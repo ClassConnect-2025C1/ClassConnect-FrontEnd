@@ -28,8 +28,10 @@ export const handleGoogleLoginCallback = async (
       body: JSON.stringify({ google_token: firebaseIdToken }),
     });
 
+    console.log("checkUserResponse status:", checkUserResponse.status);
+    console.log("checkUserResponse ok:", checkUserResponse.ok);
     if (checkUserResponse.ok) {
-      // ✅ Usuario ya existe, hacer login directo
+      console.log("✅ Usuario ya existe, obteniendo token...");
       const data = await checkUserResponse.json();
       const backendToken = data.access_token;
       await AsyncStorage.setItem('token', backendToken);

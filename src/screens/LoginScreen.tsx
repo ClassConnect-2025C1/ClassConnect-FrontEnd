@@ -52,6 +52,8 @@ const LoginScreen = () => {
         showPlayServicesUpdateDialog: true,
       });
 
+      await GoogleSignin.signOut();
+
       const response = await GoogleSignin.signIn();
 
       const id_token = response.data.idToken;
