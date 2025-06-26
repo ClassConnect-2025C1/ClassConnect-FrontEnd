@@ -40,6 +40,7 @@ import AddResourceForModule from '../screens/teacher/resources/AddResourceForMod
 import EditModule from '../screens/teacher/resources/EditModule';
 import StudentShowGrade from '../screens/student/StudentShowGrade';
 import StudentIndividualStatistics from '@/screens/teacher/StudentIndividualStatistics';
+import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 const Stack = createNativeStackNavigator();
 
 const AuthStack = () => (
@@ -58,6 +59,12 @@ const AuthStack = () => (
     <Stack.Screen name="VerifyPin" component={VerifyPin} />
     <Stack.Screen name="ResetPassword" component={RestPassword} />
     <Stack.Screen name="SetPassword" component={SetPasswordScreen} />
+
+    <Stack.Screen
+      name="RoleSelection"
+      component={RoleSelectionScreen}
+      options={{ headerShown: false }}
+    />
 
     {/* Student Screens */}
 
