@@ -709,6 +709,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     backgroundColor: '#fff',
     margin: 15,
+    marginBottom: 0,
     padding: 20,
     borderRadius: 10,
     shadowColor: '#000',
