@@ -48,6 +48,9 @@ const TeacherStatistics = () => {
   const submissionChartRef = useRef(null);
   const trendChartRef = useRef(null);
   const courseChartRef = useRef(null);
+  const courseChartCaptureRef = useRef(null);
+  const gradeChartCaptureRef = useRef(null);
+  const submissionChartCaptureRef = useRef(null);
 
   useEffect(() => {
     fetchStatistics(true);
@@ -169,7 +172,7 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
       );
       if (!course) return null;
 
-      const filteredDates = (course.statistics_for_dates || []).filter(
+      const filteredDates = (course.statistics_for_assignments || []).filter(
         (item) => {
           const date = new Date(item.date);
           return date >= startDate && date <= endDate;
@@ -257,6 +260,50 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
     return (course.global_submission_rate || 0) * 100; // Convertir a porcentaje
   }
 
+  const getLastGradeTendencyForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course || !course.last_10_assignments_average_grade_tendency) {
+      return "Unknown";
+    }
+    return course.last_10_assignments_average_grade_tendency;
+  }
+
+  const getLastSubmissionRateTendencyForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course || !course.last_10_assignments_submission_rate_tendency) {
+      return "Unknown";
+    }
+    return course.last_10_assignments_submission_rate_tendency;
+  }
+
+  const getSuggestionsForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course || !course.suggestions) {
+      return "";
+    }
+    return course.suggestions;
+  }
+
+  const getTendencyStyle = (tendency) => {
+    const upperTendency = tendency.toUpperCase();
+    
+    switch (upperTendency) {
+      case 'CRESCENT':
+        return { color: '#28a745', fontWeight: 'bold' }; // Green
+      case 'DECRESCENT':
+        return { color: '#dc3545', fontWeight: 'bold' }; // Red
+      case 'STABLE':
+        return { color: '#007AFF', fontWeight: 'bold' }; // Blue
+      default:
+        return { color: '#333', fontWeight: 'normal' }; // Default
+    }
+  };
 
   // Generar datos para gráficos simplificado
   const getChartData = () => {
@@ -303,7 +350,7 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
         return { gradeData: null, submissionData: null, trendData: null };
 
       // Filtrar fechas según el rango seleccionado
-      const filteredDates = (course.statistics_for_dates || []).filter(
+      const filteredDates = (course.statistics_for_assignments || []).filter(
         (item) => {
           const date = new Date(item.date);
           return date >= startDate && date <= endDate;
@@ -313,13 +360,13 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
       if (filteredDates.length === 0) {
         // Sin datos en el rango, mostrar datos globales
         const gradeData = {
-          labels: ['Today'],
-          datasets: [{ data: [course.global_average_grade || 0] }],
+          labels: [],
+          datasets: [{ data: [] }],
         };
 
         const submissionData = {
-          labels: ['Today'],
-          datasets: [{ data: [(course.global_submission_rate || 0) * 100] }],
+          labels: [],
+          datasets: [{ data: [] }],
         };
 
         return { gradeData, submissionData, trendData: null };
@@ -435,41 +482,44 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
       setEndDate(selectedDate);
     }
   };
+
   const handleExportPDF = async () => {
     setGeneratingPDF(true);
 
     try {
+      const gradeTendency       = getLastGradeTendencyForCourse(selectedCourse);
+      const completionTendency  = getLastSubmissionRateTendencyForCourse(selectedCourse);
+      const aiSuggestions       = getSuggestionsForCourse(selectedCourse);
+
+      const tendencyColor = (t: string) => {
+        switch ((t || '').toUpperCase()) {
+          case 'CRESCENT':   return '#28a745';  // green
+          case 'DECRESCENT': return '#dc3545';  // red
+          case 'STABLE':     return '#007AFF';  // blue
+          default:           return '#333';     // fallback
+        }
+      };
+
       const globalStats = getGlobalStats();
       const { gradeData, submissionData, trendData } = getChartData();
 
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
+      let courseChartImage = '';
       let gradeChartImage = '';
       let submissionChartImage = '';
-      let trendChartImage = '';
 
       try {
-        // Capturar gráfico de calificaciones
-        if (gradeChartRef.current) {
-          gradeChartImage = await captureRef(gradeChartRef.current, {
+        if (gradeChartCaptureRef.current) {
+          gradeChartImage = await captureRef(gradeChartCaptureRef.current, {
             format: 'png',
             quality: 0.8,
             result: 'base64',
           });
         }
 
-        // Capturar gráfico de submission
-        if (submissionChartRef.current) {
-          submissionChartImage = await captureRef(submissionChartRef.current, {
-            format: 'png',
-            quality: 0.8,
-            result: 'base64',
-          });
-        }
-
-        // Capturar gráfico de tendencias
-        if (trendChartRef.current && trendData) {
-          trendChartImage = await captureRef(trendChartRef.current, {
+        if (submissionChartCaptureRef.current) {
+          submissionChartImage = await captureRef(submissionChartCaptureRef.current, {
             format: 'png',
             quality: 0.8,
             result: 'base64',
@@ -515,35 +565,44 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
           <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
         </div>
 
-        ${gradeChartImage
-          ? `
-          <div class="chart-section">
-            <h2 class="chart-title">📊 Average Grades</h2>
-            <img src="data:image/png;base64,${gradeChartImage}" class="chart-image" alt="Grade Chart" />
-          </div>
-        `
-          : ''
-        }
+        ${selectedCourse !== 'all' ? `
+          <div class="stats">
+            <h2>📈 Last 10 Assignments – Tendencies & AI tips</h2>
 
-        ${submissionChartImage
-          ? `
-          <div class="chart-section">
-            <h2 class="chart-title">📈 Task Completion Rates</h2>
-            <img src="data:image/png;base64,${submissionChartImage}" class="chart-image" alt="Submission Chart" />
-          </div>
-        `
-          : ''
-        }
+            <div class="metric">
+              <span><strong>Grade tendency:</strong></span>
+              <span style="color:${tendencyColor(gradeTendency)}">
+                ${gradeTendency.toUpperCase()}
+              </span>
+            </div>
 
-        ${trendChartImage
-          ? `
-          <div class="chart-section">
-            <h2 class="chart-title">📈 Performance Trends</h2>
-            <img src="data:image/png;base64,${trendChartImage}" class="chart-image" alt="Trend Chart" />
+            <div class="metric">
+              <span><strong>Completion tendency:</strong></span>
+              <span style="color:${tendencyColor(completionTendency)}">
+                ${completionTendency.toUpperCase()}
+              </span>
+            </div>
+
+            <div class="metric">
+              <span><strong>AI suggestions:</strong></span>
+              <span>${aiSuggestions || '—'}</span>
+            </div>
           </div>
-        `
-          : ''
-        }
+        ` : '' }
+
+        ${gradeChartImage ? `
+          <div class="chart-section">
+            <h2 class="chart-title">📈 Average grades</h2>
+            <img src="data:image/png;base64,${gradeChartImage}"
+                class="chart-image" alt="Grade timeline"/>
+          </div>` : ''}
+
+        ${submissionChartImage ? `
+          <div class="chart-section">
+            <h2 class="chart-title">📈 Completion rates</h2>
+            <img src="data:image/png;base64,${submissionChartImage}"
+                class="chart-image" alt="Completion timeline"/>
+          </div>` : ''}
 
         <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
           <p>Generated by Teacher Statistics App</p>
@@ -622,7 +681,7 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
           style={styles.refreshButton}
           onPress={() => fetchStatistics(true)}
         >
-          <Text style={styles.refreshText}>🔄</Text>
+          <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
       </View>
 
@@ -716,6 +775,25 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
           </Text>
         </TouchableOpacity>
 
+      {/* Course Last Tendency */}
+        {selectedCourse !== 'all' && (
+          <View>
+            <Text style={styles.tendencyTitle}>📈 Last 10 Assignments Tendency</Text>
+            <View style={styles.tendencyRow}>
+              <Text style={styles.tendencyLabel}>Grade tendency:</Text>
+              <Text style={styles.tendencyBody, getTendencyStyle(getLastGradeTendencyForCourse(selectedCourse))}>{getLastGradeTendencyForCourse(selectedCourse).toUpperCase()}</Text>
+            </View>
+            <View style={styles.tendencyRow}>
+              <Text style={styles.tendencyLabel}>Task completion tendency:</Text>
+              <Text style={styles.tendencyBody, getTendencyStyle(getLastSubmissionRateTendencyForCourse(selectedCourse))}>  {getLastSubmissionRateTendencyForCourse(selectedCourse).toUpperCase()}</Text>
+            </View>
+            <View style={styles.tendencyRow}>
+              <Text style={styles.suggestionLabel}>AI suggestions:</Text>
+              <Text style={styles.tendencyBody}>{getSuggestionsForCourse(selectedCourse)}</Text>
+            </View>
+          </View>
+        )}
+
         {/* Date Filters - Solo mostrar cuando NO sea "all courses" */}
         {selectedCourse !== 'all' && (
           <View style={styles.dateRow}>
@@ -766,6 +844,19 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
                   style={styles.chart}
                 />
               </View>
+              {/* hidden replica used only for PDF */}
+              <View
+                style={{position:'absolute', left:-9999}}   // keeps it off-screen
+                ref={gradeChartCaptureRef}
+                collapsable={false}>
+                <BarChart
+                  data={gradeData}
+                  width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
+                  height={200}
+                  fromZero
+                  chartConfig={chartConfig}
+                />
+              </View>
             </ScrollView>
           </View>
 
@@ -793,9 +884,21 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
                   style={styles.chart}
                 />
               </View>
+              {/* hidden replica used only for PDF */}
+              <View
+                style={{position:'absolute', left:-9999}}   // keeps it off-screen
+                ref={submissionChartCaptureRef}
+                collapsable={false}>
+                <BarChart
+                  data={submissionData}
+                  width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
+                  height={200}
+                  fromZero
+                  chartConfig={chartConfig}
+                />
+              </View>
             </ScrollView>
           </View>
-
 
         </View>
       )}
@@ -811,7 +914,7 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
         <TouchableOpacity
           style={[
             styles.exportButton,
-            generatingPDF && { backgroundColor: '#6c757d' },
+            generatingPDF,
           ]}
           onPress={handleExportPDF}
           disabled={generatingPDF}
@@ -995,7 +1098,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   refreshButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#3A59D1',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,
@@ -1068,6 +1171,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  tendencyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  tendencyRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    alignItems: 'flex-start',
+    paddingVertical: 4,
+  },
+  tendencyLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    width: 160,
+  },
+  suggestionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    width: 100,
+  },
+  tendencyBody: {
+    fontSize: 14,
+    fontWeight: 'normal',
+    color: '#666',
+    flex: 1,
+    flexWrap: 'wrap',
+    textAlign: 'left',
+  },
   dateRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1123,22 +1258,22 @@ const styles = StyleSheet.create({
     margin: 15,
   },
   exportButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#3A59D1',
     padding: 15,
     borderRadius: 8,
     flex: 0.3,
     alignItems: 'center',
   },
   individualStatsButton: {
-    backgroundColor: '#22CAEC',
+    backgroundColor: '#3D90D7',
     padding: 15,
     borderRadius: 8,
     flex: 0.3,
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#6c757d',
-    padding: 19,
+    backgroundColor: '#7AC6D2',
+    padding: 15,
     borderRadius: 8,
     flex: 0.3,
     alignItems: 'center',

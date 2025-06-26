@@ -27,6 +27,7 @@ const StudentIndividualStatistics = () => {
   const route = useRoute();
   const { course, userId, studentName } = route.params;
 
+  const [chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 40);
   const [studentStats, setStudentStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,7 +43,7 @@ const StudentIndividualStatistics = () => {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const gradeChartRef = useRef(null);
   const submissionChartRef = useRef(null);
-  const trendChartRef = useRef(null);
+  const globalChartRef = useRef(null);
 
   useEffect(() => {
     fetchStatistics(true);
@@ -67,6 +68,9 @@ const StudentIndividualStatistics = () => {
       subscription?.remove();
     };
   }, []);
+
+  const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
+    Math.max(minWidth, labelsCount * 60); // one bar + gap per label
 
   const fetchStatistics = async (showLoading = false) => {
     try {
@@ -114,7 +118,7 @@ const StudentIndividualStatistics = () => {
   const getStudentStats = () => {
     if (!studentStats) return null;
 
-    const filteredDates = filterByDate(studentStats.statistics_for_dates || []);
+    const filteredDates = filterByDate(studentStats.statistics_for_assignments || []);
 
     let avgGrade, avgSubmissionRate, totalActiveDays;
 
@@ -132,159 +136,91 @@ const StudentIndividualStatistics = () => {
     } else {
       avgGrade = studentStats.average_grade || 0;
       avgSubmissionRate = studentStats.submission_rate || 0;
-      totalActiveDays = studentStats.statistics_for_dates?.length || 0;
+      totalActiveDays = studentStats.statistics_for_assignments?.length || 0;
     }
 
     return {
       averageGrade: avgGrade.toFixed(1),
       submissionRate: (avgSubmissionRate * 100).toFixed(1),
       activeDays: totalActiveDays,
-      totalDates: studentStats.statistics_for_dates?.length || 0,
+      totalDates: studentStats.statistics_for_assignments?.length || 0,
+    };
+  };
+
+  const getGlobalChartData = (stats) => {
+    if (!stats) return null;
+
+    const avgGrade = parseFloat(stats.averageGrade);
+    const submissionRate = parseFloat(stats.submissionRate);
+
+    return {
+      labels: ['Avg Grade', 'Completion %'],
+      datasets: [
+        {
+          data: [avgGrade, submissionRate],
+        },
+      ],
     };
   };
 
   // ✅ Función getChartData actualizada con lógica del 0 invisible
   // ✅ Función getChartData mejorada para StudentIndividualStatistics
   const getChartData = () => {
-    if (!studentStats || !studentStats.statistics_for_dates) {
-      return { gradeData: null, submissionData: null, trendData: null };
+    if (!studentStats?.statistics_for_assignments?.length) {
+      return { gradeData: null, submissionData: null};
     }
 
-    const filteredDates = filterByDate(studentStats.statistics_for_dates);
-
-    if (filteredDates.length === 0) {
-      return { gradeData: null, submissionData: null, trendData: null };
-    }
-
-    // Eliminar fechas duplicadas y ordenar
-    const uniqueDatesMap = new Map();
-    filteredDates.forEach((item) => {
-      const dateKey = new Date(item.date).toISOString().split('T')[0]; // YYYY-MM-DD
-      if (
-        !uniqueDatesMap.has(dateKey) ||
-        new Date(item.date) > new Date(uniqueDatesMap.get(dateKey).date)
-      ) {
-        uniqueDatesMap.set(dateKey, item);
-      }
-    });
-
-    const uniqueDates = Array.from(uniqueDatesMap.values()).sort(
-      (a, b) => new Date(a.date) - new Date(b.date),
+    const filtered = filterByDate(studentStats.statistics_for_assignments);
+    const uniq = Array.from(
+      new Map(
+        filtered
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .map(d => [d.date.split('T')[0], d]) // YYYY-MM-DD key
+      ).values()
     );
 
-    // FILTRAR fechas que realmente tienen actividad (no son solo 0s)
-    const datesWithActivity = uniqueDates.filter((item) => {
-      // Una fecha tiene actividad si tiene grades > 0 O submission_rate > 0
-      return item.average_grade > 0 || item.submission_rate > 0;
-    });
+    const active = uniq.filter(d => d.average_grade > 0 || d.submission_rate > 0);
 
-    // Si no hay fechas con actividad real, usar datos globales
-    if (datesWithActivity.length === 0) {
-      const gradeData = {
-        labels: ['Today'],
-        datasets: [{ data: [studentStats.average_grade || 0] }],
-      };
-
-      const submissionData = {
-        labels: ['Today'],
-        datasets: [{ data: [(studentStats.submission_rate || 0) * 100] }],
-      };
-
-      return { gradeData, submissionData, trendData: null };
-    }
-
-    // Procesar las fechas para mantener el promedio anterior cuando no hay nuevas calificaciones
-    let lastValidGrade = 0; // Empezar desde 0
-    let lastValidSubmissionRate = 0; // También mantener el último submission rate válido
-
-    const processedDates = datesWithActivity.map((item) => {
-      // Si hay una nueva calificación (> 0), actualizar el lastValidGrade
-      if (item.average_grade > 0) {
-        lastValidGrade = item.average_grade;
-      }
-
-      // Si hay nueva actividad de submission, actualizar el lastValidSubmissionRate
-      if (item.submission_rate > 0) {
-        lastValidSubmissionRate = item.submission_rate;
-      }
-
+    if (!active.length) {
       return {
-        ...item,
-        average_grade: lastValidGrade,
-        submission_rate: lastValidSubmissionRate,
+        gradeData: null,
+        submissionData: null,
       };
-    });
-
-    const finalDates = [...processedDates];
-
-    // ⭐ CLAVE: Agregar fechas adicionales para tener al menos 4 barras
-    while (finalDates.length < 4 && finalDates.length < 8) {
-      const lastDate = finalDates[finalDates.length - 1];
-      const nextDate = new Date(lastDate.date);
-      nextDate.setDate(nextDate.getDate() + 1);
-
-      if (nextDate <= endDate) {
-        finalDates.push({
-          date: nextDate.toISOString(),
-          average_grade: lastValidGrade,
-          submission_rate: lastValidSubmissionRate,
-        });
-      } else {
-        break;
-      }
     }
 
-    const labels = finalDates.map((item) => {
-      const date = new Date(item.date);
-      return `${date.getDate()}/${date.getMonth() + 1}`;
+    let lastGrade = studentStats.average_grade || 0;
+    let lastRate  = studentStats.submission_rate || 0;
+
+    const normalized = active.map(d => {
+      if (d.average_grade > 0)   lastGrade = d.average_grade;
+      if (d.submission_rate > 0) lastRate  = d.submission_rate;
+
+      return { ...d, average_grade: lastGrade, submission_rate: lastRate };
     });
 
-    // ✅ Datos para gráfico de barras de evolución de notas
-    const trendData = {
-      labels: ['', ...labels], // 0 invisible + fechas
+    /* 4️⃣  labels & datasets */
+    const labels = normalized.map(d => {
+      const dt = new Date(d.date);
+      return `${dt.getDate()}/${dt.getMonth() + 1}`;
+    });
+
+    const gradeData = {
+      labels,
       datasets: [{
-        data: [0, ...finalDates.map((item) => item.average_grade || 0)], // 0 + datos
-        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
-      }]
+        data: normalized.map(d => d.average_grade),
+        color: (o = 1) => `rgba(59,130,246,${o})`,
+      }],
     };
 
-    // ✅ Datos para gráfico de barras de tasa de envío
     const submissionData = {
-      labels: ['', ...labels], // 0 invisible + fechas
+      labels,
       datasets: [{
-        data: [0, ...finalDates.map((item) => (item.submission_rate || 0) * 100)], // 0 + datos
-        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
-      }]
+        data: normalized.map(d => d.submission_rate * 100),
+        color: (o = 1) => `rgba(59,130,246,${o})`,
+      }],
     };
 
-    // ✅ Datos comparativos por semana (solo si hay más de 7 días)
-    let weeklyData = null;
-    if (finalDates.length > 7) {
-      const weeklyStats = [];
-      for (let i = 0; i < finalDates.length; i += 7) {
-        const weekDates = finalDates.slice(i, i + 7);
-        const weekAvgGrade =
-          weekDates.reduce((sum, d) => sum + (d.average_grade || 0), 0) /
-          weekDates.length;
-
-        weeklyStats.push({
-          week: `W${Math.floor(i / 7) + 1}`,
-          grade: weekAvgGrade,
-        });
-      }
-
-      if (weeklyStats.length > 1) {
-        weeklyData = {
-          labels: ['', ...weeklyStats.map((w) => w.week)], // 0 invisible + semanas
-          datasets: [{
-            data: [0, ...weeklyStats.map((w) => w.grade)], // 0 + datos
-            color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`
-          }]
-        };
-      }
-    }
-
-    return { gradeData: weeklyData, submissionData, trendData };
+    return { gradeData, submissionData };
   };
 
   const onStartDateChange = (event, selectedDate) => {
@@ -306,8 +242,9 @@ const StudentIndividualStatistics = () => {
 
     try {
       const stats = getStudentStats();
+      const globalChartData = getGlobalChartData(stats);
       const studentDisplayName = studentName || `Student ${userId}`;
-      const { gradeData, submissionData, trendData } = getChartData();
+      const { gradeData, submissionData } = getChartData();
 
       console.log('Waiting for charts to render...');
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -362,7 +299,7 @@ const StudentIndividualStatistics = () => {
       }
 
       const filteredDates = filterByDate(
-        studentStats?.statistics_for_dates || [],
+        studentStats?.statistics_for_assignments || [],
       );
       const sortedDates = filteredDates.sort(
         (a, b) => new Date(a.date) - new Date(b.date),
@@ -541,6 +478,7 @@ const StudentIndividualStatistics = () => {
   }
 
   const stats = getStudentStats();
+  const globalChartData = getGlobalChartData(stats);
   const { gradeData, submissionData, trendData } = getChartData();
   const screenWidth = Dimensions.get('window').width;
   const studentDisplayName = studentName || `Student ${userId}`;
@@ -573,7 +511,7 @@ const StudentIndividualStatistics = () => {
           style={styles.refreshButton}
           onPress={() => fetchStatistics(true)}
         >
-          <Text style={styles.refreshText}>🔄</Text>
+          <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
       </View>
 
@@ -593,6 +531,31 @@ const StudentIndividualStatistics = () => {
             <Text style={styles.statLabel}>Active Days</Text>
           </View>
         </View>
+
+        <View
+          style={styles.chartComponent}
+          onLayout={e => {
+            const { width } = e.nativeEvent.layout;
+            setChartWidth(width);
+          }}
+        >
+          <View
+            ref={globalChartRef}
+            collapsable={false}
+            style={{ backgroundColor: 'white' }}
+          >
+          <BarChart
+            data={globalChartData}
+            width={chartWidth}
+            height={200}
+            fromZero
+            yAxisMin={0}
+            yAxisMax={100}
+            chartConfig={chartConfig}
+          />
+          </View>
+        </View>
+
       </View>
 
       <View style={styles.filtersContainer}>
@@ -618,62 +581,45 @@ const StudentIndividualStatistics = () => {
       </View>
 
       {/* ✅ Charts actualizados - Todo BarChart */}
-      {(trendData || submissionData || gradeData) && (
+      {(submissionData || gradeData) && (
         <View style={styles.chartsContainer}>
-          {trendData && (
+          {gradeData && (
             <View style={styles.chartSection}>
               <Text style={styles.chartTitle}>📈 Grade Evolution</Text>
-              <View
-                ref={trendChartRef}
-                collapsable={false}
-                style={{ backgroundColor: 'white' }}
-              >
-                <BarChart
-                  data={trendData}
-                  width={screenWidth - 40}
-                  height={200}
-                  chartConfig={chartConfig}
-                  style={styles.chart}
-                />
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View ref={gradeChartRef} collapsable={false} style={{backgroundColor:'white'}}>
+                  <BarChart
+                    data={gradeData}
+                    width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
+                    height={200}
+                    fromZero
+                    yAxisMin={0}
+                    yAxisMax={100}
+                    chartConfig={chartConfig}
+                    style={styles.chart}
+                  />
+                </View>
+              </ScrollView>
             </View>
           )}
 
           {submissionData && (
             <View style={styles.chartSection}>
               <Text style={styles.chartTitle}>📊 Task Completion Rate (%)</Text>
-              <View
-                ref={submissionChartRef}
-                collapsable={false}
-                style={{ backgroundColor: 'white' }}
-              >
-                <BarChart
-                  data={submissionData}
-                  width={screenWidth - 40}
-                  height={200}
-                  chartConfig={chartConfig}
-                  style={styles.chart}
-                />
-              </View>
-            </View>
-          )}
-
-          {gradeData && (
-            <View style={styles.chartSection}>
-              <Text style={styles.chartTitle}>📊 Weekly Performance</Text>
-              <View
-                ref={gradeChartRef}
-                collapsable={false}
-                style={{ backgroundColor: 'white' }}
-              >
-                <BarChart
-                  data={gradeData}
-                  width={screenWidth - 40}
-                  height={200}
-                  chartConfig={chartConfig}
-                  style={styles.chart}
-                />
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View ref={submissionChartRef} collapsable={false} style={{backgroundColor:'white'}}>
+                  <BarChart
+                    data={submissionData}
+                    width={dynamicChartWidth(submissionData.labels.length, screenWidth - 40)}
+                    height={200}
+                    fromZero
+                    yAxisMin={0}
+                    yAxisMax={100}
+                    chartConfig={chartConfig}
+                    style={styles.chart}
+                  />
+                </View>
+              </ScrollView>
             </View>
           )}
         </View>
@@ -683,7 +629,7 @@ const StudentIndividualStatistics = () => {
         <TouchableOpacity
           style={[
             styles.exportButton,
-            generatingPDF && { backgroundColor: '#6c757d' },
+            generatingPDF,
           ]}
           onPress={handleExportPDF}
           disabled={generatingPDF}
@@ -795,7 +741,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   refreshButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#3A59D1',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,
@@ -807,6 +753,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     backgroundColor: '#fff',
     margin: 15,
+    marginBottom: 0,
     padding: 20,
     borderRadius: 10,
     shadowColor: '#000',
@@ -892,6 +839,10 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 10,
   },
+  chartComponent: {
+    backgroundColor: '#fff',
+    paddingTop: 10,
+  },
   chart: {
     borderRadius: 8,
   },
@@ -901,14 +852,14 @@ const styles = StyleSheet.create({
     margin: 15,
   },
   exportButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#3A59D1',
     padding: 15,
     borderRadius: 8,
     flex: 0.48,
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#6c757d',
+    backgroundColor: '#7AC6D2',
     padding: 15,
     borderRadius: 8,
     flex: 0.48,

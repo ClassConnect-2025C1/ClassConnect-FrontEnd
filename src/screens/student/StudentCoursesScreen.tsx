@@ -18,15 +18,11 @@ import { AcceptOnlyModal } from '@/components/Modals';
 
 const getColorForCourse = (id: number) => {
   const cardColors = [
-    '#6C5CE7',
-    '#00B894',
-    '#0984E3',
-    '#E17055',
-    '#FD79A8',
-    '#FDCB6E',
-    '#74B9FF',
-    '#55EFC4',
-    '#FAB1A0',
+    '#3A59D1',
+    '#3D90D7',
+    '#7AC6D2',
+    '#605EA1',
+    '#3A3960',
   ];
   return cardColors[id % cardColors.length];
 };
@@ -326,11 +322,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   courseText: {
+    marginTop: 5,
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
@@ -338,7 +332,6 @@ const styles = StyleSheet.create({
   courseContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     flex: 1,
   },
   availableCoursesButton: {
