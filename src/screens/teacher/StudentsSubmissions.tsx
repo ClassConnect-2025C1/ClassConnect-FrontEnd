@@ -99,6 +99,35 @@ const DownloadFilesScreen = ({ route }) => {
     }
   };
 
+// Add this helper function before the component
+const getSubmissionStatus = (submittedAt: string, deadline: string) => {
+  if (!submittedAt || !deadline) return { text: 'Unknown', color: '#95a5a6' };
+  
+  const submissionDate = new Date(submittedAt);
+  const deadlineDate = new Date(deadline);
+  
+  if (submissionDate <= deadlineDate) {
+    return { text: 'On Time', color: '#27ae60' }; // Green
+  }
+  
+  const diffMs = submissionDate - deadlineDate;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  
+  let lateText = 'Late';
+  if (diffDays > 0) {
+    lateText = `${diffDays} day${diffDays > 1 ? 's' : ''} late`;
+  } else if (diffHours > 0) {
+    lateText = `${diffHours} hour${diffHours > 1 ? 's' : ''} late`;
+  } else {
+    lateText = 'Less than 1 hour late';
+  }
+  
+  let color = '#e74c3c'; // Red
+  
+  return { text: lateText, color };
+};
+  
   const renderTaskItem = ({ item }) => (
     <View style={styles.taskItem}>
       <Text style={styles.taskTitle}>{item.title}</Text>
@@ -152,6 +181,19 @@ const DownloadFilesScreen = ({ route }) => {
                 >
                   <Text style={styles.qualifyButtonText}>Qualify</Text>
                 </TouchableOpacity>
+                {submission.submitted_at && item.deadline && (
+                  (() => {
+                    const status = getSubmissionStatus(submission.submitted_at, item.deadline);
+                    return (
+                      <View style={styles.statusContainer}>
+                        <Text style={[styles.statusText, { color: status.color }]}>
+                          {status.text}
+                        </Text>
+                      </View>
+                    );
+                  })()
+                )}
+
               </View>
 
               {/* Archivos entregados */}
@@ -304,6 +346,17 @@ const styles = StyleSheet.create({
     color: '#2c3e50', // gris oscuro
     fontSize: 12,
     fontWeight: '500',
+  },
+  statusContainer: {
+    marginLeft: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
 
