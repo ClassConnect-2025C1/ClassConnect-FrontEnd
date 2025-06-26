@@ -51,6 +51,7 @@ const ProfileScreen = () => {
   const [courseApprove, setCourseApprove] = useState('none');
   const [feedback, setFeedback] = useState('none');
   const [enrollment, setEnrollment] = useState('none');
+  const [newAssignment, setNewAssignment] = useState('none');
 
   // ===============================================
   // NUEVOS ESTADOS PARA OVERLAY DE ÉXITO
@@ -88,6 +89,13 @@ const ProfileScreen = () => {
       description: 'When students enroll in your courses',
       state: enrollment,
       setState: setEnrollment,
+    },
+    {
+      key: 'new_assignment', // ➕ AGREGAR TODO ESTE OBJETO
+      title: 'New Assignment',
+      description: 'When teachers create new assignments',
+      state: newAssignment,
+      setState: setNewAssignment,
     },
   ];
 
@@ -207,10 +215,11 @@ const ProfileScreen = () => {
 
       if (response.ok) {
         const settings = await response.json();
-        console.log('Notification settings fetched:', settings);
+        console.log('Notification settings fetched sonn:', settings);
         setCourseApprove(settings.course_approve || 'none');
         setFeedback(settings.feedback || 'none');
         setEnrollment(settings.enrollment || 'none');
+        setNewAssignment(settings.new_assignment || 'none');
       } else {
         console.log('No previous settings found, using defaults');
       }
@@ -235,6 +244,7 @@ const ProfileScreen = () => {
         course_approve: courseApprove,
         feedback: feedback,
         enrollment: enrollment,
+        new_assignment: newAssignment,
         fcm_token: fcmToken,
         notification_enabled: notificationPermissionGranted,
       };
@@ -580,14 +590,16 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.buttonSection}>
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={handleOpenNotificationModal}
-          >
-            <Text style={styles.notificationButtonText}>
-              🔔 Edit Notifications
-            </Text>
-          </TouchableOpacity>
+          {role === 'student' && (
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={handleOpenNotificationModal}
+            >
+              <Text style={styles.notificationButtonText}>
+                🔔 Edit Notifications
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {!hasPassword && (
             <TouchableOpacity
