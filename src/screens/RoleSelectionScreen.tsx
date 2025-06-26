@@ -73,7 +73,7 @@ const RoleSelectionScreen = () => {
                 return;
             }
 
-            // Guardar token y navegar
+
             const backendToken = data.access_token;
             await AsyncStorage.setItem('token', backendToken);
 

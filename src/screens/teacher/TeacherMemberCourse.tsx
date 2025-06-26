@@ -22,7 +22,7 @@ const MembersScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { course } = route.params;
-  const courseId = course.course_id;
+  const courseId = course.course_id || course.id;
 
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -181,8 +181,8 @@ const MembersScreen = () => {
                       item.photo
                         ? item.photo
                         : {
-                            uri: 'https://www.w3schools.com/howto/img_avatar.png',
-                          }
+                          uri: 'https://www.w3schools.com/howto/img_avatar.png',
+                        }
                     }
                     style={styles.memberImage}
                   />
