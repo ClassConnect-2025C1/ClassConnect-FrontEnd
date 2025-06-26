@@ -1,5 +1,5 @@
 import messaging from '@react-native-firebase/messaging';
-import { PermissionsAndroid, Platform, Alert } from 'react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
 import { API_URL } from '@env';
 
 export interface NotificationToken {

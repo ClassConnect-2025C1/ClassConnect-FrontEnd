@@ -71,7 +71,10 @@ const TeacherCreateNewCourseScreen = () => {
 
         const auxEmails: string[] = await auxResponse.json();
 
-        const auxOptions = auxEmails.map((email) => ({
+        // Filtrar para excluir el email del profesor actual
+        const filteredAuxEmails = auxEmails.filter(email => email !== teacher?.email);
+
+        const auxOptions = filteredAuxEmails.map((email) => ({
           id: email,
           name: email,
         }));
