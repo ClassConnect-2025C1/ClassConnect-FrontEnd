@@ -257,6 +257,50 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
     return (course.global_submission_rate || 0) * 100; // Convertir a porcentaje
   }
 
+  const getLastGradeTendencyForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course || !course.last_10_assignments_average_grade_tendency) {
+      return "Unknown";
+    }
+    return course.last_10_assignments_average_grade_tendency;
+  }
+
+  const getLastSubmissionRateTendencyForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course || !course.last_10_assignments_submission_rate_tendency) {
+      return "Unknown";
+    }
+    return course.last_10_assignments_submission_rate_tendency;
+  }
+
+  const getSuggestionsForCourse = (courseId) => {
+    const course = statistics.find(
+      (c) => c.course_id.toString() === courseId,
+    );
+    if (!course || !course.suggestions) {
+      return "";
+    }
+    return course.suggestions;
+  }
+
+  const getTendencyStyle = (tendency) => {
+    const upperTendency = tendency.toUpperCase();
+    
+    switch (upperTendency) {
+      case 'CRESCENT':
+        return { color: '#28a745', fontWeight: 'bold' }; // Green
+      case 'DECRESCENT':
+        return { color: '#dc3545', fontWeight: 'bold' }; // Red
+      case 'STABLE':
+        return { color: '#007AFF', fontWeight: 'bold' }; // Blue
+      default:
+        return { color: '#333', fontWeight: 'normal' }; // Default
+    }
+  };
 
   // Generar datos para gráficos simplificado
   const getChartData = () => {
@@ -716,6 +760,25 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
           </Text>
         </TouchableOpacity>
 
+      {/* Course Last Tendency */}
+        {selectedCourse !== 'all' && (
+          <View>
+            <Text style={styles.tendencyTitle}>📈 Last 10 Assignments Tendency</Text>
+            <View style={styles.tendencyRow}>
+              <Text style={styles.tendencyLabel}>Grade tendency:</Text>
+              <Text style={styles.tendencyBody, getTendencyStyle(getLastGradeTendencyForCourse(selectedCourse))}>{getLastGradeTendencyForCourse(selectedCourse).toUpperCase()}</Text>
+            </View>
+            <View style={styles.tendencyRow}>
+              <Text style={styles.tendencyLabel}>Task completion tendency:</Text>
+              <Text style={styles.tendencyBody, getTendencyStyle(getLastSubmissionRateTendencyForCourse(selectedCourse))}>  {getLastSubmissionRateTendencyForCourse(selectedCourse).toUpperCase()}</Text>
+            </View>
+            <View style={styles.tendencyRow}>
+              <Text style={styles.suggestionLabel}>AI suggestions:</Text>
+              <Text style={styles.tendencyBody}>{getSuggestionsForCourse(selectedCourse)}</Text>
+            </View>
+          </View>
+        )}
+
         {/* Date Filters - Solo mostrar cuando NO sea "all courses" */}
         {selectedCourse !== 'all' && (
           <View style={styles.dateRow}>
@@ -1067,6 +1130,38 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 14,
     color: '#333',
+  },
+  tendencyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  tendencyRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    alignItems: 'flex-start',
+    paddingVertical: 4,
+  },
+  tendencyLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    width: 160,
+  },
+  suggestionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    width: 100,
+  },
+  tendencyBody: {
+    fontSize: 14,
+    fontWeight: 'normal',
+    color: '#666',
+    flex: 1,
+    flexWrap: 'wrap',
+    textAlign: 'left',
   },
   dateRow: {
     flexDirection: 'row',
