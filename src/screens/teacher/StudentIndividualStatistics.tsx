@@ -118,7 +118,7 @@ const StudentIndividualStatistics = () => {
   const getStudentStats = () => {
     if (!studentStats) return null;
 
-    const filteredDates = filterByDate(studentStats.statistics_for_dates || []);
+    const filteredDates = filterByDate(studentStats.statistics_for_assignments || []);
 
     let avgGrade, avgSubmissionRate, totalActiveDays;
 
@@ -136,14 +136,14 @@ const StudentIndividualStatistics = () => {
     } else {
       avgGrade = studentStats.average_grade || 0;
       avgSubmissionRate = studentStats.submission_rate || 0;
-      totalActiveDays = studentStats.statistics_for_dates?.length || 0;
+      totalActiveDays = studentStats.statistics_for_assignments?.length || 0;
     }
 
     return {
       averageGrade: avgGrade.toFixed(1),
       submissionRate: (avgSubmissionRate * 100).toFixed(1),
       activeDays: totalActiveDays,
-      totalDates: studentStats.statistics_for_dates?.length || 0,
+      totalDates: studentStats.statistics_for_assignments?.length || 0,
     };
   };
 
@@ -166,11 +166,11 @@ const StudentIndividualStatistics = () => {
   // ✅ Función getChartData actualizada con lógica del 0 invisible
   // ✅ Función getChartData mejorada para StudentIndividualStatistics
   const getChartData = () => {
-    if (!studentStats?.statistics_for_dates?.length) {
+    if (!studentStats?.statistics_for_assignments?.length) {
       return { gradeData: null, submissionData: null};
     }
 
-    const filtered = filterByDate(studentStats.statistics_for_dates);
+    const filtered = filterByDate(studentStats.statistics_for_assignments);
     const uniq = Array.from(
       new Map(
         filtered
@@ -299,7 +299,7 @@ const StudentIndividualStatistics = () => {
       }
 
       const filteredDates = filterByDate(
-        studentStats?.statistics_for_dates || [],
+        studentStats?.statistics_for_assignments || [],
       );
       const sortedDates = filteredDates.sort(
         (a, b) => new Date(a.date) - new Date(b.date),

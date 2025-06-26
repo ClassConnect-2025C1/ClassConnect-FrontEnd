@@ -172,7 +172,7 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
       );
       if (!course) return null;
 
-      const filteredDates = (course.statistics_for_dates || []).filter(
+      const filteredDates = (course.statistics_for_assignments || []).filter(
         (item) => {
           const date = new Date(item.date);
           return date >= startDate && date <= endDate;
@@ -350,7 +350,7 @@ const dynamicChartWidth = (labelsCount: number, minWidth: number) =>
         return { gradeData: null, submissionData: null, trendData: null };
 
       // Filtrar fechas según el rango seleccionado
-      const filteredDates = (course.statistics_for_dates || []).filter(
+      const filteredDates = (course.statistics_for_assignments || []).filter(
         (item) => {
           const date = new Date(item.date);
           return date >= startDate && date <= endDate;
