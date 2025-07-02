@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
+import React from 'react';
 
 const CoursesScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -67,7 +68,8 @@ const CoursesScreen = ({ route }) => {
         }
 
         if (token && userEmail) {
-          const response = await fetch(`${API_URL}/api/courses/`, {
+          // usamos el token que contiene el mail para filtrar en el back
+          const response = await fetch(`${API_URL}/api/courses/courses`, {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -253,7 +255,7 @@ const CoursesScreen = ({ route }) => {
 
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => navigation.navigate('TeacherStatistics')}
+          onPress={() => navigation.navigate('TeacherStatistics', { courses })}
         >
           <Text style={styles.buttonText}>Statistics</Text>
         </TouchableOpacity>

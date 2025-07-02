@@ -24,7 +24,7 @@ const PinScreen = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_URL}/api/auth/verify-pin`,
+        `${API_URL}/api/auth/verification`,
         {
           userId,
           pin,
@@ -52,7 +52,7 @@ const PinScreen = () => {
   const resendPin = async () => {
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/resend-pin`,
+        `${API_URL}/api/auth/verification/resend`,
         {
           userId,
           phone,

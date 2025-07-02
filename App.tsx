@@ -95,7 +95,7 @@ const AppContent = () => {
         const userId = decoded.user_id || decoded.sub;
         if (!userId) return;
 
-        await fetch(`${API_URL}/api/notification/${userId}/push-token`, {
+        await fetch(`${API_URL}/api/notifications/${userId}/push-token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

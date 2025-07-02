@@ -172,7 +172,7 @@ const TeacherQualifyAssignment = () => {
         },
         body: JSON.stringify({
           feedback: comment.trim(),
-          grade: Number(grade),
+          Grade: Number(grade),
         }),
       });
 

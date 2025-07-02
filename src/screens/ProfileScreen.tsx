@@ -203,7 +203,7 @@ const ProfileScreen = () => {
     try {
       setLoadingNotifications(true);
       const response = await fetch(
-        `${API_URL}/api/notification/${userId}/config`,
+        `${API_URL}/api/notifications/preferences/${userId}`,
         {
           method: 'GET',
           headers: {
@@ -251,7 +251,7 @@ const ProfileScreen = () => {
 
 
       const response = await fetch(
-        `${API_URL}/api/notification/${userId}/config`,
+        `${API_URL}/api/notifications/preferences/${userId}`,
         {
           method: 'PATCH',
           headers: {
