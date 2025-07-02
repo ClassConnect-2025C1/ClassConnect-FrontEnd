@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { API_URL } from '@env';
 import { useAuth } from '../../navigation/AuthContext';
+import React from 'react';
 
 const CoursesScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -254,7 +255,7 @@ const CoursesScreen = ({ route }) => {
 
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => navigation.navigate('TeacherStatistics')}
+          onPress={() => navigation.navigate('TeacherStatistics', { courses })}
         >
           <Text style={styles.buttonText}>Statistics</Text>
         </TouchableOpacity>

@@ -23,6 +23,8 @@ import { downloadAndShareFile } from '../../utils/FileDowloader';
 import { AppState } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import { useRoute } from '@react-navigation/native';
+
 
 const TeacherStatistics = () => {
   const navigation = useNavigation();
@@ -32,6 +34,8 @@ const TeacherStatistics = () => {
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [globalChartWidth, setGlobalChartWidth] = useState(0);
   const [chartWidth, setChartWidth] = useState(0);
+  const route = useRoute();
+  const { courses } = route.params || {};
 
   // Date filters
   const [startDate, setStartDate] = useState(
@@ -84,10 +88,11 @@ const TeacherStatistics = () => {
       if (showLoading) setLoading(true);
 
       let endpoint;
+
       if (selectedCourse === 'all') {
         endpoint = `${API_URL}/api/statistics/global`;
       } else {
-        endpoint = `${API_URL}/api/statistics/${selectedCourse}`;
+        endpoint = `${API_URL}/api/statistics/${selectedCourse.id}`;
       }
 
       const response = await fetch(endpoint, {
@@ -101,6 +106,7 @@ const TeacherStatistics = () => {
       if (!response.ok) throw new Error('Failed to fetch statistics');
 
       const data = await response.json();
+
 
       // Los datos ya vienen filtrados del backend
       if (JSON.stringify(data) !== JSON.stringify(statistics)) {
@@ -191,33 +197,25 @@ const TeacherStatistics = () => {
   }
 
   const getLastGradeTendencyForCourse = (courseId) => {
-    const course = statistics.find(
-      (c) => c.course_id.toString() === courseId,
-    );
-    if (!course || !course.last_10_assignments_average_grade_tendency) {
+    // Ahora puedes usar statistics directamente ya que viene del backend para el curso específico
+    if (!statistics || !statistics.gradeTendency) {
       return "Unknown";
     }
-    return course.last_10_assignments_average_grade_tendency;
+    return statistics.gradeTendency;
   }
 
   const getLastSubmissionRateTendencyForCourse = (courseId) => {
-    const course = statistics.find(
-      (c) => c.course_id.toString() === courseId,
-    );
-    if (!course || !course.last_10_assignments_submission_rate_tendency) {
+    if (!statistics || !statistics.submissionTendency) {
       return "Unknown";
     }
-    return course.last_10_assignments_submission_rate_tendency;
+    return statistics.submissionTendency;
   }
 
   const getSuggestionsForCourse = (courseId) => {
-    const course = statistics.find(
-      (c) => c.course_id.toString() === courseId,
-    );
-    if (!course || !course.suggestions) {
+    if (!statistics || !statistics.suggestions) {
       return "";
     }
-    return course.suggestions;
+    return statistics.suggestions;
   }
 
   const getTendencyStyle = (tendency) => {
@@ -238,6 +236,7 @@ const TeacherStatistics = () => {
   const getChartData = () => {
     if (selectedCourse === 'all') {
       // Los datos de cursos ya vienen del backend
+
       const courseData = (statistics.courseData || []).slice(0, 6).map((course) => ({
         name: course.course_name.substring(0, 8),
         grade: course.average_grade || 0,
@@ -595,9 +594,9 @@ const TeacherStatistics = () => {
             📚{' '}
             {selectedCourse === 'all'
               ? 'All Courses'
-              : statistics.find(
-                (c) => c.course_id.toString() === selectedCourse,
-              )?.course_name || 'Select Course'}
+              : courses.find(
+                (c) => c.id.toString() === selectedCourse,
+              )?.title || 'Select Course'}
           </Text>
         </TouchableOpacity>
 
@@ -756,22 +755,12 @@ const TeacherStatistics = () => {
           <TouchableOpacity
             style={styles.individualStatsButton}
             onPress={() => {
-              const foundCourse = statistics.find(
-                (c) => c.course_id.toString() === selectedCourse,
+              const foundCourse = courses.find(
+                (c) => c.id.toString() === selectedCourse,
               );
 
               if (foundCourse) {
-                // Transformar el objeto para que tenga las propiedades esperadas
-                const course = {
-                  id: foundCourse.course_id,
-                  name:
-                    foundCourse.course_name ||
-                    foundCourse.name ||
-                    `Course ${foundCourse.course_id}`,
-                  ...foundCourse, // Incluir todas las demás propiedades
-                };
-
-                navigation.navigate('TeacherMembersCourse', { course });
+                navigation.navigate('TeacherMembersCourse', { course: foundCourse });
               }
             }}
           >
@@ -794,24 +783,24 @@ const TeacherStatistics = () => {
             <Text style={styles.modalTitle}>Select Course</Text>
             <FlatList
               data={[
-                { course_id: 'all', course_name: 'All Courses' },
-                ...statistics,
+                { id: 'all', title: 'All Courses' },
+                ...courses,
               ]}
-              keyExtractor={(item) => item.course_id.toString()}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[
                     styles.courseOption,
-                    selectedCourse === item.course_id.toString() &&
+                    selectedCourse === item.id.toString() &&
                     styles.selectedCourse,
                   ]}
                   onPress={() => {
-                    setSelectedCourse(item.course_id.toString());
+                    setSelectedCourse(item.id.toString());
                     setShowCourseModal(false);
                   }}
                 >
                   <Text style={styles.courseOptionText}>
-                    {item.course_name}
+                    {item.title}
                   </Text>
                 </TouchableOpacity>
               )}
