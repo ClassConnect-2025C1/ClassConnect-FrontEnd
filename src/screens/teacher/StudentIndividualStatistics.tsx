@@ -248,41 +248,27 @@ const StudentIndividualStatistics = () => {
       const { gradeData, submissionData } = getChartData();
 
       console.log('Waiting for charts to render...');
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       let gradeChartImage = '';
       let submissionChartImage = '';
-      let trendChartImage = '';
+      let globalChartImage = '';
 
       console.log('Starting chart capture...');
 
       try {
-        if (trendChartRef.current && trendData) {
-          console.log('Capturing trend chart...');
-          trendChartImage = await captureRef(trendChartRef.current, {
+        // ✅ CAPTURAR GRÁFICO GLOBAL (arriba)
+        if (globalChartRef.current && globalChartData) {
+          console.log('Capturing global chart...');
+          globalChartImage = await captureRef(globalChartRef.current, {
             format: 'png',
             quality: 0.8,
             result: 'base64',
           });
-          console.log(
-            'Trend chart captured successfully, length:',
-            trendChartImage.length,
-          );
+          console.log('Global chart captured successfully, length:', globalChartImage.length);
         }
 
-        if (submissionChartRef.current && submissionData) {
-          console.log('Capturing submission chart...');
-          submissionChartImage = await captureRef(submissionChartRef.current, {
-            format: 'png',
-            quality: 0.8,
-            result: 'base64',
-          });
-          console.log(
-            'Submission chart captured successfully, length:',
-            submissionChartImage.length,
-          );
-        }
-
+        // ✅ CAPTURAR GRÁFICO DE CALIFICACIONES
         if (gradeChartRef.current && gradeData) {
           console.log('Capturing grade chart...');
           gradeChartImage = await captureRef(gradeChartRef.current, {
@@ -290,10 +276,18 @@ const StudentIndividualStatistics = () => {
             quality: 0.8,
             result: 'base64',
           });
-          console.log(
-            'Grade chart captured successfully, length:',
-            gradeChartImage.length,
-          );
+          console.log('Grade chart captured successfully, length:', gradeChartImage.length);
+        }
+
+        // ✅ CAPTURAR GRÁFICO DE SUBMISSIONS
+        if (submissionChartRef.current && submissionData) {
+          console.log('Capturing submission chart...');
+          submissionChartImage = await captureRef(submissionChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64',
+          });
+          console.log('Submission chart captured successfully, length:', submissionChartImage.length);
         }
       } catch (error) {
         console.log('Error capturing charts:', error);
@@ -306,139 +300,143 @@ const StudentIndividualStatistics = () => {
         (a, b) => new Date(a.date) - new Date(b.date),
       );
 
+      // ✅ CORREGIR NOMBRE DEL CURSO
+      const courseName = course?.name || course?.title || course?.course_name || 'Unknown Course';
+
       const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; background: white; }
-          .header { text-align: center; border-bottom: 3px solid #007AFF; padding: 20px; margin-bottom: 30px; }
-          .stats { background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 10px; }
-          .metric { margin: 15px 0; padding: 10px; background: white; border-radius: 5px; display: flex; justify-content: space-between; border: 1px solid #ddd; }
-          .chart-section { margin: 30px 0; page-break-inside: avoid; text-align: center; }
-          .chart-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #007AFF; }
-          .chart-image { width: 100%; max-width: 600px; height: auto; border: 1px solid #ddd; border-radius: 8px; margin: 10px auto; display: block; }
-          .data-section { margin: 30px 0; page-break-inside: avoid; }
-          .data-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #007AFF; }
-          .data-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-          .data-table th, .data-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-          .data-table th { background-color: #f8f9fa; font-weight: bold; }
-          .data-table tr:nth-child(even) { background-color: #f9f9f9; }
-          h1 { color: #007AFF; }
-          h2 { color: #333; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>📊 Individual Student Report</h1>
-          <h2>${studentDisplayName}</h2>
-          <h3>Course: ${course.name}</h3>
-          <p>Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-        </div>
-        
-        <div class="stats">
-          <h2>📈 Performance Summary</h2>
-          <div class="metric"><span><strong>Average Grade:</strong></span><span>${stats?.averageGrade || 'N/A'}</span></div>
-          <div class="metric"><span><strong>Submission Rate:</strong></span><span>${stats?.submissionRate || 'N/A'}%</span></div>
-          <div class="metric"><span><strong>Active Days:</strong></span><span>${stats?.activeDays || 0} / ${stats?.totalDates || 0}</span></div>
-          <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
-        </div>
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; background: white; }
+        .header { text-align: center; border-bottom: 3px solid #007AFF; padding: 20px; margin-bottom: 30px; }
+        .stats { background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 10px; }
+        .metric { margin: 15px 0; padding: 10px; background: white; border-radius: 5px; display: flex; justify-content: space-between; border: 1px solid #ddd; }
+        .chart-section { margin: 30px 0; page-break-inside: avoid; text-align: center; }
+        .chart-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #007AFF; }
+        .chart-image { width: 100%; max-width: 600px; height: auto; border: 1px solid #ddd; border-radius: 8px; margin: 10px auto; display: block; }
+        .data-section { margin: 30px 0; page-break-inside: avoid; }
+        .data-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #007AFF; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        .data-table th, .data-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .data-table th { background-color: #f8f9fa; font-weight: bold; }
+        .data-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .no-chart { padding: 20px; background: #f8f9fa; border: 1px dashed #ccc; color: #666; text-align: center; }
+        h1 { color: #007AFF; }
+        h2 { color: #333; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>📊 Individual Student Report</h1>
+        <h2>${studentDisplayName}</h2>
+        <h3>Course: ${courseName}</h3>
+        <p>Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+      </div>
+      
+      <div class="stats">
+        <h2>📈 Performance Summary</h2>
+        <div class="metric"><span><strong>Average Grade:</strong></span><span>${stats?.averageGrade || 'N/A'}</span></div>
+        <div class="metric"><span><strong>Submission Rate:</strong></span><span>${stats?.submissionRate || 'N/A'}%</span></div>
+        <div class="metric"><span><strong>Active Days:</strong></span><span>${stats?.activeDays || 0} / ${stats?.totalDates || 0}</span></div>
+        <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
+      </div>
 
-        ${trendChartImage
-          ? `
-          <div class="chart-section">
-            <h2 class="chart-title">📈 Grade Evolution</h2>
-            <img src="data:image/png;base64,${trendChartImage}" class="chart-image" alt="Trend Chart" />
-          </div>
-        `
-          : ''
-        }
+      ${globalChartImage ? `
+        <div class="chart-section">
+          <h2 class="chart-title">📊 Performance Overview</h2>
+          <img src="data:image/png;base64,${globalChartImage}" class="chart-image" alt="Performance Overview" />
+        </div>` : ''}
 
-        ${submissionChartImage
-          ? `
-          <div class="chart-section">
-            <h2 class="chart-title">📊 Task Completion Rate</h2>
-            <img src="data:image/png;base64,${submissionChartImage}" class="chart-image" alt="Submission Chart" />
-          </div>
-        `
-          : ''
-        }
+      ${gradeChartImage ? `
+        <div class="chart-section">
+          <h2 class="chart-title">📈 Grade Evolution</h2>
+          <img src="data:image/png;base64,${gradeChartImage}" class="chart-image" alt="Grade Chart" />
+        </div>` : `
+        <div class="chart-section">
+          <h2 class="chart-title">📈 Grade Evolution</h2>
+          <div class="no-chart">Chart could not be generated</div>
+        </div>`}
 
-        ${gradeChartImage
-          ? `
-          <div class="chart-section">
-            <h2 class="chart-title">📊 Weekly Performance</h2>
-            <img src="data:image/png;base64,${gradeChartImage}" class="chart-image" alt="Grade Chart" />
-          </div>
-        `
-          : ''
-        }
+      ${submissionChartImage ? `
+        <div class="chart-section">
+          <h2 class="chart-title">📊 Task Completion Rate</h2>
+          <img src="data:image/png;base64,${submissionChartImage}" class="chart-image" alt="Submission Chart" />
+        </div>` : `
+        <div class="chart-section">
+          <h2 class="chart-title">📊 Task Completion Rate</h2>
+          <div class="no-chart">Chart could not be generated</div>
+        </div>`}
 
-        ${sortedDates.length > 0
+      ${sortedDates.length > 0
           ? `
-          <div class="data-section">
-            <h2 class="data-title">📅 Daily Performance Data</h2>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Average Grade</th>
-                  <th>Submission Rate (%)</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${sortedDates
+        <div class="data-section">
+          <h2 class="data-title">📅 Daily Performance Data</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Average Grade</th>
+                <th>Submission Rate (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedDates
             .map(
               (item) => `
-                  <tr>
-                    <td>${new Date(item.date).toLocaleDateString()}</td>
-                    <td>${(item.average_grade || 0).toFixed(1)}</td>
-                    <td>${((item.submission_rate || 0) * 100).toFixed(1)}%</td>
-                  </tr>
-                `,
+                <tr>
+                  <td>${new Date(item.date).toLocaleDateString()}</td>
+                  <td>${(item.average_grade || 0).toFixed(1)}</td>
+                  <td>${((item.submission_rate || 0) * 100).toFixed(1)}%</td>
+                </tr>
+              `,
             )
             .join('')}
-              </tbody>
-            </table>
-          </div>
-        `
-          : ''
-        }
-
-        ${sortedDates.length > 1
-          ? `
-          <div class="data-section">
-            <h2 class="data-title">📈 Performance Analysis</h2>
-            <div class="metric">
-              <span><strong>Best Grade:</strong></span>
-              <span>${Math.max(...sortedDates.map((d) => d.average_grade || 0)).toFixed(1)}</span>
-            </div>
-            <div class="metric">
-              <span><strong>Lowest Grade:</strong></span>
-              <span>${Math.min(...sortedDates.filter((d) => d.average_grade > 0).map((d) => d.average_grade || 0)).toFixed(1)}</span>
-            </div>
-            <div class="metric">
-              <span><strong>Best Submission Rate:</strong></span>
-              <span>${(Math.max(...sortedDates.map((d) => d.submission_rate || 0)) * 100).toFixed(1)}%</span>
-            </div>
-            <div class="metric">
-              <span><strong>Grade Trend:</strong></span>
-              <span>${sortedDates.length > 1 && sortedDates[sortedDates.length - 1].average_grade > sortedDates[0].average_grade ? '📈 Improving' : sortedDates.length > 1 && sortedDates[sortedDates.length - 1].average_grade < sortedDates[0].average_grade ? '📉 Declining' : '➡️ Stable'}</span>
-            </div>
-          </div>
-        `
-          : ''
-        }
-
-        <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
-          <p>Generated by Student Statistics App</p>
+            </tbody>
+          </table>
         </div>
-      </body>
-    </html>`;
+      `
+          : ''
+        }
 
-      const fileName = `student_${studentDisplayName.replace(/[^a-zA-Z0-9]/g, '_')}_${course.name.replace(/[^a-zA-Z0-9]/g, '_')}_${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}.pdf`;
+      ${sortedDates.length > 1
+          ? `
+        <div class="data-section">
+          <h2 class="data-title">📈 Performance Analysis</h2>
+          <div class="metric">
+            <span><strong>Best Grade:</strong></span>
+            <span>${Math.max(...sortedDates.map((d) => d.average_grade || 0)).toFixed(1)}</span>
+          </div>
+          <div class="metric">
+            <span><strong>Lowest Grade:</strong></span>
+            <span>${Math.min(...sortedDates.filter((d) => d.average_grade > 0).map((d) => d.average_grade || 0)).toFixed(1)}</span>
+          </div>
+          <div class="metric">
+            <span><strong>Best Submission Rate:</strong></span>
+            <span>${(Math.max(...sortedDates.map((d) => d.submission_rate || 0)) * 100).toFixed(1)}%</span>
+          </div>
+          <div class="metric">
+            <span><strong>Grade Trend:</strong></span>
+            <span>${sortedDates.length > 1 && sortedDates[sortedDates.length - 1].average_grade > sortedDates[0].average_grade ? '📈 Improving' : sortedDates.length > 1 && sortedDates[sortedDates.length - 1].average_grade < sortedDates[0].average_grade ? '📉 Declining' : '➡️ Stable'}</span>
+          </div>
+        </div>
+      `
+          : ''
+        }
+
+      <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
+        <p>Generated by Student Statistics App</p>
+      </div>
+    </body>
+  </html>`;
+
+      // ✅ NOMBRE DE ARCHIVO SEGURO
+      const safeStudentName = studentDisplayName.replace(/[^a-zA-Z0-9]/g, '_');
+      const safeCourseName = courseName.replace(/[^a-zA-Z0-9]/g, '_');
+
+      const fileName = `student_${safeStudentName}_${safeCourseName}_${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}.pdf`;
 
       const options = {
         html: htmlContent,
@@ -460,7 +458,6 @@ const StudentIndividualStatistics = () => {
         content: pdf.base64,
       });
 
-      //Alert.alert('Success', 'PDF exported successfully!');
     } catch (error) {
       console.error('PDF Export Error:', error);
       Alert.alert('Error', 'Failed to generate PDF');
@@ -468,7 +465,6 @@ const StudentIndividualStatistics = () => {
       setGeneratingPDF(false);
     }
   };
-
   if (loading) {
     return (
       <View style={styles.centered}>
