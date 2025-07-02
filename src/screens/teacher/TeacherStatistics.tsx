@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -24,7 +23,6 @@ import { AppState } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import { useRoute } from '@react-navigation/native';
-
 
 const TeacherStatistics = () => {
   const navigation = useNavigation();
@@ -52,9 +50,7 @@ const TeacherStatistics = () => {
   const submissionChartRef = useRef(null);
   const trendChartRef = useRef(null);
   const courseChartRef = useRef(null);
-  const courseChartCaptureRef = useRef(null);
-  const gradeChartCaptureRef = useRef(null);
-  const submissionChartCaptureRef = useRef(null);
+  // ✅ ELIMINADAS las 3 líneas problemáticas
 
   useEffect(() => {
     fetchStatistics(true);
@@ -201,7 +197,6 @@ const TeacherStatistics = () => {
   const getChartData = () => {
     if (selectedCourse === 'all') {
       // Los datos de cursos ya vienen del backend
-
       const courseData = (statistics.courseData || []).slice(0, 6).map((course) => ({
         name: course.course_name.substring(0, 8),
         grade: course.average_grade || 0,
@@ -209,7 +204,24 @@ const TeacherStatistics = () => {
       }));
 
       if (courseData.length === 0) {
-        return { gradeData: null, submissionData: null, trendData: null };
+        // ✅ USAR DATOS GLOBALES cuando no hay courseData
+        console.log('❌ No courseData available - using global stats for ALL COURSES');
+
+        const globalGrade = statistics.global_average_grade || 0;
+        const globalSubmissionRate = (statistics.global_submission_rate || 0) * 100;
+
+        const gradeData = {
+          labels: ['Overall'],
+          datasets: [{ data: [globalGrade] }],
+        };
+
+        const submissionData = {
+          labels: ['Overall'],
+          datasets: [{ data: [globalSubmissionRate] }],
+        };
+
+        console.log('✅ ALL COURSES data created with global stats:', { gradeData, submissionData });
+        return { gradeData, submissionData, trendData: null };
       }
 
       const gradeData = {
@@ -228,7 +240,24 @@ const TeacherStatistics = () => {
       const timelineData = statistics.timelineData || [];
 
       if (timelineData.length === 0) {
-        return { gradeData: null, submissionData: null, trendData: null };
+        // ✅ USAR DATOS GLOBALES cuando no hay timelineData
+        console.log('⚠️ No timelineData, using global stats for charts');
+
+        const globalGrade = statistics.global_average_grade || 0;
+        const globalSubmissionRate = (statistics.global_submission_rate || 0) * 100;
+
+        const gradeData = {
+          labels: ['Current'],
+          datasets: [{ data: [globalGrade] }],
+        };
+
+        const submissionData = {
+          labels: ['Current'],
+          datasets: [{ data: [globalSubmissionRate] }],
+        };
+
+        console.log('✅ SPECIFIC COURSE data created with global stats:', { gradeData, submissionData });
+        return { gradeData, submissionData, trendData: null };
       }
 
       const labels = timelineData.map((item) => {
@@ -258,6 +287,7 @@ const TeacherStatistics = () => {
       return { gradeData, submissionData, trendData };
     }
   };
+
   // Date picker handlers
   const onStartDateChange = (event, selectedDate) => {
     setShowStartDatePicker(Platform.OS === 'ios');
@@ -273,6 +303,7 @@ const TeacherStatistics = () => {
     }
   };
 
+  // ✅ FUNCIÓN HANDLEEXPORTPDF COMPLETAMENTE CORREGIDA
   const handleExportPDF = async () => {
     setGeneratingPDF(true);
 
@@ -281,7 +312,7 @@ const TeacherStatistics = () => {
       const completionTendency = getLastSubmissionRateTendencyForCourse(selectedCourse);
       const aiSuggestions = getSuggestionsForCourse(selectedCourse);
 
-      const tendencyColor = (t: string) => {
+      const tendencyColor = (t) => {
         switch ((t || '').toUpperCase()) {
           case 'CRESCENT': return '#28a745';  // green
           case 'DECRESCENT': return '#dc3545';  // red
@@ -293,29 +324,65 @@ const TeacherStatistics = () => {
       const globalStats = getGlobalStats();
       const { gradeData, submissionData, trendData } = getChartData();
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log('📊 Starting PDF generation...');
+      console.log('🔍 Global chart ref:', !!globalChartRef.current);
+      console.log('🔍 Course chart ref:', !!courseChartRef.current);
+      console.log('🔍 Grade chart ref:', !!gradeChartRef.current);
+      console.log('🔍 Submission chart ref:', !!submissionChartRef.current);
+      console.log('🔍 Global chart data:', !!globalChartData);
 
-      let courseChartImage = '';
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      let globalChartImage = '';
       let gradeChartImage = '';
       let submissionChartImage = '';
 
       try {
-        if (gradeChartCaptureRef.current) {
-          gradeChartImage = await captureRef(gradeChartCaptureRef.current, {
+        // ✅ CAPTURAR EL GRÁFICO GLOBAL (arriba) - All Courses
+        if (selectedCourse === 'all' && globalChartRef.current && globalChartData) {
+          console.log('📸 Capturing global chart...');
+          globalChartImage = await captureRef(globalChartRef.current, {
             format: 'png',
             quality: 0.8,
             result: 'base64',
           });
+          console.log('✅ Global chart captured, length:', globalChartImage.length);
         }
 
-        if (submissionChartCaptureRef.current) {
-          submissionChartImage = await captureRef(submissionChartCaptureRef.current, {
+        // ✅ CAPTURAR EL GRÁFICO DEL CURSO (arriba) - Specific Course
+        if (selectedCourse !== 'all' && courseChartRef.current) {
+          console.log('📸 Capturing course chart...');
+          globalChartImage = await captureRef(courseChartRef.current, {
             format: 'png',
             quality: 0.8,
             result: 'base64',
           });
+          console.log('✅ Course chart captured, length:', globalChartImage.length);
         }
-      } catch (error) { }
+
+        // ✅ CAPTURAR LOS GRÁFICOS VISIBLES (abajo)
+        if (gradeChartRef.current && gradeData) {
+          console.log('📸 Capturing grade chart...');
+          gradeChartImage = await captureRef(gradeChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64',
+          });
+          console.log('✅ Grade chart captured, length:', gradeChartImage.length);
+        }
+
+        if (submissionChartRef.current && submissionData) {
+          console.log('📸 Capturing submission chart...');
+          submissionChartImage = await captureRef(submissionChartRef.current, {
+            format: 'png',
+            quality: 0.8,
+            result: 'base64',
+          });
+          console.log('✅ Submission chart captured, length:', submissionChartImage.length);
+        }
+      } catch (error) {
+        console.error('💥 Error capturing charts:', error);
+      }
 
       const htmlContent = `
     <!DOCTYPE html>
@@ -331,6 +398,7 @@ const TeacherStatistics = () => {
           .chart-section { margin: 30px 0; page-break-inside: avoid; text-align: center; }
           .chart-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #007AFF; }
           .chart-image { width: 100%; max-width: 600px; height: auto; border: 1px solid #ddd; border-radius: 8px; margin: 10px auto; display: block; }
+          .no-chart { padding: 20px; background: #f8f9fa; border: 1px dashed #ccc; color: #666; text-align: center; }
           h1 { color: #007AFF; }
           h2 { color: #333; }
         </style>
@@ -352,6 +420,13 @@ const TeacherStatistics = () => {
           <div class="metric"><span><strong>Active Courses:</strong></span><span>${globalStats?.activeCourses || 0}</span></div>
           <div class="metric"><span><strong>Period:</strong></span><span>${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</span></div>
         </div>
+
+        ${globalChartImage ? `
+          <div class="chart-section">
+            <h2 class="chart-title">📊 Performance Overview</h2>
+            <img src="data:image/png;base64,${globalChartImage}"
+                class="chart-image" alt="Performance overview"/>
+          </div>` : ''}
 
         ${selectedCourse !== 'all' ? `
           <div class="stats">
@@ -383,14 +458,22 @@ const TeacherStatistics = () => {
             <h2 class="chart-title">📈 Average grades</h2>
             <img src="data:image/png;base64,${gradeChartImage}"
                 class="chart-image" alt="Grade timeline"/>
-          </div>` : ''}
+          </div>` : `
+          <div class="chart-section">
+            <h2 class="chart-title">📈 Average grades</h2>
+            <div class="no-chart">Chart could not be generated</div>
+          </div>`}
 
         ${submissionChartImage ? `
           <div class="chart-section">
             <h2 class="chart-title">📈 Completion rates</h2>
             <img src="data:image/png;base64,${submissionChartImage}"
                 class="chart-image" alt="Completion timeline"/>
-          </div>` : ''}
+          </div>` : `
+          <div class="chart-section">
+            <h2 class="chart-title">📈 Completion rates</h2>
+            <div class="no-chart">Chart could not be generated</div>
+          </div>`}
 
         <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
           <p>Generated by Teacher Statistics App</p>
@@ -418,7 +501,6 @@ const TeacherStatistics = () => {
         name: fileName,
         content: pdf.base64,
       });
-
 
     } catch (error) {
       console.error('PDF Export Error:', error);
@@ -503,7 +585,7 @@ const TeacherStatistics = () => {
             <View
               ref={globalChartRef}
               collapsable={false}
-              style={{ backgroundColor: 'white' }}
+              style={{ backgroundColor: 'white', padding: 10, borderRadius: 8 }}
             >
               <BarChart
                 data={globalChartData}
@@ -528,7 +610,7 @@ const TeacherStatistics = () => {
             <View
               ref={courseChartRef}
               collapsable={false}
-              style={{ backgroundColor: 'white' }}
+              style={{ backgroundColor: 'white', padding: 10, borderRadius: 8 }}
             >
               <BarChart
                 data={globalChartDataForCourse}
@@ -619,7 +701,7 @@ const TeacherStatistics = () => {
               <View
                 ref={gradeChartRef}
                 collapsable={false}
-                style={{ backgroundColor: 'white' }}
+                style={{ backgroundColor: 'white', padding: 10, borderRadius: 8 }}
               >
                 <BarChart
                   data={gradeData}
@@ -632,19 +714,7 @@ const TeacherStatistics = () => {
                   style={styles.chart}
                 />
               </View>
-              {/* hidden replica used only for PDF */}
-              <View
-                style={{ position: 'absolute', left: -9999 }}   // keeps it off-screen
-                ref={gradeChartCaptureRef}
-                collapsable={false}>
-                <BarChart
-                  data={gradeData}
-                  width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
-                  height={200}
-                  fromZero
-                  chartConfig={chartConfig}
-                />
-              </View>
+              {/* ✅ ELIMINADO el bloque oculto */}
             </ScrollView>
           </View>
 
@@ -653,13 +723,13 @@ const TeacherStatistics = () => {
               <Text style={styles.chartTitle}>📈 Task Completion (%) per course</Text>
             )}
             {selectedCourse !== 'all' && (
-              <Text style={styles.chartTitle}> Task Completion (%) per date</Text>
+              <Text style={styles.chartTitle}>📈 Task Completion (%) per date</Text>
             )}
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View
                 ref={submissionChartRef}
                 collapsable={false}
-                style={{ backgroundColor: 'white' }}
+                style={{ backgroundColor: 'white', padding: 10, borderRadius: 8 }}
               >
                 <BarChart
                   data={submissionData}
@@ -672,19 +742,7 @@ const TeacherStatistics = () => {
                   style={styles.chart}
                 />
               </View>
-              {/* hidden replica used only for PDF */}
-              <View
-                style={{ position: 'absolute', left: -9999 }}   // keeps it off-screen
-                ref={submissionChartCaptureRef}
-                collapsable={false}>
-                <BarChart
-                  data={submissionData}
-                  width={dynamicChartWidth(gradeData.labels.length, screenWidth - 40)}
-                  height={200}
-                  fromZero
-                  chartConfig={chartConfig}
-                />
-              </View>
+              {/* ✅ ELIMINADO el bloque oculto */}
             </ScrollView>
           </View>
 
