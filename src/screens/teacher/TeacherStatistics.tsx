@@ -90,10 +90,11 @@ const TeacherStatistics = () => {
       let endpoint;
 
       if (selectedCourse === 'all') {
-        endpoint = `${API_URL}/api/statistics/global`;
+        endpoint = `${API_URL}/api/courses/statistics/global`;
       } else {
-        endpoint = `${API_URL}/api/statistics/${selectedCourse.id}`;
+        endpoint = `${API_URL}/api/courses/statistics/${selectedCourse}`;
       }
+
 
       const response = await fetch(endpoint, {
         method: 'GET',
@@ -103,16 +104,18 @@ const TeacherStatistics = () => {
         },
       });
 
+
       if (!response.ok) throw new Error('Failed to fetch statistics');
 
       const data = await response.json();
-
+      console.log('Data received:', data);
 
       // Los datos ya vienen filtrados del backend
       if (JSON.stringify(data) !== JSON.stringify(statistics)) {
-        setStatistics(data);
+        setStatistics(data.statistics);
       }
     } catch (error) {
+      console.log('Error details:', error); // 👈 Y AQUÍ
       if (showLoading) {
         Alert.alert('Error', 'Failed to load statistics');
       }
@@ -125,18 +128,16 @@ const TeacherStatistics = () => {
 
   const getGlobalStats = () => {
     if (selectedCourse === 'all') {
-      // Para "All Courses": los datos ya vienen agregados del backend
       return {
-        averageGrade: (statistics.averageGrade || 0).toFixed(1),
-        submissionRate: ((statistics.submissionRate || 0) * 100).toFixed(1),
-        activeCourses: statistics.activeCourses || 0,
-        totalCourses: statistics.totalCourses || 0,
+        averageGrade: (statistics.global_average_grade || 0).toFixed(1),
+        submissionRate: ((statistics.global_submission_rate || 0) * 100).toFixed(1),
+        activeCourses: courses?.length || 0,  // Usar los cursos pasados como parámetro
+        totalCourses: courses?.length || 0,
       };
     } else {
-      // Para curso específico: usar los datos filtrados del backend
       return {
-        averageGrade: (statistics.averageGrade || 0).toFixed(1),
-        submissionRate: ((statistics.submissionRate || 0) * 100).toFixed(1),
+        averageGrade: (statistics.global_average_grade || 0).toFixed(1),
+        submissionRate: ((statistics.global_submission_rate || 0) * 100).toFixed(1),
         activeCourses: 1,
         totalCourses: 1,
       };
@@ -146,7 +147,7 @@ const TeacherStatistics = () => {
   const getGlobalChartData = (stats) => {
     if (!stats) return null;
 
-    const avgGrade = parseFloat(stats.averageGrade);
+    const avgGrade = parseFloat(stats.averageGrade) * 10;
     const submissionRate = parseFloat(stats.submissionRate);
 
     return {
@@ -159,56 +160,20 @@ const TeacherStatistics = () => {
     };
   };
 
-  const getGlobalChartDataForCourse = (courseId) => {
-    const course = statistics.find(
-      (c) => c.course_id.toString() === courseId,
-    );
-    if (!course) return null;
-
-    const avgGrade = course.global_average_grade || 0;
-    const submissionRate = (course.global_submission_rate || 0) * 100; // Convertir a porcentaje
-
-    return {
-      labels: ['Avg Grade', 'Completion %'],
-      datasets: [
-        {
-          data: [avgGrade, submissionRate],
-        },
-      ],
-    };
-  }
-
-  const getGlobalAverageGradeForCourse = (courseId) => {
-    const course = statistics.find(
-      (c) => c.course_id.toString() === courseId,
-    );
-    if (!course) return 0;
-
-    return course.global_average_grade || 0;
-  }
-
-  const getGlobalSubmissionRateForCourse = (courseId) => {
-    const course = statistics.find(
-      (c) => c.course_id.toString() === courseId,
-    );
-    if (!course) return 0;
-
-    return (course.global_submission_rate || 0) * 100; // Convertir a porcentaje
-  }
 
   const getLastGradeTendencyForCourse = (courseId) => {
     // Ahora puedes usar statistics directamente ya que viene del backend para el curso específico
-    if (!statistics || !statistics.gradeTendency) {
+    if (!statistics || !statistics.last_10_assignments_average_grade_tendency) {
       return "Unknown";
     }
-    return statistics.gradeTendency;
+    return statistics.last_10_assignments_average_grade_tendency;
   }
 
   const getLastSubmissionRateTendencyForCourse = (courseId) => {
-    if (!statistics || !statistics.submissionTendency) {
+    if (!statistics || !statistics.last_10_assignments_submission_rate_tendency) {
       return "Unknown";
     }
-    return statistics.submissionTendency;
+    return statistics.last_10_assignments_submission_rate_tendency;
   }
 
   const getSuggestionsForCourse = (courseId) => {
@@ -376,9 +341,7 @@ const TeacherStatistics = () => {
           <p>Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
           <p>Course: ${selectedCourse === 'all'
           ? 'All Courses'
-          : statistics.find(
-            (c) => c.course_id.toString() === selectedCourse,
-          )?.course_name || 'Selected Course'
+          : courses.find(c => c.id.toString() === selectedCourse)?.title || 'Selected Course'
         }</p>
         </div>
         
@@ -479,7 +442,7 @@ const TeacherStatistics = () => {
 
   const globalStats = getGlobalStats();
   const globalChartData = getGlobalChartData(globalStats);
-  const globalChartDataForCourse = getGlobalChartDataForCourse(selectedCourse);
+  const globalChartDataForCourse = selectedCourse !== 'all' ? getGlobalChartData(getGlobalStats()) : null;
   const { gradeData, submissionData, trendData } = getChartData();
   const screenWidth = Dimensions.get('window').width;
 

@@ -141,7 +141,7 @@ const StudentIndividualStatistics = () => {
     }
 
     return {
-      averageGrade: avgGrade.toFixed(1),
+      averageGrade: avgGrade.toFixed(1) * 10,
       submissionRate: (avgSubmissionRate * 100).toFixed(1),
       activeDays: totalActiveDays,
       totalDates: studentStats.statistics_for_assignments?.length || 0,
