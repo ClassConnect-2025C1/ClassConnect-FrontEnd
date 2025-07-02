@@ -54,7 +54,7 @@ export default function EditCourseScreen({ route }) {
   useEffect(() => {
     const fetchEligibilityOptions = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/courses/`, {
+        const response = await fetch(`${API_URL}/api/courses/courses`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const json = await response.json();

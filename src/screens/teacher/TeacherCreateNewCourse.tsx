@@ -40,8 +40,8 @@ const TeacherCreateNewCourseScreen = () => {
       }
 
       try {
-        // Traer cursos
-        const response = await fetch(`${API_URL}/api/courses/`, {
+        // Traer cursos especificos para el teacher (usamos el token y no pasamos mas el id ni nada)
+        const response = await fetch(`${API_URL}/api/courses/courses`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -111,7 +111,7 @@ const TeacherCreateNewCourseScreen = () => {
     try {
       if (!token) throw new Error('No token found');
 
-      const response = await fetch(`${API_URL}/api/courses/`, {
+      const response = await fetch(`${API_URL}/api/courses/course`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

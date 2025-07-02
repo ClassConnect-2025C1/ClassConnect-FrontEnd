@@ -67,7 +67,8 @@ const CoursesScreen = ({ route }) => {
         }
 
         if (token && userEmail) {
-          const response = await fetch(`${API_URL}/api/courses/`, {
+          // usamos el token que contiene el mail para filtrar en el back
+          const response = await fetch(`${API_URL}/api/courses/courses`, {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${token}`,
