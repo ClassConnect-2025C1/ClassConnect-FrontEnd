@@ -346,6 +346,7 @@ const ProfileScreen = () => {
             bio: bio,
             photo: userImage,
             phone: phoneNumber,
+            role: role,
           }),
         });
 
